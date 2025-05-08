@@ -9,7 +9,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['admin', 'regular'],
         default: 'regular',
+    },
+    socialId: String,
+    socialProvider: {
+        type: String,
+        enum: ['google', 'facebook', null],
+        default: null
     }
+}, {
+    timestamps: true // Add this line to automatically manage createdAt and updatedAt
 });
 
 // Hash password before saving

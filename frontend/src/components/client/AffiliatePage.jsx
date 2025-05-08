@@ -11,8 +11,8 @@ const AffiliatePage = () => {
         const fetchAffiliateLinks = async () => {
             try {
                 setLoading(true);
-                const response = await api.get("/affiliate-links");
-                setAffiliateLinks(response.data);
+                const response = await api.get("/affiliate-links"); // This will now only get verified listings
+                setAffiliateLinks(response.data.filter(link => link.isVerified));
                 setError(null);
             } catch (error) {
                 console.error("Error fetching affiliate links:", error);

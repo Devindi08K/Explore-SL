@@ -36,13 +36,13 @@ const BusinessListingForm = () => {
     try {
       await api.post("/businesses", {
         ...formData,
-        isExternal: hasBookingSystem
+        isVerified: false
       });
-      alert("Business submitted successfully!");
+      alert("Business listing submitted successfully! Awaiting approval.");
       navigate('/affiliate-links');
     } catch (error) {
       console.error("Error submitting business:", error);
-      alert("Failed to submit business");
+      alert("Failed to submit business listing");
     } finally {
       setIsSubmitting(false);
     }

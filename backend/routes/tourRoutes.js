@@ -1,15 +1,41 @@
 const express = require("express");
 const Tour = require("../models/Tour");
-
+const { protect, authorize } = require("../middleware/authMiddleware");
 const router = express.Router();
 
-// Get all tours
+// Get all tours (public - only verified)
 router.get("/", async (req, res) => {
   try {
-    const tours = await Tour.find();
+    const tours = await Tour.find({ 
+      isVerified: true,
+      status: 'approved'
+    });
     res.json(tours);
   } catch (error) {
     res.status(500).json({ error: "Error fetching tours" });
+  }
+});
+
+// Get all tours (admin)
+router.get("/all", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const tours = await Tour.find().sort({ createdAt: -1 });
+    res.json(tours);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching tours" });
+  }
+});
+
+// Get single tour
+router.get("/:id", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    if (!tour) {
+      return res.status(404).json({ error: "Tour not found" });
+    }
+    res.json(tour);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching tour details" });
   }
 });
 
@@ -41,6 +67,28 @@ router.put("/:id", async (req, res) => {
   } catch (error) {
     console.error("Tour update error:", error);
     res.status(400).json({ error: "Error updating tour" });
+  }
+});
+
+// Verify tour
+router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: req.body.status,
+        isVerified: req.body.status === 'approved',
+        verifiedAt: new Date(),
+        verifiedBy: req.user._id
+      },
+      { new: true }
+    );
+    if (!tour) {
+      return res.status(404).json({ error: "Tour not found" });
+    }
+    res.json(tour);
+  } catch (error) {
+    res.status(400).json({ error: "Error updating verification status" });
   }
 });
 

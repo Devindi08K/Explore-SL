@@ -1,93 +1,231 @@
 import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { FaGoogle, FaFacebookF, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import api from '../../utils/api';
-import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
-  const [userName, setUserName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        userName: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
 
-    try {
-      await api.post("/auth/register", {
-        userName,
-        email,
-        password,
-      });
-      navigate("/login");
-    } catch (err) {
-      setError(err.response?.data?.error || "Error creating account, please try again.");
-    }
-  };
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match');
+            setLoading(false);
+            return;
+        }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-cream px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
-        <h2 className="text-2xl font-bold text-center mb-6 text-charcoal">Create Account</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Username"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-          />
-          {error && <p className="text-red-600 text-sm text-center">{error}</p>}
-          <button
-            type="submit"
-            className="w-full bg-tan text-cream py-2 rounded-lg hover:bg-gold transition duration-200"
-          >
-            Sign Up
-          </button>
-        </form>
-        <p className="text-center text-sm text-charcoal mt-4">
-          Already have an account?{" "}
-          <span
-            className="text-tan hover:text-gold cursor-pointer hover:underline"
-            onClick={() => navigate("/login")}
-          >
-            Log in
-          </span>
-        </p>
-      </div>
-    </div>
-  );
+        try {
+            await api.post("/auth/register", {
+                userName: formData.userName,
+                email: formData.email,
+                password: formData.password,
+            });
+            navigate("/login");
+        } catch (err) {
+            setError(err.response?.data?.error || "Error creating account");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSocialSignup = (provider) => {
+        // Will be implemented with OAuth
+        console.log(`Signup with ${provider}`);
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-cream px-4">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-charcoal mb-2">Create Account</h2>
+                    <p className="text-gray-600">Join Explore Sri Lanka today</p>
+                </div>
+
+                {/* Social Signup Buttons */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <button
+                        onClick={() => handleSocialSignup('google')}
+                        className="flex items-center justify-center gap-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300"
+                    >
+                        <FaGoogle className="text-red-500" />
+                        <span>Google</span>
+                    </button>
+                    <button
+                        onClick={() => handleSocialSignup('facebook')}
+                        className="flex items-center justify-center gap-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300"
+                    >
+                        <FaFacebookF className="text-blue-600" />
+                        <span>Facebook</span>
+                    </button>
+                </div>
+
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">Or sign up with email</span>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FaUser className="text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                name="userName"
+                                value={formData.userName}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-4 py-3 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-cream/50"
+                                placeholder="Choose a username"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FaEnvelope className="text-gray-400" />
+                            </div>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-4 py-3 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-cream/50"
+                                placeholder="Enter your email"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FaLock className="text-gray-400" />
+                            </div>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-12 py-3 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-cream/50"
+                                placeholder="Create a password"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                                {showPassword ? (
+                                    <FaEyeSlash className="text-gray-400 hover:text-gray-600" />
+                                ) : (
+                                    <FaEye className="text-gray-400 hover:text-gray-600" />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FaLock className="text-gray-400" />
+                            </div>
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-12 py-3 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-cream/50"
+                                placeholder="Confirm your password"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                                {showConfirmPassword ? (
+                                    <FaEyeSlash className="text-gray-400 hover:text-gray-600" />
+                                ) : (
+                                    <FaEye className="text-gray-400 hover:text-gray-600" />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                            {error}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full bg-tan text-cream py-3 rounded-lg hover:bg-gold transition duration-300 flex items-center justify-center text-lg font-medium ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                    >
+                        {loading ? (
+                            <span className="flex items-center gap-2">
+                                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                                </svg>
+                                Creating account...
+                            </span>
+                        ) : 'Create Account'}
+                    </button>
+
+                    <p className="text-xs text-gray-500 text-center mt-4">
+                        By signing up, you agree to our{" "}
+                        <Link to="/terms" className="text-tan hover:text-gold">Terms of Service</Link>
+                        {" "}and{" "}
+                        <Link to="/privacy" className="text-tan hover:text-gold">Privacy Policy</Link>
+                    </p>
+                </form>
+
+                <div className="mt-8 text-center">
+                    <p className="text-gray-600">
+                        Already have an account?{" "}
+                        <Link 
+                            to="/login" 
+                            className="text-tan hover:text-gold font-medium transition-colors duration-300"
+                        >
+                            Sign in
+                        </Link>
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default Signup;

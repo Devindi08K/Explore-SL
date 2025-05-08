@@ -67,6 +67,26 @@ const affiliateSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+
+  // Add verification fields
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  submittedAt: {
+    type: Date,
+    default: Date.now
+  },
+  verifiedAt: Date,
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 });
 

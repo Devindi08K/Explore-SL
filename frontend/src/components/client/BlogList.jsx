@@ -8,7 +8,7 @@ const BlogList = () => {
     useEffect(() => {
         const fetchBlogs = async () => {
             try {
-                const response = await api.get("/blogs");
+                const response = await api.get("/blogs"); // This will only get verified blogs
                 setBlogs(response.data);
             } catch (error) {
                 console.error("Error fetching blogs:", error);

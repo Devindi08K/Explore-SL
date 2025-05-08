@@ -20,7 +20,7 @@ const AdminBlogForm = () => {
 
   const fetchBlogs = async () => {
     try {
-      const response = await api.get("/blogs");
+      const response = await api.get("/blogs/all"); // Use /blogs/all instead of /blogs
       setBlogs(response.data);
     } catch (error) {
       console.error("Error fetching blogs:", error);
@@ -66,6 +66,18 @@ const AdminBlogForm = () => {
       } catch (error) {
         console.error("Error deleting blog:", error);
       }
+    }
+  };
+
+  const handleVerification = async (id, isVerified) => {
+    try {
+      await api.patch(`/blogs/${id}/verify`, { 
+        status: isVerified ? 'approved' : 'rejected',
+        isVerified
+      });
+      fetchBlogs();
+    } catch (error) {
+      console.error("Error updating verification status:", error);
     }
   };
 
@@ -127,25 +139,57 @@ const AdminBlogForm = () => {
       <div className="mt-4 space-y-6">
         {blogs.map((b) => (
           <div key={b._id} className="p-4 bg-white rounded-lg shadow-md">
-            <h3 className="text-xl font-semibold text-charcoal">{b.title}</h3>
-            <p className="text-sm text-gray-600 mt-1">Author: {b.author}</p>
-            <img src={b.image} alt={b.title} className="mt-2 rounded-md w-32 h-32 object-cover" />
-            <p className="mt-2 text-gray-600">
-              {b.content.length > 100 ? b.content.substring(0, 100) + "..." : b.content}
-            </p>
-            <div className="mt-4 flex space-x-4">
-              <button
-                onClick={() => handleEdit(b)}
-                className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(b._id)}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-              >
-                Delete
-              </button>
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-xl font-semibold text-charcoal">
+                  {b.title}
+                  {b.isVerified && (
+                    <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                      Verified
+                    </span>
+                  )}
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">Author: {b.authorName}</p>
+                <img src={b.image} alt={b.title} className="mt-2 rounded-md w-32 h-32 object-cover" />
+                <p className="mt-2 text-gray-600">
+                  {b.content?.length > 100 ? b.content.substring(0, 100) + "..." : b.content}
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleVerification(b._id, !b.isVerified)}
+                  className={`px-4 py-2 rounded-md ${
+                    b.isVerified 
+                      ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {b.isVerified ? 'Unverify' : 'Verify'}
+                </button>
+                <button
+                  onClick={() => handleEdit(b)}
+                  className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(b._id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+            <div className="mt-2">
+              <span className={`px-2 py-1 rounded-full text-xs ${
+                b.status === 'approved' 
+                  ? 'bg-green-100 text-green-800'
+                  : b.status === 'rejected'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {b.status?.charAt(0).toUpperCase() + b.status?.slice(1) || 'Pending'}
+              </span>
             </div>
           </div>
         ))}

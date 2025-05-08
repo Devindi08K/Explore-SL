@@ -10,15 +10,17 @@ const TourSubmissionForm = () => {
     description: '',
     duration: '',
     groupSize: '',
-    priceRange: '',
-    highlights: '',
-    included: '',
-    notIncluded: '',
+    priceRange: 'Rs ',  // Initialize with currency
+    highlights: '',      // Optional
+    included: '',        // Optional
+    notIncluded: '',     // Optional
     email: '',
     phone: '',
-    message: '',
+    message: '',         // Optional
     isExternal: false,
     bookingUrl: '',
+    startingPoint: 'To be determined',
+    endingPoint: 'To be determined'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -30,16 +32,39 @@ const TourSubmissionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
-      await api.post("/tours", {
-        ...formData,
-        isExternal: hasWebsite
-      });
-      alert("Tour submitted successfully!");
+      const tourData = {
+        name: formData.tourName,
+        type: formData.tourType,
+        description: formData.description,
+        image: "https://placehold.co/600x400?text=Tour+Image", // Default placeholder
+        isExternal: hasWebsite,
+        bookingUrl: hasWebsite ? formData.bookingUrl : "",
+        priceRange: formData.priceRange,
+        duration: formData.duration || "",
+        groupSize: formData.groupSize || "",
+        highlights: formData.highlights || "",
+        included: formData.included || "",
+        notIncluded: formData.notIncluded || "",
+        startingPoint: "To be determined", // Default value for required field
+        endingPoint: "To be determined", // Default value for required field
+        itinerary: [{ day: "Day 1", description: "Detailed itinerary will be provided" }],
+        contactEmail: formData.email,
+        contactPhone: formData.phone,
+        status: 'pending',
+        isVerified: false,
+        submittedAt: new Date()
+      };
+
+      const response = await api.post("/tours", tourData);
+      alert("Tour submitted successfully! Awaiting admin approval.");
       navigate('/tours');
     } catch (error) {
       console.error("Error submitting tour:", error);
-      alert("Failed to submit tour");
+      alert("Failed to submit tour: " + (error.response?.data?.error || error.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -144,24 +169,46 @@ const TourSubmissionForm = () => {
 
               <div>
                 <label className="block text-charcoal mb-2">Price Range</label>
-                <input
-                  type="text"
-                  name="priceRange"
-                  placeholder="e.g., $100-$200 per person"
-                  value={formData.priceRange}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-                />
+                <div className="relative">
+                  <select
+                    name="currency"
+                    value={formData.priceRange.startsWith('$') ? '$' : 'Rs'}
+                    onChange={(e) => {
+                      const numericPart = formData.priceRange.replace(/[^0-9-]/g, '');
+                      setFormData({
+                        ...formData,
+                        priceRange: `${e.target.value}${numericPart}`
+                      });
+                    }}
+                    className="absolute left-0 top-0 h-full px-2 border-r border-tan"
+                  >
+                    <option value="Rs">Rs</option>
+                    <option value="$">$</option>
+                  </select>
+                  <input
+                    type="text"
+                    name="priceRange"
+                    placeholder="e.g., 1000-2000 per person"
+                    value={formData.priceRange.replace(/^(Rs|\$)/, '')}
+                    onChange={(e) => {
+                      const currency = formData.priceRange.startsWith('$') ? '$' : 'Rs';
+                      setFormData({
+                        ...formData,
+                        priceRange: `${currency}${e.target.value}`
+                      });
+                    }}
+                    required
+                    className="w-full pl-16 px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-charcoal mb-2">Tour Highlights</label>
+                <label className="block text-charcoal mb-2">Tour Highlights (Optional)</label>
                 <textarea
                   name="highlights"
                   value={formData.highlights}
                   onChange={handleChange}
-                  required
                   rows="3"
                   placeholder="Key attractions and activities"
                   className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
@@ -169,12 +216,11 @@ const TourSubmissionForm = () => {
               </div>
 
               <div>
-                <label className="block text-charcoal mb-2">What's Included</label>
+                <label className="block text-charcoal mb-2">What's Included (Optional)</label>
                 <textarea
                   name="included"
                   value={formData.included}
                   onChange={handleChange}
-                  required
                   rows="3"
                   placeholder="Transportation, accommodation, meals, etc."
                   className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
@@ -182,7 +228,7 @@ const TourSubmissionForm = () => {
               </div>
 
               <div>
-                <label className="block text-charcoal mb-2">What's Not Included</label>
+                <label className="block text-charcoal mb-2">What's Not Included (Optional)</label>
                 <textarea
                   name="notIncluded"
                   value={formData.notIncluded}
@@ -218,7 +264,7 @@ const TourSubmissionForm = () => {
               </div>
 
               <div>
-                <label className="block text-charcoal mb-2">Additional Message</label>
+                <label className="block text-charcoal mb-2">Additional Message (Optional)</label>
                 <textarea
                   name="message"
                   value={formData.message}

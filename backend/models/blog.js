@@ -1,11 +1,28 @@
 const mongoose = require("mongoose");
 
 const blogSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  content: { type: String, required: true },
-  image: { type: String, required: true }, // Store image URL or base64 string
-  author: { type: String, required: true }, // New field for author
-  
+  authorName: { type: String, required: true },
+  blogUrl: { type: String, required: true },
+  email: { type: String, required: true },
+  message: String,
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  submittedAt: {
+    type: Date,
+    default: Date.now
+  },
+  verifiedAt: Date,
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
 });
 
 module.exports = mongoose.model("Blog", blogSchema);

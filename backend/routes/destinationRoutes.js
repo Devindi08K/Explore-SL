@@ -48,13 +48,15 @@ router.put("/:id", async (req, res) => {
         const destination = await Destination.findById(req.params.id);
         if (!destination) return res.status(404).json({ message: "Destination not found" });
 
-        // Update the destination fields
-        destination.name = req.body.name || destination.name;
-        destination.description = req.body.description || destination.description;
-        destination.image = req.body.image || destination.image;
-        destination.source = req.body.source || destination.source;
+        const updatedDestination = await Destination.findByIdAndUpdate(
+            req.params.id,
+            {
+                ...req.body,
+                district: req.body.district || destination.district // Fallback to existing district
+            },
+            { new: true, runValidators: true }
+        );
 
-        const updatedDestination = await destination.save();
         res.json(updatedDestination);
     } catch (err) {
         res.status(400).json({ message: err.message });

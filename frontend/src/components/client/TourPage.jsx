@@ -8,7 +8,7 @@ const TourPage = () => {
   useEffect(() => {
     const fetchTours = async () => {
       try {
-        const response = await api.get("/tours");
+        const response = await api.get("/tours"); // This endpoint now only returns verified tours
         setTours(response.data);
       } catch (error) {
         console.error("Error fetching tours:", error);

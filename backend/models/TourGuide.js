@@ -1,31 +1,63 @@
 const mongoose = require("mongoose");
 
 const tourGuideSchema = new mongoose.Schema({
+  // Basic Information
   name: { type: String, required: true },
   image: { type: String, required: true },
-  languages: [{ type: String, required: true }],
-  specialization: [{ type: String, required: true }], // e.g., Cultural, Wildlife, Adventure
+  bio: { type: String, required: true },
+  
+  // Professional Details
+  languages: {
+    type: [String],
+    default: []
+  },
+  specialization: {
+    type: [String],
+    default: []
+  },
   yearsOfExperience: { type: Number, required: true },
-  certifications: [{
-    name: String,
-    issuedBy: String,
-    year: Number
-  }],
-  licenseNumber: { type: String, required: true, unique: true }, // Government-issued license
+  certifications: {
+    type: [{
+      name: String,
+      issuedBy: String,
+      year: Number
+    }],
+    default: []
+  },
+  licenseNumber: { type: String },
+  
+  // Contact Information
   contactEmail: { type: String, required: true },
   contactPhone: { type: String, required: true },
-  bio: { type: String, required: true },
+  whatsapp: { type: String },
+  
+  // Availability & Rates
   availability: { type: String, required: true },
   ratePerDay: { type: String, required: true },
-  isVerified: { type: Boolean, default: false }, // Admin verification status
-  reviews: [{
-    rating: Number,
-    comment: String,
-    reviewerName: String,
-    date: { type: Date, default: Date.now }
-  }],
-  tourAreas: [{ type: String, required: true }], // Districts/areas they cover
-  createdAt: { type: Date, default: Date.now }
+  preferredAreas: {
+    type: [String],
+    default: []
+  },
+  
+  // Verification Fields
+  isVerified: { 
+    type: Boolean, 
+    default: false 
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  submittedAt: {
+    type: Date,
+    default: Date.now
+  },
+  verifiedAt: Date,
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
 });
 
 module.exports = mongoose.model("TourGuide", tourGuideSchema);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
 const BlogSubmissionForm = () => {
   const [formData, setFormData] = useState({
     authorName: '',
@@ -15,24 +16,26 @@ const BlogSubmissionForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Create mailto link with form data
-    const mailtoLink = `mailto:admin@exploreSriLanka.com?subject=Blog Submission Request&body=` +
-      `Author Name: ${formData.authorName}%0D%0A` +
-      `Blog URL: ${formData.blogUrl}%0D%0A` +
-      `Email: ${formData.email}%0D%0A` +
-      `Message: ${formData.message}`;
-
-    // Open email client
-    window.location.href = mailtoLink;
-
-    // Return to partnership page after 2 seconds
-    setTimeout(() => {
+    try {
+      await api.post("/blogs", {
+        ...formData,
+        status: 'pending',
+        isVerified: false,
+        submittedAt: new Date()
+      });
+      
+      alert("Blog submission successful! Awaiting admin approval.");
       navigate('/partnership');
-    }, 2000);
+    } catch (error) {
+      console.error("Error submitting blog:", error);
+      alert("Failed to submit blog");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

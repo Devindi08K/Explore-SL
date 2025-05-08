@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 
 const AdminTourGuidePage = () => {
@@ -20,19 +21,55 @@ const AdminTourGuidePage = () => {
     tourAreas: [],
     isVerified: false
   });
-
-  useEffect(() => {
-    fetchGuides();
-  }, []);
+  const location = useLocation();
 
   const fetchGuides = async () => {
     try {
-      const response = await api.get("/tour-guides");
+      const response = await api.get("/tour-guides/all");
+      console.log("Fetched guides:", response.data); // Add this for debugging
       setGuides(response.data);
     } catch (error) {
       console.error("Error fetching guides:", error);
     }
   };
+
+  const fetchGuideDetails = async (id) => {
+    try {
+      const response = await api.get(`/tour-guides/${id}`);
+      const guide = response.data;
+      setEditingGuide(guide);
+      setFormData({
+        name: guide.name || '',
+        image: guide.image || '',
+        languages: guide.languages || [],
+        specialization: guide.specialization || [],
+        yearsOfExperience: guide.yearsOfExperience || '',
+        certifications: guide.certifications || [{ name: '', issuedBy: '', year: '' }],
+        licenseNumber: guide.licenseNumber || '',
+        contactEmail: guide.contactEmail || '',
+        contactPhone: guide.contactPhone || '',
+        bio: guide.bio || '',
+        availability: guide.availability || '',
+        ratePerDay: guide.ratePerDay || '',
+        tourAreas: guide.tourAreas || [],
+        isVerified: guide.isVerified || false,
+        status: guide.status || 'pending'
+      });
+    } catch (error) {
+      console.error('Error fetching guide details:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchGuides();
+    
+    // If there's an ID in the URL, fetch that specific guide
+    const searchParams = new URLSearchParams(location.search);
+    const guideId = searchParams.get('id');
+    if (guideId) {
+      fetchGuideDetails(guideId);
+    }
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,21 +104,14 @@ const AdminTourGuidePage = () => {
 
   const handleVerification = async (id, isVerified) => {
     try {
-      await api.patch(`/tour-guides/${id}/verify`, { isVerified });
+      await api.patch(`/tour-guides/${id}/verify`, { 
+        isVerified,
+        status: isVerified ? 'approved' : 'rejected'
+      });
       fetchGuides();
     } catch (error) {
       console.error("Error updating verification status:", error);
     }
-  };
-
-  const handleLanguageChange = (e) => {
-    const value = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData({ ...formData, languages: value });
-  };
-
-  const handleSpecializationChange = (e) => {
-    const value = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData({ ...formData, specialization: value });
   };
 
   const handleCertificationChange = (index, field, value) => {
@@ -149,13 +179,13 @@ const AdminTourGuidePage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">License Number</label>
+            <label className="block text-sm font-medium text-gray-700">License Number (Optional)</label>
             <input
               type="text"
               value={formData.licenseNumber}
               onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
               className="w-full p-2 border border-tan rounded-md"
-              required
+              placeholder="Government-issued license number if available"
             />
           </div>
 
@@ -174,43 +204,147 @@ const AdminTourGuidePage = () => {
 
         {/* Languages and Specializations */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Languages Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Languages (Multiple)</label>
-            <select
-              multiple
-              value={formData.languages}
-              onChange={handleLanguageChange}
-              className="w-full p-2 border border-tan rounded-md"
-              required
-              size="4"
-            >
-              <option value="English">English</option>
-              <option value="Sinhala">Sinhala</option>
-              <option value="Tamil">Tamil</option>
-              <option value="French">French</option>
-              <option value="German">German</option>
-              <option value="Chinese">Chinese</option>
-              <option value="Japanese">Japanese</option>
-            </select>
+            <label className="block text-sm font-medium text-gray-700 mb-3">Languages</label>
+            <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto p-3 border border-tan rounded-md">
+              {/* Local Languages */}
+              <div className="col-span-2 mb-2">
+                <h4 className="font-medium text-sm text-gray-600">Local Languages</h4>
+                <div className="space-y-2 mt-1">
+                  {['English', 'Sinhala', 'Tamil'].map((lang) => (
+                    <label key={lang} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.languages.includes(lang)}
+                        onChange={(e) => {
+                          const updatedLanguages = e.target.checked
+                            ? [...formData.languages, lang]
+                            : formData.languages.filter(l => l !== lang);
+                          setFormData({ ...formData, languages: updatedLanguages });
+                        }}
+                        className="rounded border-tan text-gold focus:ring-gold"
+                      />
+                      <span className="text-sm">{lang}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* European Languages */}
+              <div className="col-span-2 mb-2">
+                <h4 className="font-medium text-sm text-gray-600">European Languages</h4>
+                <div className="space-y-2 mt-1">
+                  {[
+                    'French', 'German', 'Italian', 'Spanish', 
+                    'Dutch', 'Russian', 'Polish'
+                  ].map((lang) => (
+                    <label key={lang} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.languages.includes(lang)}
+                        onChange={(e) => {
+                          const updatedLanguages = e.target.checked
+                            ? [...formData.languages, lang]
+                            : formData.languages.filter(l => l !== lang);
+                          setFormData({ ...formData, languages: updatedLanguages });
+                        }}
+                        className="rounded border-tan text-gold focus:ring-gold"
+                      />
+                      <span className="text-sm">{lang}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Asian Languages */}
+              <div className="col-span-2 mb-2">
+                <h4 className="font-medium text-sm text-gray-600">Asian Languages</h4>
+                <div className="space-y-2 mt-1">
+                  {[
+                    'Mandarin Chinese', 'Cantonese', 'Japanese', 'Korean',
+                    'Thai', 'Vietnamese', 'Malay'
+                  ].map((lang) => (
+                    <label key={lang} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.languages.includes(lang)}
+                        onChange={(e) => {
+                          const updatedLanguages = e.target.checked
+                            ? [...formData.languages, lang]
+                            : formData.languages.filter(l => l !== lang);
+                          setFormData({ ...formData, languages: updatedLanguages });
+                        }}
+                        className="rounded border-tan text-gold focus:ring-gold"
+                      />
+                      <span className="text-sm">{lang}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Middle Eastern & South Asian Languages */}
+              <div className="col-span-2">
+                <h4 className="font-medium text-sm text-gray-600">Other Languages</h4>
+                <div className="space-y-2 mt-1">
+                  {[
+                    'Arabic', 'Hebrew', 'Persian', 'Hindi', 
+                    'Malayalam', 'Bengali', 'Urdu'
+                  ].map((lang) => (
+                    <label key={lang} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.languages.includes(lang)}
+                        onChange={(e) => {
+                          const updatedLanguages = e.target.checked
+                            ? [...formData.languages, lang]
+                            : formData.languages.filter(l => l !== lang);
+                          setFormData({ ...formData, languages: updatedLanguages });
+                        }}
+                        className="rounded border-tan text-gold focus:ring-gold"
+                      />
+                      <span className="text-sm">{lang}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
+          {/* Specializations Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Specializations (Multiple)</label>
-            <select
-              multiple
-              value={formData.specialization}
-              onChange={handleSpecializationChange}
-              className="w-full p-2 border border-tan rounded-md"
-              required
-              size="4"
-            >
-              <option value="Cultural">Cultural Tours</option>
-              <option value="Adventure">Adventure Tours</option>
-              <option value="Wildlife">Wildlife Tours</option>
-              <option value="Historical">Historical Tours</option>
-              <option value="Hiking">Hiking</option>
-              <option value="Photography">Photography Tours</option>
-            </select>
+            <label className="block text-sm font-medium text-gray-700 mb-3">Specializations</label>
+            <div className="space-y-2 p-3 border border-tan rounded-md">
+              {[
+                'Cultural Tours',
+                'Adventure Tours',
+                'Wildlife Tours',
+                'Historical Tours',
+                'Hiking',
+                'Photography Tours',
+                'Food Tours',
+                'Religious Tours',
+                'Beach Tours',
+                'City Tours',
+                'Nature Tours',
+                'Architectural Tours'
+              ].map((spec) => (
+                <label key={spec} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.specialization.includes(spec)}
+                    onChange={(e) => {
+                      const updatedSpecs = e.target.checked
+                        ? [...formData.specialization, spec]
+                        : formData.specialization.filter(s => s !== spec);
+                      setFormData({ ...formData, specialization: updatedSpecs });
+                    }}
+                    className="rounded border-tan text-gold focus:ring-gold"
+                  />
+                  <span className="text-sm">{spec}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -279,7 +413,9 @@ const AdminTourGuidePage = () => {
 
         {/* Certifications */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Certifications</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Certifications (Optional)
+          </label>
           {formData.certifications.map((cert, index) => (
             <div key={index} className="grid grid-cols-3 gap-4 mb-4">
               <input
@@ -322,49 +458,66 @@ const AdminTourGuidePage = () => {
         </button>
       </form>
 
-      {/* Guide List */}
-      <div className="space-y-6">
-        {guides.map((guide) => (
-          <div key={guide._id} className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-xl font-semibold text-charcoal">
-                  {guide.name}
-                  {guide.isVerified && (
-                    <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
-                      Verified
-                    </span>
-                  )}
-                </h3>
-                <p className="text-gray-600">{guide.yearsOfExperience} years experience</p>
+      {/* Guide List Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold mb-6 text-charcoal">Tour Guides List</h2>
+        <div className="space-y-6">
+          {guides.map((guide) => (
+            <div key={guide._id} className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-semibold text-charcoal">
+                    {guide.name}
+                    {guide.isVerified && (
+                      <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                        Verified
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-gray-600 mt-1">{guide.yearsOfExperience} years experience</p>
+                  <p className="text-gray-600 mt-1">Languages: {guide.languages.join(', ')}</p>
+                  <p className="text-gray-600 mt-1">Contact: {guide.contactEmail}</p>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleVerification(guide._id, !guide.isVerified)}
+                    className={`px-4 py-2 rounded-md ${
+                      guide.isVerified 
+                        ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
+                  >
+                    {guide.isVerified ? 'Unverify' : 'Verify'}
+                  </button>
+                  <button
+                    onClick={() => handleEdit(guide)}
+                    className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(guide._id)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleVerification(guide._id, !guide.isVerified)}
-                  className={`px-4 py-2 rounded-md ${
-                    guide.isVerified 
-                      ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                  }`}
-                >
-                  {guide.isVerified ? 'Unverify' : 'Verify'}
-                </button>
-                <button
-                  onClick={() => handleEdit(guide)}
-                  className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(guide._id)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                >
-                  Delete
-                </button>
+              
+              {/* Additional Guide Details */}
+              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong>Specializations:</strong>
+                  <p className="text-gray-600">{guide.specialization.join(', ')}</p>
+                </div>
+                <div>
+                  <strong>Preferred Areas:</strong>
+                  <p className="text-gray-600">{guide.preferredAreas.join(', ')}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

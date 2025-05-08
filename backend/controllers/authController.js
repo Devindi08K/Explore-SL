@@ -49,47 +49,23 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log("Login attempt for:", email);
-        console.log("Password received:", password);
-
         const user = await User.findOne({ email });
-        if (!user) {
-            console.log("User not found for email:", email);
-            return res.status(400).json({ error: "Invalid credentials" });
-        }
-        console.log("User found:", user.email);
-        console.log("Stored hashed password:", user.password);
-
-        // Use the comparePassword method
-        const isMatch = await bcrypt.compare(password, user.password);
-        console.log("Password comparison result:", isMatch);
-
-        if (!isMatch) {
-            console.log("Password does not match");
-            return res.status(400).json({ error: "Invalid credentials" });
-        }
-
-        // Generate token and set cookie
-        const token = generateToken(user);
-        console.log("Token generated successfully");
         
-        res.cookie("authToken", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "Strict",
-            maxAge: 6 * 60 * 60 * 1000 // 6 hours
-        });
+        if (!user || !(await user.comparePassword(password))) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
 
-        // Send response with user data
+        const token = generateToken(user);
+        
         res.json({
+            token,
             role: user.role,
             userName: user.userName,
             email: user.email
         });
-
     } catch (error) {
         console.error("Login error:", error);
-        res.status(500).json({ error: "Login failed. Please try again." });
+        res.status(500).json({ error: "Login failed" });
     }
 };
 

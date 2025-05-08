@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 
 const AdminAffiliatePage = () => {
+    const location = useLocation();
     const [affiliateLinks, setAffiliateLinks] = useState([]);
-    const [isExternal, setIsExternal] = useState(false);
+    const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState({
         category: "hotel",
         name: "",
@@ -11,27 +13,54 @@ const AdminAffiliatePage = () => {
         imageUrl: "",
         priceRange: "",
         isExternal: false,
-        // External business fields
-        redirectUrl: "",
-        // Local business fields
         contactName: "",
         email: "",
         phone: "",
         address: "",
         openingHours: "",
-        specialties: ""
+        specialties: "",
+        status: "pending",
+        isVerified: false
     });
 
     useEffect(() => {
         fetchAffiliateLinks();
-    }, []);
+        
+        // Get ID from query params
+        const searchParams = new URLSearchParams(location.search);
+        const affiliateId = searchParams.get('id');
+        if (affiliateId) {
+            fetchAffiliateDetails(affiliateId);
+        }
+    }, [location]);
 
     const fetchAffiliateLinks = async () => {
         try {
-            const response = await api.get("/affiliate-links");
-            setAffiliateLinks(response.data);
+            setAffiliateLinks([]); // Clear existing data while loading
+            const response = await api.get("/affiliate-links/all");
+            console.log("Fetched all affiliate links:", response.data);
+            
+            if (Array.isArray(response.data)) {
+                setAffiliateLinks(response.data);
+            } else {
+                console.error("Invalid data format received:", response.data);
+                setAffiliateLinks([]);
+            }
         } catch (error) {
             console.error("Error fetching affiliate links:", error);
+            setAffiliateLinks([]);
+        }
+    };
+
+    const fetchAffiliateDetails = async (id) => {
+        try {
+            const response = await api.get(`/affiliate-links/${id}`);
+            const affiliate = response.data;
+            console.log('Fetched affiliate details:', affiliate);
+            setForm(affiliate);
+        } catch (error) {
+            console.error('Error fetching affiliate details:', error);
+            alert('Failed to load business listing details');
         }
     };
 
@@ -39,8 +68,7 @@ const AdminAffiliatePage = () => {
         e.preventDefault();
         try {
             const formData = {
-                ...form,
-                isExternal
+                ...form
             };
             
             if (form._id) {
@@ -63,20 +91,21 @@ const AdminAffiliatePage = () => {
             imageUrl: "",
             priceRange: "",
             isExternal: false,
-            redirectUrl: "",
             contactName: "",
             email: "",
             phone: "",
             address: "",
             openingHours: "",
-            specialties: ""
+            specialties: "",
+            status: "pending",
+            isVerified: false
         });
-        setIsExternal(false);
+        setEditingId(null);
     };
 
     const handleEdit = (link) => {
         setForm(link);
-        setIsExternal(link.isExternal);
+        setEditingId(link._id);
     };
 
     const handleDelete = async (id) => {
@@ -90,227 +119,214 @@ const AdminAffiliatePage = () => {
         }
     };
 
-    return (
-        <div className="min-h-screen bg-cream py-8 px-4">
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-semibold text-charcoal mb-6 text-center">
-                    {form._id ? "Update" : "Add"} Business Listing
-                </h2>
+    const handleVerification = async (id, isVerified) => {
+        try {
+            await api.patch(`/affiliate-links/${id}/verify`, {
+                status: isVerified ? 'approved' : 'rejected',
+                isVerified
+            });
+            fetchAffiliateLinks(); // Refresh the list after update
+        } catch (error) {
+            console.error("Error updating verification status:", error);
+        }
+    };
 
-                <div className="mb-6">
-                    <label className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            checked={isExternal}
-                            onChange={(e) => setIsExternal(e.target.checked)}
-                            className="form-checkbox text-tan"
-                        />
-                        <span>Business has online booking system</span>
-                    </label>
+    return (
+        <div className="container mx-auto p-6 bg-cream">
+            {/* Form section */}
+            <h2 className="text-2xl font-bold mb-6 text-charcoal">
+                {editingId ? "Edit Business Listing" : "Add New Business Listing"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Category:</label>
+                    <select
+                        value={form.category}
+                        onChange={(e) => setForm({ ...form, category: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        required
+                    >
+                        <option value="hotel">Hotel</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="cafe">Café</option>
+                        <option value="localEatery">Local Eatery</option>
+                    </select>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Common Fields */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Category:</label>
-                        <select
-                            value={form.category}
-                            onChange={(e) => setForm({ ...form, category: e.target.value })}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            required
-                        >
-                            <option value="hotel">Hotel</option>
-                            <option value="restaurant">Restaurant</option>
-                            <option value="cafe">Café</option>
-                            <option value="localEatery">Local Eatery</option>
-                        </select>
-                    </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Business Name:</label>
+                    <input
+                        type="text"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        required
+                    />
+                </div>
 
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Description:</label>
+                    <textarea
+                        value={form.description}
+                        onChange={(e) => setForm({ ...form, description: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        required
+                        rows="4"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Image URL:</label>
+                    <input
+                        type="text"
+                        value={form.imageUrl}
+                        onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Price Range:</label>
+                    <input
+                        type="text"
+                        value={form.priceRange}
+                        onChange={(e) => setForm({ ...form, priceRange: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        required
+                        placeholder="e.g., $$$ or Rs.1000-3000"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Contact Person:</label>
+                    <input
+                        type="text"
+                        value={form.contactName}
+                        onChange={(e) => setForm({ ...form, contactName: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        required
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Business Name:</label>
+                        <label className="block text-sm font-medium text-gray-700">Email:</label>
                         <input
-                            type="text"
-                            value={form.name}
-                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            type="email"
+                            value={form.email}
+                            onChange={(e) => setForm({ ...form, email: e.target.value })}
                             className="w-full p-2 border border-gray-300 rounded-md"
                             required
                         />
                     </div>
-
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Description:</label>
-                        <textarea
-                            value={form.description}
-                            onChange={(e) => setForm({ ...form, description: e.target.value })}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            required
-                            rows="4"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Image URL:</label>
+                        <label className="block text-sm font-medium text-gray-700">Phone:</label>
                         <input
-                            type="text"
-                            value={form.imageUrl}
-                            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                            type="tel"
+                            value={form.phone}
+                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
                             className="w-full p-2 border border-gray-300 rounded-md"
                             required
                         />
                     </div>
+                </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Price Range:</label>
-                        <input
-                            type="text"
-                            value={form.priceRange}
-                            onChange={(e) => setForm({ ...form, priceRange: e.target.value })}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            required
-                            placeholder="e.g., $$$ or Rs.1000-3000"
-                        />
-                    </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Address:</label>
+                    <textarea
+                        value={form.address}
+                        onChange={(e) => setForm({ ...form, address: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        required
+                    />
+                </div>
 
-                    {isExternal ? (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Booking URL:</label>
-                            <input
-                                type="url"
-                                value={form.redirectUrl}
-                                onChange={(e) => setForm({ ...form, redirectUrl: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                                required
-                            />
-                        </div>
-                    ) : (
-                        <>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Contact Person:</label>
-                                <input
-                                    type="text"
-                                    value={form.contactName}
-                                    onChange={(e) => setForm({ ...form, contactName: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded-md"
-                                    required
-                                />
-                            </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Opening Hours:</label>
+                    <input
+                        type="text"
+                        value={form.openingHours}
+                        onChange={(e) => setForm({ ...form, openingHours: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        placeholder="e.g., Mon-Sat: 9AM-9PM, Sun: Closed"
+                        required
+                    />
+                </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Specialties:</label>
+                    <textarea
+                        value={form.specialties}
+                        onChange={(e) => setForm({ ...form, specialties: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                        placeholder="List special dishes or services"
+                    />
+                </div>
+
+                <button 
+                    type="submit" 
+                    className="w-full bg-tan text-cream py-2 rounded-lg hover:bg-gold transition duration-200"
+                >
+                    {editingId ? "Update" : "Add"} Business
+                </button>
+            </form>
+
+            {/* Business Listings List */}
+            <div className="mt-12">
+                <h2 className="text-2xl font-bold mb-6 text-charcoal">Business Listings</h2>
+                <div className="space-y-6">
+                    {affiliateLinks.map((listing) => (
+                        <div key={listing._id} className="bg-white rounded-lg shadow-md p-6">
+                            <div className="flex justify-between items-start">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Email:</label>
-                                    <input
-                                        type="email"
-                                        value={form.email}
-                                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                        className="w-full p-2 border border-gray-300 rounded-md"
-                                        required
-                                    />
+                                    <h3 className="text-xl font-semibold text-charcoal">
+                                        {listing.name}
+                                        {listing.isVerified && (
+                                            <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                Verified
+                                            </span>
+                                        )}
+                                    </h3>
+                                    <p className="text-gray-600 mt-1">Category: {listing.category}</p>
+                                    <p className="text-gray-600 mt-1">Contact: {listing.email}</p>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Phone:</label>
-                                    <input
-                                        type="tel"
-                                        value={form.phone}
-                                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                                        className="w-full p-2 border border-gray-300 rounded-md"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Address:</label>
-                                <textarea
-                                    value={form.address}
-                                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded-md"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Opening Hours:</label>
-                                <input
-                                    type="text"
-                                    value={form.openingHours}
-                                    onChange={(e) => setForm({ ...form, openingHours: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded-md"
-                                    placeholder="e.g., Mon-Sat: 9AM-9PM, Sun: Closed"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Specialties:</label>
-                                <textarea
-                                    value={form.specialties}
-                                    onChange={(e) => setForm({ ...form, specialties: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded-md"
-                                    placeholder="List special dishes or services"
-                                />
-                            </div>
-                        </>
-                    )}
-
-                    <button 
-                        type="submit" 
-                        className="w-full bg-tan text-cream py-2 rounded-lg hover:bg-gold transition duration-200"
-                    >
-                        {form._id ? "Update" : "Add"} Business
-                    </button>
-                </form>
-
-                {/* Existing Business Listings */}
-                <h3 className="text-xl font-semibold text-charcoal mt-8 mb-4">Existing Business Listings</h3>
-                <div className="space-y-4">
-                    {affiliateLinks.map((link) => (
-                        <div key={link._id} className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col md:flex-row">
-                            <div className="md:w-1/3">
-                                <img 
-                                    src={link.imageUrl} 
-                                    alt={link.name} 
-                                    className="w-full h-48 object-cover"
-                                />
-                            </div>
-                            <div className="md:w-2/3 p-6">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h4 className="text-xl font-semibold text-charcoal">{link.name}</h4>
-                                        <p className="text-sm text-gray-600">Category: {link.category}</p>
-                                        <p className="text-sm text-gray-600">Price Range: {link.priceRange}</p>
-                                    </div>
-                                    <div className="flex space-x-2">
-                                        <button
-                                            onClick={() => handleEdit(link)}
-                                            className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(link._id)}
-                                            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
-                                <p className="text-gray-700 mt-2">{link.description}</p>
-                                {link.isExternal ? (
-                                    <a 
-                                        href={link.redirectUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-block mt-4 text-tan hover:text-gold"
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={() => handleVerification(listing._id, !listing.isVerified)}
+                                        className={`px-4 py-2 rounded-md ${
+                                            listing.isVerified 
+                                                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                : 'bg-green-600 text-white hover:bg-green-700'
+                                        }`}
                                     >
-                                        View Booking Page →
-                                    </a>
-                                ) : (
-                                    <div className="mt-4 text-sm text-gray-600">
-                                        <p>Contact: {link.contactName}</p>
-                                        <p>Hours: {link.openingHours}</p>
-                                        <p>Address: {link.address}</p>
-                                    </div>
-                                )}
+                                        {listing.isVerified ? 'Unverify' : 'Verify'}
+                                    </button>
+                                    <button
+                                        onClick={() => handleEdit(listing)}
+                                        className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(listing._id)}
+                                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <strong>Address:</strong>
+                                    <p className="text-gray-600">{listing.address}</p>
+                                </div>
+                                <div>
+                                    <strong>Status:</strong>
+                                    <p className={`text-${listing.status === 'approved' ? 'green' : 'red'}-600`}>
+                                        {listing.status?.charAt(0).toUpperCase() + listing.status?.slice(1)}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     ))}
