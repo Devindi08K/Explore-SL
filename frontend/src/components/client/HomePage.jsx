@@ -76,6 +76,20 @@ const heroImages = [
 const HomePage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Add ref for the scrollable container
+  const scrollContainerRef = React.useRef(null);
+
+  // Add scroll handlers
+  const handleScroll = (direction) => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      scrollContainerRef.current.scrollBy({
+        left: scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   useEffect(() => {
     AOS.init({
       duration: 1000,
@@ -130,8 +144,18 @@ const HomePage = () => {
             Start Exploring
           </Link>
         </div>
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce">
-          <FaArrowDown className="w-6 h-6 text-white" />
+        <div 
+          onClick={() => {
+            document.getElementById('destinations').scrollIntoView({ 
+              behavior: 'smooth' 
+            });
+          }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 cursor-pointer hover:opacity-75 transition-opacity"
+        >
+          <FaArrowDown 
+            className="w-8 h-8 text-cream animate-bounce" 
+            aria-label="Scroll to destinations"
+          />
         </div>
 
         {/* Image Navigation Dots */}
@@ -155,7 +179,10 @@ const HomePage = () => {
             Popular Destinations
           </h2>
           <div className="relative" data-aos="fade-up">
-            <div className="flex space-x-6 overflow-x-auto scrollbar-hide pb-6 -mx-4 px-4">
+            <div 
+              ref={scrollContainerRef}
+              className="flex space-x-6 overflow-x-auto scrollbar-hide pb-6 -mx-4 px-4"
+            >
               {featuredDestinations.map((place, index) => (
                 <div 
                   key={place.name}
@@ -177,13 +204,13 @@ const HomePage = () => {
             <div className="absolute top-1/2 -translate-y-1/2 -left-4 right-4">
               <div className="flex justify-between">
                 <button 
-                  onClick={() => document.getElementById('destinations').scrollBy(-300, 0)}
+                  onClick={() => handleScroll('left')}
                   className="bg-white/80 hover:bg-white text-charcoal p-2 rounded-full shadow-lg transition-all duration-200"
                 >
                   ←
                 </button>
                 <button 
-                  onClick={() => document.getElementById('destinations').scrollBy(300, 0)}
+                  onClick={() => handleScroll('right')}
                   className="bg-white/80 hover:bg-white text-charcoal p-2 rounded-full shadow-lg transition-all duration-200"
                 >
                   →
