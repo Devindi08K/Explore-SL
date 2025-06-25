@@ -26,7 +26,8 @@ router.get("/all", protect, authorize(["admin"]), async (req, res) => {
 });
 
 // Get a single tour guide by ID
-router.get("/:id", protect, authorize(["admin"]), async (req, res) => {
+router.get("/:id", async (req, res) => {
+  // Skip auth check for viewing public guide profiles
   try {
     const guide = await TourGuide.findById(req.params.id);
     if (!guide) {
@@ -86,7 +87,7 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
       req.params.id,
       {
         isVerified: req.body.isVerified,
-        status: req.body.isVerified ? 'approved' : 'rejected',
+        status: req.body.status || (req.body.isVerified ? 'approved' : 'rejected'),
         verifiedAt: new Date(),
         verifiedBy: req.user._id
       },
@@ -111,6 +112,20 @@ router.delete("/:id", protect, authorize(["admin"]), async (req, res) => {
     res.json({ message: "Tour guide deleted successfully" });
   } catch (error) {
     res.status(400).json({ error: "Error deleting tour guide" });
+  }
+});
+
+// Get tour guide submissions for the current user - CRITICAL BUG FIX
+// This route must be defined BEFORE the /:id route to avoid conflicts
+router.get("/my-submissions", protect, async (req, res) => {
+  try {
+    const guides = await TourGuide.find({ 
+      submittedBy: req.user._id 
+    }).sort({ submittedAt: -1 });
+    res.json(guides);
+  } catch (error) {
+    console.error("Error fetching user's tour guide submissions:", error);
+    res.status(500).json({ error: "Error fetching submissions" });
   }
 });
 

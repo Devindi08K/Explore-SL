@@ -44,6 +44,19 @@ router.get('/pending', protect, authorize(['admin']), async (req, res) => {
   }
 });
 
+// Get vehicle submissions for current user
+router.get('/my-submissions', protect, async (req, res) => {
+  try {
+    const vehicles = await Vehicle.find({ 
+      submittedBy: req.user._id 
+    }).sort({ submittedAt: -1 });
+    res.json(vehicles);
+  } catch (error) {
+    console.error('Error fetching user vehicles:', error);
+    res.status(500).json({ error: 'Error fetching vehicles' });
+  }
+});
+
 // Update vehicle status
 router.patch('/:id/verify', protect, authorize(['admin']), async (req, res) => {
   try {

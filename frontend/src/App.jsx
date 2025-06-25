@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from './utils/api';
 
@@ -24,6 +24,7 @@ import DestinationsPage from './components/client/DestinationsPage';
 import VehiclesPage from './components/client/VehiclesPage';
 import VehicleRegistrationForm from './components/client/VehicleRegistrationForm';
 import UserProfile from './components/client/UserProfile';
+import ReviewList from './components/client/ReviewForm';
 
 // Admin Components
 import AdminDashboard from './components/client/AdminDashboard';
@@ -37,15 +38,17 @@ import AdminVehiclesPage from './components/admin/AdminVehiclesPage';
 // Auth Component
 import AuthCallback from './components/auth/AuthCallback';
 
+// Payment Components
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelPage from './pages/PaymentCancelPage';
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check for stored authentication on app load
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    
     if (token && storedUser) {
       setIsLoggedIn(true);
       setUser(JSON.parse(storedUser));
@@ -57,7 +60,7 @@ function App() {
     localStorage.removeItem('user');
     setIsLoggedIn(false);
     setUser(null);
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   const handleLoginSuccess = (userData) => {
@@ -69,15 +72,12 @@ function App() {
   const ProtectedRoute = ({ children, adminOnly = false }) => {
     const token = localStorage.getItem('token');
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-
     if (!token || !storedUser) {
       return <Navigate to="/login" replace />;
     }
-
     if (adminOnly && storedUser.role !== 'admin') {
       return <Navigate to="/" replace />;
     }
-
     return children;
   };
 
@@ -91,8 +91,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/blogs" element={<BlogList />} />
-            <Route path="/blogs/:id" element={<BlogDetails />} />
+            <Route path="/blogs" element={<BlogList user={user} />} />
+            <Route path="/blogs/:id" element={<BlogDetails user={user} />} />
             <Route path="/map" element={<MapComponent />} />
             <Route path="/tours" element={<TourPage />} />
             <Route path="/affiliate-links" element={<AffiliatePage />} />
@@ -114,6 +114,9 @@ function App() {
             <Route path="/auth/callback" element={
               <AuthCallback onLoginSuccess={handleLoginSuccess} />
             } />
+            <Route path="/reviews" element={<ReviewList />} />
+            <Route path="/payment/success" element={<PaymentSuccessPage />} />
+            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
 
             {/* Protected Admin Routes */}
             <Route path="/admin" element={

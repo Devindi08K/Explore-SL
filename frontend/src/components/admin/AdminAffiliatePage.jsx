@@ -13,6 +13,7 @@ const AdminAffiliatePage = () => {
         imageUrl: "",
         priceRange: "",
         isExternal: false,
+        listingType: "regular", // Default to regular listing
         contactName: "",
         email: "",
         phone: "",
@@ -91,6 +92,7 @@ const AdminAffiliatePage = () => {
             imageUrl: "",
             priceRange: "",
             isExternal: false,
+            listingType: "regular", // Default to regular listing
             contactName: "",
             email: "",
             phone: "",
@@ -264,6 +266,23 @@ const AdminAffiliatePage = () => {
                     />
                 </div>
 
+                {/* Add new field for listing type */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Listing Type:</label>
+                    <select
+                        value={form.listingType}
+                        onChange={(e) => setForm({ ...form, listingType: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                    >
+                        <option value="regular">Regular Listing</option>
+                        <option value="affiliate">Paid Affiliate</option>
+                        <option value="free">Free Featured Listing</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                        Regular: User submitted | Affiliate: Paid partner | Free: Complimentary featured listing
+                    </p>
+                </div>
+
                 <button 
                     type="submit" 
                     className="w-full bg-tan text-cream py-2 rounded-lg hover:bg-gold transition duration-200"
@@ -280,11 +299,21 @@ const AdminAffiliatePage = () => {
                         <div key={listing._id} className="bg-white rounded-lg shadow-md p-6">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="text-xl font-semibold text-charcoal">
+                                    <h3 className="text-xl font-semibold text-charcoal flex items-center">
                                         {listing.name}
                                         {listing.isVerified && (
                                             <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
                                                 Verified
+                                            </span>
+                                        )}
+                                        {listing.listingType === 'affiliate' && (
+                                            <span className="ml-2 text-sm bg-gold text-cream px-2 py-1 rounded">
+                                                Affiliate
+                                            </span>
+                                        )}
+                                        {listing.listingType === 'free' && (
+                                            <span className="ml-2 text-sm bg-green-500 text-white px-2 py-1 rounded">
+                                                Free Featured
                                             </span>
                                         )}
                                     </h3>

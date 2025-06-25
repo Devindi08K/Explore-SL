@@ -92,6 +92,19 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
   }
 });
 
+// Get tour submissions for current user
+router.get('/my-submissions', protect, async (req, res) => {
+  try {
+    const tours = await Tour.find({ 
+      submittedBy: req.user._id 
+    }).sort({ submittedAt: -1 });
+    res.json(tours);
+  } catch (error) {
+    console.error('Error fetching user tours:', error);
+    res.status(500).json({ error: 'Error fetching tours' });
+  }
+});
+
 // Delete a tour
 router.delete("/:id", async (req, res) => {
   try {

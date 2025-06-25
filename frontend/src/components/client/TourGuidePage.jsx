@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from '../../utils/api';
+import { FaFilter, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
 const TourGuidePage = () => {
   const [guides, setGuides] = useState([]);
@@ -8,6 +9,9 @@ const TourGuidePage = () => {
   const [selectedSpecializations, setSelectedSpecializations] = useState([]);
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [showSpecializations, setShowSpecializations] = useState(true);
+  const [showLanguages, setShowLanguages] = useState(true);
 
   // Language categories
   const languageCategories = {
@@ -71,6 +75,12 @@ const TourGuidePage = () => {
         : [...prev, language]
     );
   };
+  
+  const resetFilters = () => {
+    setSelectedSpecializations([]);
+    setSelectedLanguages([]);
+    setSearchTerm("");
+  };
 
   const filteredGuides = guides.filter(guide => {
     const matchesSearch = searchTerm === "" || 
@@ -105,7 +115,7 @@ const TourGuidePage = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
+        <div className="mb-6">
           <input
             type="text"
             placeholder="Search guides by name or description..."
@@ -114,160 +124,212 @@ const TourGuidePage = () => {
             className="w-full max-w-2xl mx-auto block px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-white"
           />
         </div>
+        
+        {/* Mobile Filter Toggle Button */}
+        <div className="md:hidden mb-4">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center justify-center w-full bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition duration-200"
+          >
+            {showFilters ? (
+              <>
+                <FaTimes className="mr-2" /> Hide Filters
+              </>
+            ) : (
+              <>
+                <FaFilter className="mr-2" /> Show Filters ({selectedSpecializations.length + selectedLanguages.length})
+              </>
+            )}
+          </button>
+        </div>
 
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Left Sidebar with Filters */}
-          <div className="md:w-1/4 space-y-6">
+        {/* Selected Filters Display - Always visible */}
+        {(selectedSpecializations.length > 0 || selectedLanguages.length > 0) && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {selectedSpecializations.map(spec => (
+              <span key={spec} 
+                className="bg-tan text-cream px-3 py-1 rounded-full text-xs flex items-center mb-1"
+              >
+                {spec}
+                <button 
+                  onClick={() => handleSpecializationToggle(spec)}
+                  className="ml-2 hover:text-gold"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {selectedLanguages.map(lang => (
+              <span key={lang} 
+                className="bg-gold text-cream px-3 py-1 rounded-full text-xs flex items-center mb-1"
+              >
+                {lang}
+                <button 
+                  onClick={() => handleLanguageToggle(lang)}
+                  className="ml-2 hover:text-tan"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <button
+              onClick={resetFilters}
+              className="text-sm text-gray-600 hover:text-charcoal ml-2"
+            >
+              Reset All
+            </button>
+          </div>
+        )}
+
+        {/* Main Content Area with Filters and Guide Cards */}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar Filters - Hidden on mobile unless toggled */}
+          <div className={`${showFilters ? 'block' : 'hidden'} md:block md:w-1/4 space-y-4 mb-6 md:mb-0 transition-all duration-300`}>
             {/* Specializations Filter */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-charcoal mb-4">Specializations</h3>
-              <div className="space-y-2">
-                {specializations.map((spec) => (
-                  <label key={spec} className="flex items-center space-x-2 p-2 hover:bg-cream rounded">
-                    <input
-                      type="checkbox"
-                      checked={selectedSpecializations.includes(spec)}
-                      onChange={() => handleSpecializationToggle(spec)}
-                      className="rounded border-tan text-gold focus:ring-gold"
-                    />
-                    <span className="text-sm">{spec}</span>
-                  </label>
-                ))}
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <div 
+                onClick={() => setShowSpecializations(!showSpecializations)} 
+                className="flex justify-between items-center cursor-pointer"
+              >
+                <h3 className="text-lg font-semibold text-charcoal">Specializations</h3>
+                {showSpecializations ? <FaChevronUp /> : <FaChevronDown />}
               </div>
+              
+              {showSpecializations && (
+                <div className="mt-3 max-h-48 overflow-y-auto">
+                  {specializations.map((spec) => (
+                    <label key={spec} className="flex items-center space-x-2 py-1 px-2 hover:bg-cream rounded">
+                      <input
+                        type="checkbox"
+                        checked={selectedSpecializations.includes(spec)}
+                        onChange={() => handleSpecializationToggle(spec)}
+                        className="rounded border-tan text-gold focus:ring-gold"
+                      />
+                      <span className="text-sm">{spec}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Languages Filter */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-charcoal mb-4">Languages</h3>
-              {Object.entries(languageCategories).map(([category, languages]) => (
-                <div key={category} className="mb-4">
-                  <h4 className="text-sm font-medium text-charcoal capitalize mb-2">
-                    {category} Languages
-                  </h4>
-                  <div className="space-y-1">
-                    {languages.map((lang) => (
-                      <label key={lang} className="flex items-center space-x-2 p-2 hover:bg-cream rounded">
-                        <input
-                          type="checkbox"
-                          checked={selectedLanguages.includes(lang)}
-                          onChange={() => handleLanguageToggle(lang)}
-                          className="rounded border-tan text-gold focus:ring-gold"
-                        />
-                        <span className="text-sm">{lang}</span>
-                      </label>
-                    ))}
-                  </div>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <div 
+                onClick={() => setShowLanguages(!showLanguages)} 
+                className="flex justify-between items-center cursor-pointer"
+              >
+                <h3 className="text-lg font-semibold text-charcoal">Languages</h3>
+                {showLanguages ? <FaChevronUp /> : <FaChevronDown />}
+              </div>
+              
+              {showLanguages && (
+                <div className="mt-3 max-h-48 overflow-y-auto">
+                  {Object.entries(languageCategories).map(([category, languages]) => (
+                    <div key={category} className="mb-3">
+                      <h4 className="text-sm font-medium text-charcoal capitalize mb-1 px-2">
+                        {category} Languages
+                      </h4>
+                      <div>
+                        {languages.map((lang) => (
+                          <label key={lang} className="flex items-center space-x-2 py-1 px-2 hover:bg-cream rounded">
+                            <input
+                              type="checkbox"
+                              checked={selectedLanguages.includes(lang)}
+                              onChange={() => handleLanguageToggle(lang)}
+                              className="rounded border-tan text-gold focus:ring-gold"
+                            />
+                            <span className="text-sm">{lang}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
-          {/* Right Content Area */}
+          {/* Guide Cards Grid */}
           <div className="md:w-3/4">
-            {/* Selected Filters Display */}
-            {(selectedSpecializations.length > 0 || selectedLanguages.length > 0) && (
-              <div className="mb-6 flex flex-wrap gap-2">
-                {selectedSpecializations.map(spec => (
-                  <span key={spec} 
-                    className="bg-tan text-cream px-3 py-1 rounded-full text-sm flex items-center">
-                    {spec}
-                    <button 
-                      onClick={() => handleSpecializationToggle(spec)}
-                      className="ml-2 hover:text-gold"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-                {selectedLanguages.map(lang => (
-                  <span key={lang} 
-                    className="bg-gold text-cream px-3 py-1 rounded-full text-sm flex items-center">
-                    {lang}
-                    <button 
-                      onClick={() => handleLanguageToggle(lang)}
-                      className="ml-2 hover:text-tan"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-tan border-t-gold"></div>
               </div>
-            )}
-
-            {/* Guide Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {loading ? (
-                <p className="text-center col-span-full">Loading guides...</p>
-              ) : filteredGuides.map((guide) => (
-                <div key={guide._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                  <img
-                    src={guide.image}
-                    alt={guide.name}
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-semibold text-charcoal">{guide.name}</h3>
-                      <span className="bg-tan text-cream px-3 py-1 rounded-full text-sm">
-                        {guide.yearsOfExperience} Years Exp.
-                      </span>
-                    </div>
-
-                    <div className="mb-4">
-                      <p className="text-gray-600 line-clamp-3">{guide.bio}</p>
-                    </div>
-
-                    <div className="space-y-2 mb-4">
-                      <p className="text-sm">
-                        <span className="font-medium">Specializations:</span>{' '}
-                        <span className="text-gray-600">
-                          {guide.specialization?.join(', ') || 'Not specified'}
+            ) : filteredGuides.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredGuides.map((guide) => (
+                  <div key={guide._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-auto">
+                    <div className="p-3 flex items-center">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-tan">
+                        <img
+                          src={guide.image || 'https://via.placeholder.com/300x300?text=Guide'}
+                          alt={guide.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-lg font-semibold text-charcoal">{guide.name}</h3>
+                        <span className="bg-tan text-cream px-2 py-0.5 rounded-full text-xs">
+                          {guide.yearsOfExperience} Yrs Exp
                         </span>
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-medium">Languages:</span>{' '}
-                        <span className="text-gray-600">
-                          {guide.languages?.join(', ') || 'Not specified'}
-                        </span>
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-medium">Areas:</span>{' '}
-                        <span className="text-gray-600">
-                          {guide.preferredAreas?.join(', ') || 'Not specified'}
-                        </span>
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-medium">Rate:</span>{' '}
-                        <span className="text-gray-600">{guide.ratePerDay || 'Not specified'}</span>
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-medium">Availability:</span>{' '}
-                        <span className="text-gray-600">{guide.availability || 'Not specified'}</span>
-                      </p>
+                      </div>
                     </div>
-
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => window.location.href = `mailto:${guide.contactEmail}`}
-                        className="w-full bg-tan text-cream py-2 rounded-lg hover:bg-gold transition duration-200"
-                      >
-                        Contact Guide
-                      </button>
-                      {guide.licenseNumber && (
-                        <p className="text-sm text-center text-gray-500">
-                          License No: {guide.licenseNumber}
+                    
+                    <div className="px-4 py-2 border-t border-gray-100 text-sm">
+                      <p className="text-gray-600 line-clamp-2 mb-2">{guide.bio}</p>
+                      
+                      <div className="space-y-1 mb-3 text-xs">
+                        <p className="flex">
+                          <span className="font-medium w-24 text-gray-700">Specializations:</span>
+                          <span className="text-gray-600 truncate flex-1">
+                            {guide.specialization?.join(', ') || 'Not specified'}
+                          </span>
                         </p>
-                      )}
+                        <p className="flex">
+                          <span className="font-medium w-24 text-gray-700">Languages:</span>
+                          <span className="text-gray-600 truncate flex-1">
+                            {guide.languages?.join(', ') || 'Not specified'}
+                          </span>
+                        </p>
+                        <p className="flex">
+                          <span className="font-medium w-24 text-gray-700">Rate:</span>
+                          <span className="text-gray-600">{guide.ratePerDay || 'Not specified'}</span>
+                        </p>
+                      </div>
+                      
+                      <div className="mt-2 pt-2 border-t border-gray-100">
+                        <div className="flex flex-col space-y-2 text-xs">
+                          <div>
+                            <p className="font-medium text-charcoal">Phone:</p>
+                            <p className="text-gray-700">{guide.contactPhone || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-charcoal">Email:</p>
+                            <p className="text-gray-700 break-words">{guide.contactEmail || 'N/A'}</p>
+                          </div>
+                          
+                          {guide.licenseNumber && (
+                            <p className="text-xs text-center text-gray-500 mt-1">
+                              License: {guide.licenseNumber}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {!loading && filteredGuides.length === 0 && (
-              <p className="text-center text-gray-600 py-8">
-                No guides found matching your criteria. Try adjusting your filters.
-              </p>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-white rounded-lg shadow-md">
+                <p className="text-lg text-charcoal mb-2">No guides found</p>
+                <p className="text-gray-600">Try adjusting your filters.</p>
+                <button
+                  onClick={resetFilters}
+                  className="mt-4 bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition duration-200"
+                >
+                  Reset All Filters
+                </button>
+              </div>
             )}
           </div>
         </div>

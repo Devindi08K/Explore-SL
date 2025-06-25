@@ -7,6 +7,7 @@ const Blog = require("../models/blog");
 const Tour = require("../models/Tour");
 const Destination = require("../models/Destination");
 const AffiliateLink = require("../models/affiliateLink");
+const Review = require("../models/Review"); // Add this line to fix the review deletion issue
 
 const router = express.Router();
 
@@ -251,6 +252,79 @@ router.patch("/:type/:id/verify", protect, authorize(["admin"]), async (req, res
   } catch (error) {
     console.error('Error updating submission status:', error);
     res.status(500).json({ error: 'Error updating submission status' });
+  }
+});
+
+// Delete a review (admin only)
+router.delete("/reviews/:id", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const reviewId = req.params.id;
+    const review = await Review.findById(reviewId);
+    
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    
+    // Get the reference to the item that was reviewed
+    const { itemId, itemType, rating } = review;
+    
+    // Find the right model based on itemType
+    let Model;
+    switch (itemType) {
+      case 'blog':
+        Model = Blog;  // Use the already imported Blog model
+        break;
+      case 'tourGuide':
+        Model = TourGuide;  // Use the already imported TourGuide model
+        break;
+      case 'vehicle':
+        Model = Vehicle;  // Use the already imported Vehicle model
+        break;
+      case 'tour':
+        Model = Tour;  // Use the already imported Tour model
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid item type' });
+    }
+    
+    // Find the item and update it without triggering validation
+    const item = await Model.findById(itemId);
+    if (item) {
+      // Calculate new values for the update
+      let updatedReviews = [];
+      if (Array.isArray(item.reviews)) {
+        updatedReviews = item.reviews.filter(r => r.toString() !== reviewId);
+      }
+      
+      let newAvgRating = 0;
+      let newTotalReviews = 0;
+      
+      // Recalculate rating if this item has other reviews
+      if ((item.totalReviews || 0) > 1) {
+        // Get the total rating without this review
+        const totalRatingPoints = (item.averageRating || 0) * (item.totalReviews || 0);
+        const newTotalPoints = totalRatingPoints - rating;
+        newTotalReviews = (item.totalReviews || 0) - 1;
+        newAvgRating = newTotalPoints / newTotalReviews;
+      }
+      
+      // Update the item WITHOUT triggering validation
+      await Model.findByIdAndUpdate(itemId, {
+        $set: {
+          reviews: updatedReviews,
+          totalReviews: newTotalReviews,
+          averageRating: newAvgRating
+        }
+      }, { runValidators: false });
+    }
+    
+    // Delete the review
+    await Review.findByIdAndDelete(reviewId);
+    
+    res.json({ message: 'Review deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting review:', error);
+    res.status(500).json({ error: 'Error deleting review: ' + error.message });
   }
 });
 

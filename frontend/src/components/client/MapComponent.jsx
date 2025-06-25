@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const MapComponent = () => {
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [searchType, setSearchType] = useState('all');
+  const [mapUrl, setMapUrl] = useState('https://www.openstreetmap.org/export/embed.html?bbox=79.5,5.8,82.0,9.9&layer=mapnik');
 
   // Complete Sri Lankan districts data
   const districtsData = {
@@ -159,10 +160,24 @@ const MapComponent = () => {
     }
   };
 
-  const getDistrictMapUrl = (district) => {
-    const coordinates = districtsData[district]?.coordinates || '7.873054,80.771797'; // Sri Lanka center
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${coordinates},${coordinates}&layer=mapnik&marker=${coordinates}`;
-  };
+  // Update the map when district changes
+  useEffect(() => {
+    if (selectedDistrict === 'all') {
+      // Show full Sri Lanka map when "All Districts" is selected
+      setMapUrl('https://www.openstreetmap.org/export/embed.html?bbox=79.5,5.8,82.0,9.9&layer=mapnik');
+    } else {
+      // Show specific district with marker and appropriate zoom level
+      const coords = districtsData[selectedDistrict].coordinates.split(',');
+      const lat = parseFloat(coords[0]);
+      const lon = parseFloat(coords[1]);
+      
+      // Calculate bounding box with some padding for zoom level
+      const padding = 0.1; // Adjust for desired zoom level
+      const bbox = `${lon-padding},${lat-padding},${lon+padding},${lat+padding}`;
+      
+      setMapUrl(`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`);
+    }
+  }, [selectedDistrict]);
 
   return (
     <div className="min-h-screen bg-cream px-4 py-10">
@@ -172,19 +187,47 @@ const MapComponent = () => {
         </h2>
 
         {/* Interactive District Selection */}
-        <div className="mb-8 space-y-4">
-          <select
-            value={selectedDistrict}
-            onChange={(e) => setSelectedDistrict(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-white"
-          >
-            <option value="all">All Districts</option>
-            {Object.keys(districtsData).map((key) => (
-              <option key={key} value={key}>
-                {districtsData[key].name}
-              </option>
-            ))}
-          </select>
+        <div className="mb-8">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold text-charcoal mb-4">Select a District</h3>
+            
+            <div className="relative">
+              <select
+                value={selectedDistrict}
+                onChange={(e) => setSelectedDistrict(e.target.value)}
+                className="w-full p-3 bg-cream border border-tan rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-tan text-charcoal"
+              >
+                <option value="all">All Districts</option>
+                {Object.keys(districtsData).map((key) => (
+                  <option key={key} value={key}>
+                    {districtsData[key].name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-tan">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                </svg>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <h4 className="text-sm font-medium text-charcoal mb-3">About Selected District</h4>
+              {selectedDistrict !== 'all' ? (
+                <div className="p-4 bg-cream/50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    {districtsData[selectedDistrict].description}
+                  </p>
+                </div>
+              ) : (
+                <div className="p-4 bg-cream/50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    Select a specific district to see detailed information and attractions.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Map and Information Layout */}
@@ -192,9 +235,9 @@ const MapComponent = () => {
           {/* Map Container */}
           <div className="lg:col-span-2">
             <div className="bg-white p-4 rounded-lg shadow-lg">
-              <div className="w-full h-[400px] lg:h-[600px] rounded-lg overflow-hidden">
+              <div className="relative w-full h-[350px] sm:h-[400px] lg:h-[600px] rounded-lg overflow-hidden">
                 <iframe
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=79.5,5.8,82.0,9.9&layer=mapnik`}
+                  src={mapUrl}
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -203,6 +246,38 @@ const MapComponent = () => {
                   title="Sri Lanka Map"
                   className="w-full h-full"
                 ></iframe>
+                
+                {/* Map Controls - Make them more touch-friendly */}
+                <div className="absolute top-4 right-4 flex flex-col space-y-3 z-10">
+                  <button 
+                    onClick={() => setSelectedDistrict('all')}
+                    className="bg-white p-3 rounded-md shadow-md hover:bg-tan hover:text-white transition-colors"
+                    title="Show all of Sri Lanka"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 3a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V3zm2-1a1 1 0 00-1 1v14a1 1 0 001 1h10a1 1 0 001-1V3a1 1 0 00-1-1H5z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Map Legend */}
+              <div className="mt-4 p-3 bg-cream rounded-lg flex flex-wrap gap-4 text-xs text-gray-600 items-center">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                  <span>District Capital</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 border border-blue-500 bg-blue-200 rounded-full mr-2"></div>
+                  <span>Water Bodies</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-300 rounded-sm mr-2"></div>
+                  <span>National Parks</span>
+                </div>
+                <div className="ml-auto">
+                  <span>Data source: OpenStreetMap</span>
+                </div>
               </div>
             </div>
           </div>
@@ -211,43 +286,158 @@ const MapComponent = () => {
           <div className="lg:col-span-1 space-y-6">
             {selectedDistrict !== 'all' && districtsData[selectedDistrict] && (
               <div className="bg-white p-6 rounded-lg shadow-lg">
-                <h3 className="text-xl font-semibold text-charcoal mb-4">
-                  {districtsData[selectedDistrict].name}
-                </h3>
-                <p className="text-gray-600 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-2xl font-semibold text-charcoal">
+                    {districtsData[selectedDistrict].name}
+                  </h3>
+                  <span className="px-3 py-1 bg-tan/10 text-tan text-xs rounded-full">
+                    District
+                  </span>
+                </div>
+                
+                <p className="text-gray-600 mb-6 leading-relaxed">
                   {districtsData[selectedDistrict].description}
                 </p>
-                <h4 className="font-medium text-charcoal mb-2">Key Attractions:</h4>
-                <ul className="list-disc list-inside text-gray-600">
-                  {districtsData[selectedDistrict].attractions.map((attraction, index) => (
-                    <li key={index}>{attraction}</li>
-                  ))}
-                </ul>
+                
+                <div className="border-t border-gray-100 pt-4">
+                  <h4 className="font-medium text-charcoal mb-3 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-tan" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    Key Attractions
+                  </h4>
+                  <ul className="space-y-2">
+                    {districtsData[selectedDistrict].attractions.map((attraction, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-tan mt-1.5 mr-2"></span>
+                        <span className="text-gray-600">{attraction}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <Link 
+                  to={`/destinations?district=${districtsData[selectedDistrict].name}`}
+                  className="mt-6 inline-flex items-center text-sm font-medium text-tan hover:text-gold transition-colors"
+                >
+                  View all destinations in {districtsData[selectedDistrict].name}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </Link>
               </div>
             )}
 
-            {/* Quick Access Categories */}
+            {/* Sri Lanka Facts with Visual Enhancement */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h4 className="text-lg font-semibold text-charcoal mb-4">About Sri Lanka</h4>
+              <h4 className="text-lg font-semibold text-charcoal mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-tan" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
+                </svg>
+                About Sri Lanka
+              </h4>
+              
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-cream rounded-lg">
+                <div className="text-center p-4 bg-cream rounded-lg hover:shadow-md transition-shadow">
                   <span className="block text-2xl font-bold text-tan">25</span>
                   <span className="text-sm text-charcoal">Districts</span>
                 </div>
-                <div className="text-center p-4 bg-cream rounded-lg">
+                <div className="text-center p-4 bg-cream rounded-lg hover:shadow-md transition-shadow">
                   <span className="block text-2xl font-bold text-tan">9</span>
                   <span className="text-sm text-charcoal">Provinces</span>
                 </div>
-                <div className="text-center p-4 bg-cream rounded-lg">
+                <div className="text-center p-4 bg-cream rounded-lg hover:shadow-md transition-shadow">
                   <span className="block text-2xl font-bold text-tan">65,610</span>
                   <span className="text-sm text-charcoal">km² Area</span>
                 </div>
-                <div className="text-center p-4 bg-cream rounded-lg">
+                <div className="text-center p-4 bg-cream rounded-lg hover:shadow-md transition-shadow">
                   <span className="block text-2xl font-bold text-tan">22M+</span>
                   <span className="text-sm text-charcoal">Population</span>
                 </div>
               </div>
             </div>
+            
+            {/* Quick Links Section */}
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h4 className="text-lg font-semibold text-charcoal mb-4">Explore By Region</h4>
+              <div className="space-y-2">
+                <button 
+                  onClick={() => setSelectedDistrict('colombo')}
+                  className="w-full text-left px-4 py-2 bg-cream hover:bg-tan/10 rounded-md text-sm transition-colors flex justify-between items-center"
+                >
+                  <span>Western Province</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={() => setSelectedDistrict('kandy')}
+                  className="w-full text-left px-4 py-2 bg-cream hover:bg-tan/10 rounded-md text-sm transition-colors flex justify-between items-center"
+                >
+                  <span>Central Province</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={() => setSelectedDistrict('jaffna')}
+                  className="w-full text-left px-4 py-2 bg-cream hover:bg-tan/10 rounded-md text-sm transition-colors flex justify-between items-center"
+                >
+                  <span>Northern Province</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Sri Lanka Provincial Map */}
+            {selectedDistrict === 'all' && (
+              <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+                <h4 className="text-lg font-semibold text-charcoal mb-4">Provinces</h4>
+                <div className="flex justify-center">
+                 
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-center">
+                  <div className="p-1 bg-red-100">Northern</div>
+                  <div className="p-1 bg-blue-100">North Central</div>
+                  <div className="p-1 bg-green-100">Eastern</div>
+                  <div className="p-1 bg-yellow-100">North Western</div>
+                  <div className="p-1 bg-purple-100">Central</div>
+                  <div className="p-1 bg-pink-100">Uva</div>
+                  <div className="p-1 bg-orange-100">Western</div>
+                  <div className="p-1 bg-indigo-100">Sabaragamuwa</div>
+                  <div className="p-1 bg-teal-100">Southern</div>
+                </div>
+              </div>
+            )}
+
+            {/* Travel Information */}
+            {selectedDistrict !== 'all' && selectedDistrict !== 'colombo' && (
+              <div className="bg-white p-4 rounded-lg shadow-lg mb-6">
+                <h4 className="text-sm font-medium text-charcoal mb-2">Travel from Colombo</h4>
+                <div className="flex items-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-tan mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm">
+                    {/* This would be dynamically calculated in a real application */}
+                    {selectedDistrict === 'kandy' ? '115 km' : 
+                     selectedDistrict === 'galle' ? '119 km' : '150+ km'} from Colombo
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-tan mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm">
+                    {/* This would be dynamically calculated in a real application */}
+                    {selectedDistrict === 'kandy' ? 'Approx. 3 hours' : 
+                     selectedDistrict === 'galle' ? 'Approx. 2.5 hours' : '4+ hours'} by car
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

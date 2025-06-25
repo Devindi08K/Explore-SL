@@ -113,4 +113,17 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
   }
 });
 
+// Get blog submissions for current user
+router.get('/my-submissions', protect, async (req, res) => {
+  try {
+    const blogs = await Blog.find({ 
+      submittedBy: req.user._id 
+    }).sort({ submittedAt: -1 });
+    res.json(blogs);
+  } catch (error) {
+    console.error('Error fetching user blogs:', error);
+    res.status(500).json({ error: 'Error fetching blogs' });
+  }
+});
+
 module.exports = router;

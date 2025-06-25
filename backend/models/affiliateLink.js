@@ -18,6 +18,14 @@ const affiliateSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
+  
+  // New field to distinguish between paid affiliates and free listings
+  listingType: {
+    type: String,
+    enum: ["affiliate", "free", "regular"],
+    default: "regular" // Regular user submissions are the default
+  },
+  
   priceRange: { 
     type: String, 
     required: true 
@@ -87,6 +95,20 @@ const affiliateSchema = new mongoose.Schema({
   verifiedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+
+  // Add review fields
+  reviews: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Review'
+  }],
+  averageRating: {
+    type: Number,
+    default: 0
+  },
+  totalReviews: {
+    type: Number,
+    default: 0
   }
 });
 

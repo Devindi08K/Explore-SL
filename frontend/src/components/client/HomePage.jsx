@@ -109,63 +109,61 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-cream">
       {/* Hero Section with Rotating Images */}
-      <div className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-black/40 z-10"></div>
+      <div className="relative h-screen md:h-screen flex items-center justify-center overflow-hidden">
+        {/* Add a subtle pattern overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/30 z-10"></div>
+        
         {heroImages.map((image, index) => (
           <img
             key={image.url}
             src={image.url}
             alt={image.alt}
-            loading="eager" // Prioritize loading
+            loading={index === 0 ? "eager" : "lazy"}
             className={`
               absolute inset-0 w-full h-full object-cover object-center transform scale-[1.02]
-              transition-opacity duration-1000 will-change-transform
+              transition-opacity duration-1000
               ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'}
             `}
-            style={{
-              imageRendering: '-webkit-optimize-contrast',
-              backfaceVisibility: 'hidden'
-            }}
           />
         ))}
-        <div className="relative z-20 text-center text-white px-4">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6" data-aos="fade-down">
+        <div className="relative z-20 text-center text-white px-4 sm:px-6 max-w-4xl">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 drop-shadow-lg">
             Welcome to Sri Lanka
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto" data-aos="fade-up">
+          <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto drop-shadow-md font-light">
             Discover the pearl of the Indian Ocean
           </p>
           <Link 
             to="/destinations"
-            className="inline-block bg-tan text-cream px-8 py-4 rounded-lg hover:bg-gold transition duration-300 text-lg"
-            data-aos="fade-up"
-            data-aos-delay="200"
+            className="inline-block bg-tan text-cream px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-gold transition duration-300 text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
           >
             Start Exploring
           </Link>
         </div>
+
+        {/* Enhanced scroll indicator */}
         <div 
           onClick={() => {
             document.getElementById('destinations').scrollIntoView({ 
               behavior: 'smooth' 
             });
           }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 cursor-pointer hover:opacity-75 transition-opacity"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 cursor-pointer hover:opacity-100 opacity-80 transition-all w-12 h-12 flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20"
         >
           <FaArrowDown 
-            className="w-8 h-8 text-cream animate-bounce" 
+            className="w-5 h-5 sm:w-6 sm:h-6 text-cream animate-bounce" 
             aria-label="Scroll to destinations"
           />
         </div>
 
-        {/* Image Navigation Dots */}
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
+        {/* Enhanced image navigation dots */}
+        <div className="absolute bottom-24 sm:bottom-20 left-1/2 transform -translate-x-1/2 z-20 flex space-x-3 bg-black/20 backdrop-blur-sm px-3 py-2 rounded-full">
           {heroImages.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentImageIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 
-                ${index === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'}`}
+              className={`w-3 h-3 rounded-full transition-all duration-300 
+                ${index === currentImageIndex ? 'bg-white scale-110' : 'bg-white/50 hover:bg-white/70'}`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -173,20 +171,25 @@ const HomePage = () => {
       </div>
 
       {/* Featured Destinations */}
-      <section className="py-20 px-6 bg-white" id="destinations">
+      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-b from-white to-cream/30" id="destinations">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-charcoal text-center mb-12" data-aos="fade-up">
-            Popular Destinations
-          </h2>
+          <div className="mb-14 text-center" data-aos="fade-up">
+            <h2 className="text-4xl font-bold text-charcoal inline-block relative">
+              Popular Destinations
+              <span className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-tan rounded-full"></span>
+            </h2>
+          </div>
+          
+          {/* Destination slider with enhanced cards */}
           <div className="relative" data-aos="fade-up">
             <div 
               ref={scrollContainerRef}
-              className="flex space-x-6 overflow-x-auto scrollbar-hide pb-6 -mx-4 px-4"
+              className="flex space-x-4 sm:space-x-6 overflow-x-auto scrollbar-hide pb-6 -mx-4 px-4 snap-x snap-mandatory"
             >
               {featuredDestinations.map((place, index) => (
                 <div 
                   key={place.name}
-                  className="flex-none w-80 group relative rounded-lg shadow-lg overflow-hidden"
+                  className="flex-none w-72 sm:w-80 group relative rounded-lg shadow-lg overflow-hidden snap-start"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <img
@@ -201,37 +204,46 @@ const HomePage = () => {
                 </div>
               ))}
             </div>
-            <div className="absolute top-1/2 -translate-y-1/2 -left-4 right-4">
+            
+            {/* Enhanced navigation buttons */}
+            <div className="absolute top-1/2 -translate-y-1/2 -left-2 sm:-left-6 -right-2 sm:-right-6">
               <div className="flex justify-between">
                 <button 
                   onClick={() => handleScroll('left')}
-                  className="bg-white/80 hover:bg-white text-charcoal p-2 rounded-full shadow-lg transition-all duration-200"
+                  className="bg-white text-tan p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none hover:bg-tan hover:text-white transform hover:scale-105"
+                  aria-label="Scroll left"
                 >
-                  ←
+                  <span className="text-lg sm:text-xl">←</span>
                 </button>
                 <button 
                   onClick={() => handleScroll('right')}
-                  className="bg-white/80 hover:bg-white text-charcoal p-2 rounded-full shadow-lg transition-all duration-200"
+                  className="bg-white text-tan p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none hover:bg-tan hover:text-white transform hover:scale-105"
+                  aria-label="Scroll right"
                 >
-                  →
+                  <span className="text-lg sm:text-xl">→</span>
                 </button>
               </div>
             </div>
           </div>
-          <div className="text-center mt-10">
+          
+          {/* Enhanced CTA */}
+          <div className="text-center mt-12">
             <Link 
               to="/destinations"
-              className="inline-block bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200"
+              className="inline-flex items-center bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition-all duration-300 shadow-md hover:shadow-lg"
               data-aos="fade-up"
             >
-              View All Destinations
+              <span>View All Destinations</span>
+              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="py-20 px-6 bg-cream" id="services">
+      {/* Services Section with gradient */}
+      <section className="py-20 px-6 bg-gradient-to-b from-cream to-cream/70" id="services">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-charcoal text-center mb-12" data-aos="fade-up">
             Our Services
@@ -262,9 +274,10 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Tour Guide Registration Section */}
-      <section className="py-20 px-6 bg-cream" id="become-guide">
-        <div className="max-w-6xl mx-auto text-center">
+      {/* Tour Guide Registration Section with background pattern */}
+      <section className="py-20 px-6 bg-cream relative" id="become-guide">
+        <div className="absolute inset-0 opacity-5 pattern-dots"></div>
+        <div className="max-w-6xl mx-auto text-center relative z-10">
           <h2 className="text-4xl font-bold text-charcoal mb-6" data-aos="fade-up">
             Become a Tour Guide
           </h2>
@@ -299,8 +312,8 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Vehicle Registration Section */}
-      <section className="py-20 px-6 bg-white" id="register-vehicle">
+      {/* Vehicle Registration Section with subtle background */}
+      <section className="py-20 px-6 bg-gradient-to-b from-white to-gray-50" id="register-vehicle">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-charcoal mb-6" data-aos="fade-up">
             Register Your Vehicle
@@ -345,7 +358,7 @@ const HomePage = () => {
           <h2 className="text-4xl font-bold text-charcoal text-center mb-12" data-aos="fade-up">
             Partner With Us
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             <PartnerCard 
               icon={MdTour}
               title="Tour Operators"
@@ -372,9 +385,13 @@ const HomePage = () => {
       </section>
 
       {/* Interactive Map Section */}
-      <section className="py-20 px-6 bg-cream" id="map">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-charcoal text-center mb-12" data-aos="fade-up">
+      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-cream relative overflow-hidden" id="map">
+        {/* Background decoration */}
+        <div className="absolute -right-24 -bottom-24 w-64 h-64 bg-tan/5 rounded-full"></div>
+        <div className="absolute -left-24 -top-24 w-48 h-48 bg-tan/5 rounded-full"></div>
+        
+        <div className="max-w-6xl mx-auto text-center relative z-10">
+          <h2 className="text-3xl sm:text-4xl font-bold text-charcoal text-center mb-10 sm:mb-14" data-aos="fade-up">
             Explore Sri Lanka
           </h2>
           <Link 
@@ -382,13 +399,16 @@ const HomePage = () => {
             className="inline-flex flex-col items-center group"
             data-aos="zoom-in"
           >
-            <div className="w-24 h-24 flex items-center justify-center bg-tan rounded-full mb-4 group-hover:bg-gold transition-colors duration-300 shadow-lg">
-              <FaCompass className="w-12 h-12 text-cream" />
+            <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center bg-tan rounded-full mb-5 group-hover:bg-gold transition-colors duration-300 shadow-lg relative">
+              <FaCompass className="w-10 h-10 sm:w-12 sm:h-12 text-cream" />
+              
+              {/* Animated ring effect */}
+              <div className="absolute inset-0 border-4 border-tan/30 rounded-full animate-ping opacity-75 group-hover:border-gold/30"></div>
             </div>
             <span className="text-xl font-semibold text-charcoal group-hover:text-gold transition-colors duration-300">
               Open Interactive Map
             </span>
-            <p className="text-gray-600 mt-2 max-w-md mx-auto">
+            <p className="text-gray-600 mt-3 max-w-md mx-auto">
               Discover destinations, plan routes, and explore the beauty of Sri Lanka
             </p>
           </Link>
@@ -401,30 +421,38 @@ const HomePage = () => {
 const ServiceCard = ({ icon: Icon, title, description, link, delay }) => (
   <Link 
     to={link}
-    className="bg-white rounded-lg p-6 text-center hover:shadow-xl transition duration-300 transform hover:-translate-y-1"
+    className="bg-white rounded-lg p-8 text-center hover:shadow-xl transition duration-300 transform hover:-translate-y-2 group border border-transparent hover:border-tan/10"
     data-aos="fade-up"
     data-aos-delay={delay}
   >
-    <Icon className="text-5xl mb-4 mx-auto text-tan" />
-    <h3 className="text-xl font-semibold text-tan mb-3">{title}</h3>
-    <p className="text-charcoal">{description}</p>
+    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-tan/10 mb-6 mx-auto group-hover:bg-tan/20 transition-all">
+      <Icon className="text-3xl text-tan" />
+    </div>
+    <h3 className="text-xl font-semibold text-tan mb-3 group-hover:text-gold transition-colors">{title}</h3>
+    <p className="text-charcoal mb-4">{description}</p>
+    <span className="inline-block text-sm font-medium text-tan group-hover:text-gold transition-colors">
+      Learn more →
+    </span>
   </Link>
 );
 
 const PartnerCard = ({ icon: Icon, title, description, link, delay }) => (
   <Link 
     to={link}
-    className="group bg-cream rounded-lg p-6 text-center hover:shadow-xl transition duration-300"
+    className="group bg-cream rounded-lg p-8 text-center hover:shadow-xl transition duration-300 relative overflow-hidden"
     data-aos="fade-up"
     data-aos-delay={delay}
   >
-    <Icon className="text-4xl mb-4 mx-auto text-tan" />
+    {/* Background accent */}
+    <div className="absolute top-0 left-0 w-full h-1 bg-tan transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+    
+    <Icon className="text-4xl mb-5 mx-auto text-tan" />
     <h3 className="text-xl font-semibold text-tan mb-3 group-hover:text-gold transition-colors">
       {title}
     </h3>
-    <p className="text-charcoal">{description}</p>
-    <span className="inline-block mt-4 text-tan group-hover:text-gold transition-colors">
-      Learn More →
+    <p className="text-charcoal mb-4">{description}</p>
+    <span className="inline-block mt-2 text-tan group-hover:text-gold transition-colors font-medium">
+      Learn More <span className="group-hover:ml-1 transition-all duration-300">→</span>
     </span>
   </Link>
 );

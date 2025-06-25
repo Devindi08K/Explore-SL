@@ -12,6 +12,7 @@ const BusinessListingForm = () => {
     priceRange: '',
     specialties: '',
     openingHours: '',
+    imageUrl: '',  // Add this field
     // For businesses with booking systems
     bookingUrl: '',
     // For local businesses
@@ -34,15 +35,33 @@ const BusinessListingForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post("/businesses", {
+      // Update formData with booking system info
+      const updatedFormData = {
         ...formData,
-        isVerified: false
-      });
+        isExternal: hasBookingSystem,
+        // Transform data to match your backend model
+        category: formData.businessType,
+        name: formData.businessName,
+        // Set as regular listing (user submitted)
+        listingType: "regular",
+        // Add missing required fields
+        imageUrl: formData.imageUrl || 'https://via.placeholder.com/300x200?text=Business+Image',
+        // For external listings - set redirectUrl to bookingUrl
+        ...(hasBookingSystem && { redirectUrl: formData.bookingUrl }),
+        // Set pending status
+        status: 'pending',
+        isVerified: false,
+        submittedAt: new Date()
+      };
+
+      // Use the correct API endpoint
+      await api.post("/affiliate-links", updatedFormData);
       alert("Business listing submitted successfully! Awaiting approval.");
       navigate('/affiliate-links');
     } catch (error) {
       console.error("Error submitting business:", error);
-      alert("Failed to submit business listing");
+      // Show more specific error message
+      alert("Failed to submit business listing: " + (error.response?.data?.error || error.message));
     } finally {
       setIsSubmitting(false);
     }
@@ -148,17 +167,60 @@ const BusinessListingForm = () => {
                 />
               </div>
 
+              {/* Opening Hours Builder */}
               <div>
                 <label className="block text-charcoal mb-2">Opening Hours</label>
-                <input
-                  type="text"
-                  name="openingHours"
-                  value={formData.openingHours}
-                  onChange={handleChange}
-                  placeholder="e.g., Mon-Sat: 9AM-9PM, Sun: Closed"
-                  required
-                  className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-                />
+                <div className="space-y-4 border border-gray-200 rounded-lg p-4">
+                  {/* Quick templates */}
+                  <div>
+                    <p className="text-sm font-medium text-charcoal mb-2">Quick templates:</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ 
+                          ...formData, 
+                          openingHours: "Mon-Fri: 9:00 AM - 5:00 PM, Sat-Sun: Closed" 
+                        })}
+                        className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md"
+                      >
+                        Weekdays 9-5
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ 
+                          ...formData, 
+                          openingHours: "Mon-Sun: 10:00 AM - 10:00 PM" 
+                        })}
+                        className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md"
+                      >
+                        Daily 10AM-10PM
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ 
+                          ...formData, 
+                          openingHours: "Mon-Thu: 11:00 AM - 9:00 PM, Fri-Sat: 11:00 AM - 11:00 PM, Sun: 12:00 PM - 8:00 PM" 
+                        })}
+                        className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md"
+                      >
+                        Restaurant Hours
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Custom input */}
+                  <textarea
+                    name="openingHours"
+                    value={formData.openingHours}
+                    onChange={handleChange}
+                    rows="2"
+                    placeholder="e.g., Mon-Fri: 9AM-9PM, Sat: 10AM-6PM, Sun: Closed"
+                    className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Use the templates above or enter your custom hours. Include day ranges and time ranges.
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -199,17 +261,53 @@ const BusinessListingForm = () => {
             />
           </div>
 
+          {/* Price Range Selector */}
           <div>
-            <label className="block text-charcoal mb-2">Price Range</label>
+            <label className="block text-charcoal mb-2">Price Range (LKR)</label>
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {['Under 1,000', '1,000-3,000', '3,000-6,000', 'Above 6,000'].map(priceOption => (
+                  <button
+                    type="button"
+                    key={priceOption}
+                    onClick={() => setFormData({ ...formData, priceRange: priceOption })}
+                    className={`px-4 py-2 rounded-md ${
+                      formData.priceRange === priceOption 
+                        ? 'bg-tan text-cream' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {priceOption}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2">
+                <input
+                  type="text"
+                  name="priceRange"
+                  value={formData.priceRange}
+                  onChange={handleChange}
+                  placeholder="Or enter custom range (e.g., 500-1500)"
+                  className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-charcoal mb-2">Business Image URL</label>
             <input
-              type="text"
-              name="priceRange"
-              value={formData.priceRange}
+              type="url"
+              name="imageUrl"
+              value={formData.imageUrl || ''}
               onChange={handleChange}
-              placeholder="e.g., $$ or Rs.500-1500 per person"
+              placeholder="https://example.com/your-business-image.jpg"
               required
               className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter a URL for an image of your business
+            </p>
           </div>
 
           <button

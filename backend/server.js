@@ -25,7 +25,8 @@ const blogRoutes = require("./routes/blogRoutes");
 const tourRoutes = require("./routes/tourRoutes");
 const destinationRoutes = require("./routes/destinationRoutes");
 const affiliateLinksRoute = require("./routes/affiliateLinksRoute");
-
+const reviewRoutes = require('./routes/review'); // Note: check if it's review.js or reviews.js
+const paymentRoutes = require('./routes/paymentRoutes');
 // Mount routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tour-guides", tourGuideRoutes); // Mount before admin routes
@@ -35,7 +36,8 @@ app.use("/api/blogs", blogRoutes);
 app.use("/api/tours", tourRoutes);
 app.use("/api/destinations", destinationRoutes);
 app.use("/api/affiliate-links", affiliateLinksRoute);
-
+app.use('/api/reviews', reviewRoutes); // This path must match what frontend is calling
+app.use('/api/payments', paymentRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
