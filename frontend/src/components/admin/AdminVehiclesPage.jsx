@@ -7,7 +7,8 @@ import {
 } from 'react-icons/fa';
 import { 
   MdAirportShuttle,
-  MdLocalTaxi 
+  MdLocalTaxi,
+  MdDirectionsBike 
 } from 'react-icons/md';
 
 const AdminVehiclesPage = () => {
@@ -42,9 +43,10 @@ const AdminVehiclesPage = () => {
     car: { icon: FaCar, label: 'Car' },
     van: { icon: MdAirportShuttle, label: 'Van' },
     minibus: { icon: FaBus, label: 'Mini Bus' },
-    bus: { icon: FaBus, label: 'Large Bus' },
+    largebus: { icon: FaBus, label: 'Large Bus' },
     suv: { icon: FaCarSide, label: 'SUV' },
-    taxi: { icon: MdLocalTaxi, label: 'Taxi' }
+    taxi: { icon: MdLocalTaxi, label: 'Taxi' },
+    threeWheeler: { icon: MdDirectionsBike, label: 'Three Wheeler' }
   };
 
   const features = [
@@ -75,15 +77,30 @@ const AdminVehiclesPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Create a new object with explicit type conversion for vehicleType
+      const submitData = {
+        ...formData,
+        vehicleType: String(formData.vehicleType),
+        seatingCapacity: parseInt(formData.seatingCapacity || 0),
+        pricePerDay: parseInt(formData.pricePerDay || 0),
+        pricePerKm: formData.pricePerKm ? parseInt(formData.pricePerKm) : 0,
+      };
+      
+      console.log('Submitting vehicle data with type:', submitData.vehicleType);
+      
       if (editingVehicle) {
-        await api.put(`/vehicles/${editingVehicle._id}`, formData);
+        console.log('Updating vehicle ID:', editingVehicle._id);
+        console.log('Complete form data:', submitData);
+        const response = await api.put(`/vehicles/${editingVehicle._id}`, submitData);
+        console.log('Update response:', response.data);
       } else {
-        await api.post("/vehicles", formData);
+        await api.post("/vehicles", submitData);
       }
       fetchVehicles();
       resetForm();
     } catch (error) {
       console.error("Error saving vehicle:", error);
+      alert(`Error saving vehicle: ${error.response?.data?.error || error.message}`);
     }
   };
 
@@ -112,6 +129,25 @@ const AdminVehiclesPage = () => {
         console.error("Error deleting vehicle:", error);
       }
     }
+  };
+
+  const handleEdit = (vehicle) => {
+    console.log('Editing vehicle with type:', vehicle.vehicleType);
+    setEditingVehicle(vehicle);
+    
+    // Clone the vehicle data and ensure all fields exist
+    const vehicleData = {
+      ...vehicle,
+      vehicleType: vehicle.vehicleType || 'car', // Set default if missing
+      features: vehicle.features || [],
+      servingAreas: vehicle.servingAreas || [],
+      vehicleImages: vehicle.vehicleImages || [],
+    };
+    
+    setFormData(vehicleData);
+    
+    // Scroll to the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
@@ -164,7 +200,10 @@ const AdminVehiclesPage = () => {
                 name="vehicleType"
                 value={type}
                 checked={formData.vehicleType === type}
-                onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
+                onChange={(e) => {
+                  console.log('Selected vehicle type:', e.target.value);
+                  setFormData({ ...formData, vehicleType: e.target.value });
+                }}
                 className="sr-only"
               />
               <Icon className="text-3xl mb-2" />
@@ -343,7 +382,7 @@ const AdminVehiclesPage = () => {
                   {vehicle.isVerified ? 'Unverify' : 'Verify'}
                 </button>
                 <button
-                  onClick={() => setEditingVehicle(vehicle)}
+                  onClick={() => handleEdit(vehicle)}
                   className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
                 >
                   Edit

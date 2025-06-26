@@ -21,7 +21,15 @@ const paymentSchema = new mongoose.Schema({
   },
   serviceType: {
     type: String,
-    enum: ['blog_post', 'business_listing', 'tour_partner'],
+    enum: [
+      'blog_post', 
+      'business_listing', 
+      'tour_partner',
+      'guide_premium_monthly',
+      'guide_premium_yearly',
+      'vehicle_premium_monthly',
+      'vehicle_premium_yearly'
+    ],
     required: true
   },
   description: {

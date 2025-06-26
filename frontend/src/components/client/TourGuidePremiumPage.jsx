@@ -1,0 +1,232 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FaStar, FaSearch, FaArrowUp, FaMedal, FaChartLine } from 'react-icons/fa';
+import PaymentModal from './PaymentModal';
+
+const TourGuidePremiumPage = () => {
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState({
+    type: '',
+    amount: 0,
+    description: '',
+    duration: ''
+  });
+
+  const handlePremiumPurchase = (type, amount, description, duration) => {
+    setSelectedPlan({ type, amount, description, duration });
+    setPaymentModalOpen(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-cream px-4 py-16">
+      <div className="max-w-5xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-charcoal">
+            Tour Guide <span className="text-tan">Premium</span>
+          </h1>
+          <p className="text-lg max-w-2xl mx-auto text-gray-600">
+            Boost your visibility and attract more clients with our premium tour guide features.
+          </p>
+        </div>
+        
+        {/* Benefits Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-center">Why Upgrade to Premium?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaArrowUp className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Top Placement</h3>
+              <p className="text-gray-600 text-sm mt-2">Your profile appears at the top of search results and guide listings</p>
+            </div>
+            
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaMedal className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Premium Badge</h3>
+              <p className="text-gray-600 text-sm mt-2">Stand out with an exclusive badge that builds trust with travelers</p>
+            </div>
+            
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaChartLine className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Analytics Access</h3>
+              <p className="text-gray-600 text-sm mt-2">Track your profile views, inquiries, and booking requests</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Pricing Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+          <h2 className="text-2xl font-bold mb-2 text-center">Premium Plans</h2>
+          <p className="text-center text-gray-600 mb-8">Choose the plan that best fits your needs</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Free Plan */}
+            <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 flex flex-col">
+              <div className="mb-4">
+                <h3 className="font-bold text-charcoal text-xl mb-2">Basic</h3>
+                <div className="text-3xl font-bold text-charcoal mb-2">Free <span className="text-sm font-normal text-gray-500">forever</span></div>
+                <p className="text-gray-600 text-sm">For new guides just starting out</p>
+              </div>
+              
+              <ul className="mb-6 flex-grow space-y-2">
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Standard profile listing</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Basic contact info</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Standard search visibility</span>
+                </li>
+              </ul>
+              
+              <Link to="/tour-guide-registration" className="bg-gray-200 text-gray-700 py-2 px-4 rounded text-center hover:bg-gray-300 transition">
+                Current Plan
+              </Link>
+            </div>
+            
+            {/* Plus Plan - Highlighted as Best Value */}
+            <div className="border-2 border-tan rounded-lg p-6 bg-white flex flex-col relative">
+              <div className="absolute top-0 right-0 bg-tan text-cream text-xs py-1 px-3 rounded-bl-lg rounded-tr-lg font-medium">
+                POPULAR
+              </div>
+              <div className="mb-4">
+                <h3 className="font-bold text-charcoal text-xl mb-2">Premium</h3>
+                <div className="text-3xl font-bold text-charcoal mb-2">LKR 500 <span className="text-sm font-normal text-gray-500">/month</span></div>
+                <p className="text-gray-600 text-sm">First 2 months free!</p>
+              </div>
+              
+              <ul className="mb-6 flex-grow space-y-2">
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Priority ranking in search</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Premium badge on profile</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Analytics dashboard</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Featured in destination pages</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Direct inquiry form</span>
+                </li>
+              </ul>
+              
+              <button 
+                onClick={() => handlePremiumPurchase('guide_premium_monthly', 500, 'Tour Guide Premium Monthly', 'monthly')}
+                className="bg-tan text-cream py-2 px-4 rounded text-center hover:bg-gold transition"
+              >
+                Subscribe Now
+              </button>
+            </div>
+            
+            {/* Pro Plan */}
+            <div className="border border-gray-200 rounded-lg p-6 bg-white flex flex-col">
+              <div className="mb-4">
+                <h3 className="font-bold text-charcoal text-xl mb-2">Annual Premium</h3>
+                <div className="text-3xl font-bold text-charcoal mb-2">LKR 4,800 <span className="text-sm font-normal text-gray-500">/year</span></div>
+                <p className="text-gray-600 text-sm">Save 20% + first 2 months free!</p>
+              </div>
+              
+              <ul className="mb-6 flex-grow space-y-2">
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>All Premium features</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Homepage featured spot</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Social media promotion</span>
+                </li>
+                <li className="flex items-start text-sm">
+                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>20% savings vs monthly</span>
+                </li>
+              </ul>
+              
+              <button 
+                onClick={() => handlePremiumPurchase('guide_premium_yearly', 4800, 'Tour Guide Premium Yearly', 'yearly')}
+                className="bg-tan/80 text-cream py-2 px-4 rounded text-center hover:bg-gold transition"
+              >
+                Subscribe Annually
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 bg-gold/10 rounded-lg p-4 border border-gold/20">
+            <p className="text-center font-medium text-sm">
+              <span className="text-gold">🎉 Special Launch Offer:</span> First 2 months free with any premium plan subscription!
+            </p>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <h3 className="text-2xl font-bold mb-6 text-center">Frequently Asked Questions</h3>
+          <div className="space-y-6 max-w-3xl mx-auto">
+            <div>
+              <h4 className="font-semibold text-charcoal mb-2">When will I be charged after my free months?</h4>
+              <p className="text-gray-600">Your first payment will be collected exactly 60 days after you sign up. We'll send you a reminder email 7 days before your free period ends.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-charcoal mb-2">Can I cancel my premium subscription?</h4>
+              <p className="text-gray-600">Yes, you can cancel your subscription at any time from your profile dashboard. Your premium benefits will remain active until the end of your billing period.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-charcoal mb-2">How much more visibility will I get as a premium guide?</h4>
+              <p className="text-gray-600">On average, premium guides receive 4x more profile views and 3x more inquiries compared to basic listings. Your profile will appear at the top of search results and destination pages.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        serviceType={selectedPlan.type}
+        amount={selectedPlan.amount}
+        description={selectedPlan.description}
+      />
+    </div>
+  );
+};
+
+export default TourGuidePremiumPage;

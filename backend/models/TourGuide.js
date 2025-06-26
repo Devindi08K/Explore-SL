@@ -76,6 +76,18 @@ const tourGuideSchema = new mongoose.Schema({
   totalReviews: {
     type: Number,
     default: 0
+  },
+
+  // Premium Fields
+  isPremium: {
+    type: Boolean,
+    default: false
+  },
+  premiumExpiry: Date,
+  premiumLevel: {
+    type: String,
+    enum: ['standard', 'featured'],
+    default: 'standard'
   }
 });
 

@@ -8,7 +8,7 @@ const vehicleSchema = new mongoose.Schema({
   vehicleType: {
     type: String,
     required: true,
-    enum: ['car', 'van', 'minibus', 'largebus', 'suv', 'taxi']
+    enum: ['car', 'van', 'minibus', 'largebus', 'suv', 'taxi', 'threeWheeler']
   },
   vehicleModel: {
     type: String,
@@ -66,9 +66,22 @@ const vehicleSchema = new mongoose.Schema({
   servingAreas: [{
     type: String
   }],
-  vehicleImages: [{
-    type: String
-  }],
+  vehicleImages: {
+    type: [String],
+    validate: {
+      validator: function(images) {
+        // Filter out empty strings first
+        const validImages = images.filter(img => img && img.trim() !== '');
+        const maxImages = this.isPremium ? 3 : 1;
+        return validImages.length >= 1 && validImages.length <= maxImages;
+      },
+      message: function(props) {
+        const validImages = props.value.filter(img => img && img.trim() !== '');
+        const maxImages = this.isPremium ? 3 : 1;
+        return `Vehicle must have 1-${maxImages} valid images. Current: ${validImages.length}`;
+      }
+    }
+  },
   driverLicense: {
     type: String,
     required: true
@@ -127,7 +140,52 @@ const vehicleSchema = new mongoose.Schema({
   totalReviews: {
     type: Number,
     default: 0
-  }
+  },
+  isPremium: {
+    type: Boolean,
+    default: false
+  },
+  premiumExpiry: Date,
+  featuredStatus: {
+    type: String,
+    enum: ['none', 'homepage', 'destination'],
+    default: 'none'
+  },
+  maxPhotos: {
+    type: Number,
+    default: 3 // Free tier default
+  },
+  analyticsEnabled: {
+    type: Boolean,
+    default: false
+  },
+  bookingNotifications: {
+    type: Boolean,
+    default: false
+  },
+  viewCount: {
+    type: Number,
+    default: 0
+  },
+  inquiryCount: {
+    type: Number,
+    default: 0
+  },
+  // For advanced booking calendar
+  availabilityCalendar: {
+    type: Map,
+    of: String,
+    default: {}
+  },
+  needsReview: {
+    type: Boolean,
+    default: false
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  reviewedAt: Date,
 });
 
 module.exports = mongoose.model('Vehicle', vehicleSchema);

@@ -8,6 +8,8 @@ const Tour = require("../models/Tour");
 const Destination = require("../models/Destination");
 const AffiliateLink = require("../models/affiliateLink");
 const Review = require("../models/Review"); // Add this line to fix the review deletion issue
+const Payment = require("../models/Payment"); // Import Payment model
+const mongoose = require("mongoose"); // Import mongoose for database status check
 
 const router = express.Router();
 
@@ -325,6 +327,118 @@ router.delete("/reviews/:id", protect, authorize(["admin"]), async (req, res) =>
   } catch (error) {
     console.error('Error deleting review:', error);
     res.status(500).json({ error: 'Error deleting review: ' + error.message });
+  }
+});
+
+// Get all premium vehicles
+router.get("/vehicles/premium", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const premiumVehicles = await Vehicle.find({
+      isPremium: true,
+      premiumExpiry: { $gt: new Date() }
+    }).sort({ premiumExpiry: 1 }); // Sort by expiry date ascending
+    
+    res.json(premiumVehicles);
+  } catch (error) {
+    console.error('Error fetching premium vehicles:', error);
+    res.status(500).json({ error: 'Error fetching premium vehicles' });
+  }
+});
+
+// Update vehicle premium status
+router.patch("/vehicles/:id/feature", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const { status } = req.body;
+    const vehicle = await Vehicle.findById(req.params.id);
+    
+    if (!vehicle) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+    
+    if (!vehicle.isPremium) {
+      return res.status(400).json({ error: 'Only premium vehicles can be featured' });
+    }
+    
+    vehicle.featuredStatus = status;
+    await vehicle.save();
+    
+    res.json(vehicle);
+  } catch (error) {
+    console.error('Error updating vehicle feature status:', error);
+    res.status(500).json({ error: 'Error updating feature status' });
+  }
+});
+
+// Extend vehicle premium subscription
+router.post("/vehicles/:id/extend-premium", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const vehicle = await Vehicle.findById(req.params.id);
+    
+    if (!vehicle) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+    
+    // Add 30 days to current expiry or from today if expired
+    const currentExpiry = vehicle.premiumExpiry && vehicle.premiumExpiry > new Date() 
+      ? new Date(vehicle.premiumExpiry) 
+      : new Date();
+    
+    currentExpiry.setDate(currentExpiry.getDate() + 30);
+    vehicle.premiumExpiry = currentExpiry;
+    vehicle.isPremium = true;
+    
+    await vehicle.save();
+    
+    res.json(vehicle);
+  } catch (error) {
+    console.error('Error extending vehicle premium:', error);
+    res.status(500).json({ error: 'Error extending premium subscription' });
+  }
+});
+
+// Cancel vehicle premium subscription
+router.delete("/vehicles/:id/premium", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const vehicle = await Vehicle.findById(req.params.id);
+    
+    if (!vehicle) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+    
+    vehicle.isPremium = false;
+    vehicle.featuredStatus = 'none';
+    vehicle.premiumExpiry = null;
+    
+    await vehicle.save();
+    
+    res.json({ message: 'Premium subscription cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling vehicle premium:', error);
+    res.status(500).json({ error: 'Error cancelling premium subscription' });
+  }
+});
+
+// Get all payments (admin only)
+router.get("/payments", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    console.log('🔍 Admin requesting payments data...');
+    
+    const payments = await Payment.find()
+      .sort({ createdAt: -1 })
+      .limit(100);
+    
+    console.log(`📊 Found ${payments.length} payments`);
+    console.log('💰 Payment details:', payments.map(p => ({
+      id: p._id,
+      amount: p.amount,
+      status: p.status,
+      date: p.createdAt
+    })));
+    
+    res.json(payments);
+  } catch (error) {
+    console.error('❌ Error fetching payments:', error);
+    res.status(500).json({ error: 'Error fetching payments' });
   }
 });
 

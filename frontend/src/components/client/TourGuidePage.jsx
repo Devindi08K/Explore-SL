@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from '../../utils/api';
-import { FaFilter, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaFilter, FaTimes, FaChevronDown, FaChevronUp, FaCrown } from 'react-icons/fa';
 
 const TourGuidePage = () => {
   const [guides, setGuides] = useState([]);
@@ -96,6 +96,15 @@ const TourGuidePage = () => {
     return matchesSearch && matchesSpecializations && matchesLanguages;
   });
 
+  const sortedGuides = [...filteredGuides].sort((a, b) => {
+    // Premium guides first
+    if (a.isPremium && !b.isPremium) return -1;
+    if (!a.isPremium && b.isPremium) return 1;
+    
+    // Then sort by rating
+    return b.averageRating - a.averageRating;
+  });
+
   return (
     <div className="min-h-screen bg-cream px-4 py-10">
       <div className="max-w-7xl mx-auto">
@@ -103,15 +112,20 @@ const TourGuidePage = () => {
           <h1 className="text-3xl font-bold text-charcoal mb-4 md:mb-0">
             Professional Tour Guides
           </h1>
-          <Link 
-            to="/tour-guide-registration" 
-            className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200 flex items-center gap-2"
-          >
-            <span>Register as Tour Guide</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-            </svg>
-          </Link>
+          <div className="flex items-center space-x-4">
+            <Link 
+              to="/tour-guide-registration" 
+              className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200 flex items-center gap-2"
+            >
+              Become a Tour Guide
+            </Link>
+            <Link 
+              to="/partnership/tour-guide-premium" 
+              className="bg-gold/10 text-gold px-6 py-3 rounded-lg hover:bg-gold/20 transition duration-200 flex items-center gap-2 border border-gold/30"
+            >
+              Premium Guide Benefits
+            </Link>
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -255,9 +269,9 @@ const TourGuidePage = () => {
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-tan border-t-gold"></div>
               </div>
-            ) : filteredGuides.length > 0 ? (
+            ) : sortedGuides.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredGuides.map((guide) => (
+                {sortedGuides.map((guide) => (
                   <div key={guide._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-auto">
                     <div className="p-3 flex items-center">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-tan">
@@ -316,6 +330,13 @@ const TourGuidePage = () => {
                         </div>
                       </div>
                     </div>
+
+                    {guide.isPremium && (
+                      <span className="absolute top-2 right-2 bg-tan/90 text-white text-xs font-bold px-2 py-1 rounded-full z-10 shadow-lg flex items-center">
+                        <FaCrown className="mr-1" />
+                        PREMIUM
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

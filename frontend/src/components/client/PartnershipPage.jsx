@@ -135,7 +135,7 @@ const PartnershipPage = () => {
                   </ul>
                 </div>
                 
-                <p className="text-center font-bold text-tan text-lg">LKR 25,000 per post</p>
+                <p className="text-center font-bold text-tan text-lg">LKR 700 per post</p>
               </div>
               
               <div className="flex space-x-3 mt-6">
@@ -218,7 +218,7 @@ const PartnershipPage = () => {
                       <span>Analytics & reports</span>
                     </li>
                   </ul>
-                  <p className="text-center font-bold text-tan text-lg mt-4">LKR 15,000/mo</p>
+                  <p className="text-center font-bold text-tan text-lg mt-4">LKR 500/mo</p>
                 </div>
               </div>
               
@@ -292,7 +292,7 @@ const PartnershipPage = () => {
                   </ul>
                 </div>
                 
-                <p className="text-center font-bold text-tan text-lg">Starting from LKR 10,000</p>
+                <p className="text-center font-bold text-tan text-lg">Starting from LKR 500/mo</p>
               </div>
               
               <div className="flex space-x-3 mt-6">

@@ -12,9 +12,19 @@ app.use(cors({
     origin: 'http://localhost:5173',
     credentials: true
 }));
-app.use(express.json());
+app.use(express.json()); // Regular JSON parsing for most routes
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Special handling for Stripe webhook (must be before the express.json middleware)
+app.post('/api/payments/stripe/webhook', 
+  express.raw({ type: 'application/json' }), 
+  (req, res, next) => {
+    req.rawBody = req.body; // Save raw body for Stripe signature verification
+    next();
+  },
+  require('./controllers/stripeController').handleStripeWebhook
+);
 
 // Import routes
 const authRoutes = require("./routes/auth");
@@ -25,18 +35,19 @@ const blogRoutes = require("./routes/blogRoutes");
 const tourRoutes = require("./routes/tourRoutes");
 const destinationRoutes = require("./routes/destinationRoutes");
 const affiliateLinksRoute = require("./routes/affiliateLinksRoute");
-const reviewRoutes = require('./routes/review'); // Note: check if it's review.js or reviews.js
+const reviewRoutes = require('./routes/review');
 const paymentRoutes = require('./routes/paymentRoutes');
+
 // Mount routes
 app.use("/api/auth", authRoutes);
-app.use("/api/tour-guides", tourGuideRoutes); // Mount before admin routes
+app.use("/api/tour-guides", tourGuideRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/tours", tourRoutes);
 app.use("/api/destinations", destinationRoutes);
 app.use("/api/affiliate-links", affiliateLinksRoute);
-app.use('/api/reviews', reviewRoutes); // This path must match what frontend is calling
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {

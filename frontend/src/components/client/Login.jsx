@@ -13,25 +13,33 @@ const Login = ({ onLoginSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
+        setError('');
 
         try {
             const response = await api.post('/auth/login', { email, password });
             
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify({
-                    role: response.data.role,
+            if (response.data) {
+                // Make sure user data includes the ID
+                const userData = {
+                    _id: response.data._id || response.data.id,
                     userName: response.data.userName,
-                    email: response.data.email
-                }));
+                    email: response.data.email,
+                    role: response.data.role || 'regular',
+                    token: response.data.token
+                };
                 
-                onLoginSuccess(response.data);
-                navigate(response.data.role === 'admin' ? '/admin' : '/');
+                // Store in localStorage for AuthContext
+                localStorage.setItem('user', JSON.stringify(userData));
+                localStorage.setItem('token', userData.token);
+
+                // Optionally update AuthContext immediately if you want
+                // setCurrentUser(userData);
+
+                // Navigate based on role
+                navigate(userData.role === 'admin' ? '/admin' : '/');
             }
         } catch (err) {
-            console.error('Login error:', err.response?.data || err);
             setError(err.response?.data?.error || 'Login failed');
         } finally {
             setLoading(false);

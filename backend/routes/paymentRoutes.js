@@ -1,27 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 const paymentController = require('../controllers/paymentController');
+const stripeController = require('../controllers/stripeController');
 
-// Initialize a payment
-router.post('/initialize', protect, paymentController.initializePayment);
+// Regular payment routes
+router.get('/user', protect, paymentController.getUserPayments);
+router.post('/', protect, paymentController.createPayment);
+router.get('/:id', protect, paymentController.getPaymentById);
+router.patch('/:paymentId/complete', protect, authorize(['admin']), paymentController.completePayment);
 
-// PayHere notification endpoint
-router.post('/notify', paymentController.handleNotification);
+// Test routes (only for development)
+router.post('/test/make-premium/:vehicleId', protect, paymentController.makePremiumForTesting);
+router.post('/test/complete/:orderId', protect, paymentController.testCompletePayment);
 
-// Check payment status
-router.get('/status/:orderId', protect, paymentController.checkPaymentStatus);
-
-// Get user's payment history
-router.get('/history', protect, async (req, res) => {
-  try {
-    const payments = await Payment.find({ userId: req.user._id })
-      .sort({ createdAt: -1 });
-    
-    res.json(payments);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch payment history' });
-  }
-});
+// Stripe specific routes
+router.post('/stripe/create-checkout', protect, stripeController.createStripeCheckout);
+router.get('/stripe/status/:orderId', stripeController.checkPaymentStatus);
 
 module.exports = router;

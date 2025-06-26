@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, AuthContext } from './context/AuthContext';
 import api from './utils/api';
 
 // Client Components
@@ -25,6 +26,8 @@ import VehiclesPage from './components/client/VehiclesPage';
 import VehicleRegistrationForm from './components/client/VehicleRegistrationForm';
 import UserProfile from './components/client/UserProfile';
 import ReviewList from './components/client/ReviewForm';
+import TourGuidePremiumPage from './components/client/TourGuidePremiumPage';
+import VehiclePremiumPage from './components/client/VehiclePremiumPage';
 
 // Admin Components
 import AdminDashboard from './components/client/AdminDashboard';
@@ -42,16 +45,16 @@ import AuthCallback from './components/auth/AuthCallback';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentCancelPage from './pages/PaymentCancelPage';
 
-function App() {
+// Create a separate component for the app content
+const AppContent = () => {
+  const { user, login: authLogin } = useContext(AuthContext); // Now this is inside the provider
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (token && storedUser) {
       setIsLoggedIn(true);
-      setUser(JSON.parse(storedUser));
     }
   }, []);
 
@@ -59,13 +62,13 @@ function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setIsLoggedIn(false);
-    setUser(null);
     window.location.href = '/login';
   };
 
   const handleLoginSuccess = (userData) => {
+    console.log('App: Login success with data:', userData);
     setIsLoggedIn(true);
-    setUser(userData);
+    authLogin(userData, userData.token); // Use AuthContext login
   };
 
   // Protected Route component
@@ -84,7 +87,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col min-h-screen">
-        <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} userRole={user?.role} />
+        <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} userRole={user?.role} user={user} />
         <main className="flex-grow">
           <Routes>
             {/* Public Routes */}
@@ -117,6 +120,9 @@ function App() {
             <Route path="/reviews" element={<ReviewList />} />
             <Route path="/payment/success" element={<PaymentSuccessPage />} />
             <Route path="/payment/cancel" element={<PaymentCancelPage />} />
+            <Route path="/partnership/tour-guide-premium" element={<TourGuidePremiumPage />} />
+            <Route path="/partnership/vehicle-premium" element={<VehiclePremiumPage />} />
+            <Route path="/vehicles/:id" element={<VehiclesPage />} />
 
             {/* Protected Admin Routes */}
             <Route path="/admin" element={
@@ -159,6 +165,15 @@ function App() {
         <Footer />
       </div>
     </BrowserRouter>
+  );
+};
+
+// Main App component that provides the context
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

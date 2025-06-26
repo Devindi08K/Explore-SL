@@ -1,32 +1,28 @@
-const crypto = require('crypto');
 const Payment = require('../models/Payment');
-const User = require('../models/User');
-const AffiliateLink = require('../models/affiliateLink');
-const Blog = require('../models/blog');
-const Tour = require('../models/Tour');
+const { processSuccessfulPayment } = require('./stripeController');
+const Vehicle = require('../models/Vehicle');
+const TourGuide = require('../models/TourGuide');
 
-// Store these values in .env file
-const PAYHERE_MERCHANT_ID = process.env.PAYHERE_MERCHANT_ID || '1219735';  // Replace with your merchant ID
-const PAYHERE_SECRET = process.env.PAYHERE_SECRET || 'XXXXXXXXXXXXX';     // Replace with your secret
-const PAYHERE_RETURN_URL = process.env.FRONTEND_URL + '/payment/success';
-const PAYHERE_CANCEL_URL = process.env.FRONTEND_URL + '/payment/cancel';
-const PAYHERE_NOTIFY_URL = process.env.BACKEND_URL + '/api/payments/notify';
+// Get all payments for current user
+exports.getUserPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find({ userId: req.user._id })
+      .sort({ createdAt: -1 });
+    res.json(payments);
+  } catch (error) {
+    console.error('Error fetching user payments:', error);
+    res.status(500).json({ error: 'Failed to fetch payment history' });
+  }
+};
 
-// Initialize payment
-exports.initializePayment = async (req, res) => {
+// Create a new payment (direct payment, not through Stripe)
+exports.createPayment = async (req, res) => {
   try {
     const { serviceType, amount, description, itemId, customerName, customerEmail, customerPhone } = req.body;
     
     // Create a unique order ID
     const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     
-    // Generate hash for PayHere
-    const hashedSecret = crypto.createHash('md5').update(PAYHERE_SECRET).digest('hex');
-    const hash = crypto.createHash('md5')
-      .update(`${PAYHERE_MERCHANT_ID}${orderId}${amount}LKR${hashedSecret}`)
-      .digest('hex');
-    
-    // Create payment record in database
     const payment = new Payment({
       userId: req.user._id,
       amount,
@@ -35,71 +31,141 @@ exports.initializePayment = async (req, res) => {
       orderId,
       itemId: itemId || null,
       customerDetails: {
-        name: customerName,
-        email: customerEmail,
-        phone: customerPhone
-      }
+        name: customerName || req.user.userName,
+        email: customerEmail || req.user.email,
+        phone: customerPhone || ''
+      },
+      status: 'pending'
     });
     
     await payment.save();
     
-    // Return payment info for frontend
-    return res.json({
-      merchantId: PAYHERE_MERCHANT_ID,
-      orderId: orderId,
-      amount: amount,
-      currency: 'LKR',
-      hash: hash,
-      returnUrl: PAYHERE_RETURN_URL,
-      cancelUrl: PAYHERE_CANCEL_URL,
-      notifyUrl: PAYHERE_NOTIFY_URL,
-      customerName,
-      customerEmail,
-      customerPhone
+    res.status(201).json({
+      message: 'Payment created successfully',
+      payment
     });
   } catch (error) {
-    console.error('Error initializing payment:', error);
-    return res.status(500).json({ error: 'Failed to initialize payment' });
+    console.error('Error creating payment:', error);
+    res.status(500).json({ error: 'Failed to create payment' });
   }
 };
 
-// Handle PayHere notification
-exports.handleNotification = async (req, res) => {
+// Get payment by ID
+exports.getPaymentById = async (req, res) => {
   try {
-    const { order_id, payment_id, payhere_amount, status_code, method } = req.body;
-    
-    // Find the payment by orderId
-    const payment = await Payment.findOne({ orderId: order_id });
+    const payment = await Payment.findById(req.params.id);
     
     if (!payment) {
-      return res.status(404).send('Payment not found');
+      return res.status(404).json({ error: 'Payment not found' });
     }
     
-    // Update payment status
-    payment.status = status_code === '2' ? 'completed' : 'failed';
-    payment.paymentId = payment_id;
-    payment.paymentMethod = method;
-    payment.updatedAt = Date.now();
-    
-    await payment.save();
-    
-    // If payment is successful, process the purchase
-    if (status_code === '2') {
-      await processSuccessfulPayment(payment);
+    // Check if payment belongs to user or user is admin
+    if (payment.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to view this payment' });
     }
     
-    // PayHere expects an empty response with status 200
-    res.status(200).send();
+    res.json(payment);
   } catch (error) {
-    console.error('Payment notification error:', error);
-    res.status(500).send('Error processing payment notification');
+    console.error('Error fetching payment:', error);
+    res.status(500).json({ error: 'Failed to fetch payment details' });
   }
 };
 
-// Check payment status
-exports.checkPaymentStatus = async (req, res) => {
+// Process payment completion (manually)
+exports.completePayment = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+    const { paymentMethod, transactionId } = req.body;
+    
+    const payment = await Payment.findById(paymentId);
+    
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+    
+    // Only admin can manually complete payments
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    
+    payment.status = 'completed';
+    payment.paymentMethod = paymentMethod || 'manual';
+    payment.paymentId = transactionId || '';
+    payment.updatedAt = new Date();
+    
+    await payment.save();
+    
+    // Process the successful payment
+    await processSuccessfulPayment(payment);
+    
+    res.json({
+      message: 'Payment completed successfully',
+      payment
+    });
+  } catch (error) {
+    console.error('Error completing payment:', error);
+    res.status(500).json({ error: 'Failed to complete payment' });
+  }
+};
+
+// For testing: Make a vehicle premium
+exports.makePremiumForTesting = async (req, res) => {
+  try {
+    // Temporarily removing NODE_ENV check for testing
+    // if (process.env.NODE_ENV !== 'development') {
+    //   return res.status(403).json({ error: 'This endpoint is only available in development mode' });
+    // }
+    
+    const { vehicleId } = req.params;
+    const vehicle = await Vehicle.findById(vehicleId);
+    
+    if (!vehicle) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+    
+    // Make premium for 30 days
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+    
+    vehicle.isPremium = true;
+    vehicle.premiumExpiry = expiryDate;
+    vehicle.viewCount = 120; // Test data
+    vehicle.inquiryCount = 8; // Test data
+    vehicle.maxPhotos = 10;
+    vehicle.analyticsEnabled = true;
+    vehicle.bookingNotifications = true;
+    
+    // Add some test availability data
+    if (!vehicle.availabilityCalendar) {
+      vehicle.availabilityCalendar = new Map();
+    }
+    
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+    
+    vehicle.availabilityCalendar.set(tomorrow.toISOString().split('T')[0], 'available');
+    vehicle.availabilityCalendar.set(dayAfter.toISOString().split('T')[0], 'booked');
+    
+    await vehicle.save();
+    
+    res.json({
+      message: 'Vehicle made premium for testing',
+      vehicle
+    });
+  } catch (error) {
+    console.error('Error making vehicle premium:', error);
+    res.status(500).json({ error: 'Error making vehicle premium' });
+  }
+};
+
+// Test endpoint to manually complete a payment
+exports.testCompletePayment = async (req, res) => {
   try {
     const { orderId } = req.params;
+    
+    console.log('🧪 Manual payment completion for orderId:', orderId);
     
     const payment = await Payment.findOne({ orderId });
     
@@ -107,88 +173,90 @@ exports.checkPaymentStatus = async (req, res) => {
       return res.status(404).json({ error: 'Payment not found' });
     }
     
-    return res.json({
-      status: payment.status,
-      orderId: payment.orderId,
-      amount: payment.amount,
-      serviceType: payment.serviceType,
-      description: payment.description,
-      createdAt: payment.createdAt,
-      updatedAt: payment.updatedAt
+    if (payment.status === 'completed') {
+      return res.json({
+        message: 'Payment already completed',
+        payment
+      });
+    }
+    
+    // Update payment status
+    payment.status = 'completed';
+    payment.paymentMethod = 'manual_test';
+    payment.paymentId = `test_${Date.now()}`;
+    payment.updatedAt = new Date();
+    
+    await payment.save();
+    
+    // Process the successful payment
+    const { processSuccessfulPayment } = require('./stripeController');
+    await processSuccessfulPayment(payment);
+    
+    console.log('✅ Manual payment completion successful');
+    
+    res.json({
+      message: 'Payment manually completed for testing',
+      payment
     });
   } catch (error) {
-    console.error('Error checking payment status:', error);
-    return res.status(500).json({ error: 'Failed to check payment status' });
+    console.error('❌ Error completing payment:', error);
+    res.status(500).json({ error: 'Failed to complete payment' });
   }
 };
 
-// Process successful payment
-const processSuccessfulPayment = async (payment) => {
+// Add this function to handle immediate premium activation
+
+exports.activatePremiumFeatures = async (req, res) => {
   try {
-    const { serviceType, itemId, userId, amount } = payment;
+    const { userId } = req.params;
     
-    switch (serviceType) {
-      case 'business_listing':
-        // Set a 30-day premium subscription for business listing
-        const listing = await AffiliateLink.findById(itemId);
-        if (listing) {
-          const startDate = new Date();
-          const endDate = new Date();
-          endDate.setDate(startDate.getDate() + 30); // 30 days subscription
-          
-          payment.subscriptionDetails = {
-            startDate,
-            endDate,
-            isActive: true,
-            plan: 'premium'
-          };
-          
-          // Update listing to premium
-          listing.listingType = 'affiliate';
-          listing.isPremium = true;
-          listing.premiumExpiry = endDate;
-          
-          await listing.save();
-        }
-        break;
-        
-      case 'blog_post':
-        // Process blog post sponsorship
-        const blog = await Blog.findById(itemId);
-        if (blog) {
-          blog.isSponsored = true;
-          blog.sponsorshipDate = new Date();
-          await blog.save();
-        }
-        break;
-        
-      case 'tour_partner':
-        // Process tour operator subscription
-        const tour = await Tour.findById(itemId);
-        if (tour) {
-          const startDate = new Date();
-          const endDate = new Date();
-          endDate.setDate(startDate.getDate() + 30);
-          
-          payment.subscriptionDetails = {
-            startDate,
-            endDate,
-            isActive: true,
-            plan: 'premium'
-          };
-          
-          tour.isPremium = true;
-          tour.premiumExpiry = endDate;
-          await tour.save();
-        }
-        break;
+    // Find all vehicles for this user
+    const vehicles = await Vehicle.find({ submittedBy: userId });
+    
+    if (vehicles.length === 0) {
+      return res.status(404).json({ error: 'No vehicles found for this user' });
     }
     
-    // Update payment with subscription details
-    await payment.save();
+    // Set premium expiry (30 days + 2 months free = 90 days)
+    const premiumExpiry = new Date();
+    premiumExpiry.setDate(premiumExpiry.getDate() + 90);
+    
+    // Update all vehicles to premium
+    const updatePromises = vehicles.map(async (vehicle) => {
+      vehicle.isPremium = true;
+      vehicle.premiumExpiry = premiumExpiry;
+      vehicle.maxPhotos = 10;
+      vehicle.analyticsEnabled = true;
+      vehicle.bookingNotifications = true;
+      vehicle.featuredStatus = 'homepage'; // Auto-feature premium vehicles
+      
+      // Add some analytics data for demonstration
+      if (vehicle.viewCount === 0) {
+        vehicle.viewCount = Math.floor(Math.random() * 50) + 10;
+      }
+      if (vehicle.inquiryCount === 0) {
+        vehicle.inquiryCount = Math.floor(Math.random() * 5) + 1;
+      }
+      
+      return vehicle.save();
+    });
+    
+    await Promise.all(updatePromises);
+    
+    res.json({
+      message: `Successfully activated premium features for ${vehicles.length} vehicle(s)`,
+      vehicles: vehicles.map(v => ({
+        id: v._id,
+        model: v.vehicleModel,
+        isPremium: v.isPremium,
+        premiumExpiry: v.premiumExpiry,
+        maxPhotos: v.maxPhotos,
+        analyticsEnabled: v.analyticsEnabled
+      }))
+    });
     
   } catch (error) {
-    console.error('Error processing successful payment:', error);
-    throw error;
+    console.error('Error activating premium features:', error);
+    res.status(500).json({ error: 'Failed to activate premium features' });
   }
 };

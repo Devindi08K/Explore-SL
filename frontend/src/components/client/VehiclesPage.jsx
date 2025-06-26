@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import api from '../../utils/api';
+import { AuthContext } from '../../context/AuthContext';
 import { 
   FaCar, 
   FaTruck, 
@@ -8,7 +9,8 @@ import {
   FaCarSide,
   FaCarAlt,
   FaMapMarkerAlt,
-  FaFilter
+  FaFilter,
+  FaCrown
 } from 'react-icons/fa';
 import { 
   MdAirportShuttle, 
@@ -16,7 +18,8 @@ import {
   MdAirlineSeatReclineNormal, 
   MdAttachMoney,
   MdFilterAlt,
-  MdClose
+  MdClose,
+  MdDirectionsBike // Import for three-wheeler icon
 } from 'react-icons/md';
 
 const vehicleTypes = {
@@ -25,10 +28,13 @@ const vehicleTypes = {
   minibus: { icon: FaBus, label: 'Mini Bus' },
   largebus: { icon: FaBus, label: 'Large Bus' },
   suv: { icon: FaCarSide, label: 'SUV' },
-  taxi: { icon: MdLocalTaxi, label: 'Taxi' }
+  taxi: { icon: MdLocalTaxi, label: 'Taxi' },
+  threeWheeler: { icon: MdDirectionsBike, label: 'Three Wheeler' } // Add three-wheeler type
 };
 
 const VehiclesPage = () => {
+  const { id } = useParams(); // Get vehicle ID from URL
+  const { user } = useContext(AuthContext);
   const [vehicles, setVehicles] = useState([]);
   const [selectedType, setSelectedType] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -39,6 +45,10 @@ const VehiclesPage = () => {
     location: '',
     features: []
   });
+  const [singleVehicle, setSingleVehicle] = useState(null);
+
+  // Add this state to track the current image
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const sriLankanProvinces = [
     'Western Province',
@@ -69,6 +79,20 @@ const VehiclesPage = () => {
   useEffect(() => {
     fetchVehicles();
   }, []);
+
+  useEffect(() => {
+    if (id) {
+      const fetchSingleVehicle = async () => {
+        try {
+          const response = await api.get(`/vehicles/${id}`);
+          setSingleVehicle(response.data);
+        } catch (error) {
+          console.error('Error fetching vehicle:', error);
+        }
+      };
+      fetchSingleVehicle();
+    }
+  }, [id]);
 
   const fetchVehicles = async () => {
     try {
@@ -107,6 +131,264 @@ const VehiclesPage = () => {
     return true;
   });
 
+  const sortedVehicles = [...filteredVehicles].sort((a, b) => {
+    // Premium vehicles first
+    if (a.isPremium && !b.isPremium) return -1;
+    if (!a.isPremium && b.isPremium) return 1;
+    
+    // For same premium status, sort by rating
+    if (a.averageRating !== b.averageRating) {
+      return b.averageRating - a.averageRating;
+    }
+    
+    // Then sort by newest
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  // If viewing a single vehicle, show detailed view
+  if (id && singleVehicle) {
+    return (
+      <div className="min-h-screen bg-cream px-4 py-10">
+        <div className="max-w-4xl mx-auto">
+          {/* Back button */}
+          <button 
+            onClick={() => window.history.back()}
+            className="flex items-center text-tan hover:text-gold mb-6 transition-colors"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
+          </button>
+
+          {/* Vehicle Details Card */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {/* Images */}
+            {singleVehicle.vehicleImages && singleVehicle.vehicleImages.length > 0 && (
+              <div className="h-64 md:h-96 relative">
+                {/* Main image display */}
+                <img 
+                  src={singleVehicle.vehicleImages[currentImageIndex]} 
+                  alt={singleVehicle.vehicleModel}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.log("Image load error, using placeholder");
+                    e.target.src = '/placeholder-vehicle.jpg'; // Ensure this placeholder exists
+                  }}
+                />
+                
+                {/* Premium badge */}
+                {singleVehicle.isPremium && (
+                  <div className="absolute top-4 right-4">
+                    <span className="bg-gradient-to-r from-gold to-tan text-white text-sm font-bold px-3 py-2 rounded-full shadow-lg flex items-center">
+                      <FaCrown className="mr-2" />
+                      PREMIUM
+                    </span>
+                  </div>
+                )}
+                
+                {/* Image thumbnail navigation */}
+                {singleVehicle.vehicleImages.length > 1 && (
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                    {singleVehicle.vehicleImages.map((img, idx) => (
+                      <button 
+                        key={idx}
+                        className={`w-3 h-3 rounded-full ${currentImageIndex === idx ? 'bg-gold' : 'bg-white/70 hover:bg-white'}`}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        aria-label={`View image ${idx + 1}`}
+                      ></button>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Navigation arrows - only show if more than one image */}
+                {singleVehicle.vehicleImages.length > 1 && (
+                  <>
+                    <button 
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/70 hover:bg-white p-2 rounded-full"
+                      onClick={() => setCurrentImageIndex(prev => (prev === 0 ? singleVehicle.vehicleImages.length - 1 : prev - 1))}
+                      aria-label="Previous image"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    
+                    <button 
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/70 hover:bg-white p-2 rounded-full"
+                      onClick={() => setCurrentImageIndex(prev => (prev === singleVehicle.vehicleImages.length - 1 ? 0 : prev + 1))}
+                      aria-label="Next image"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+            
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-3xl font-bold text-charcoal">
+                  {singleVehicle.vehicleModel}
+                </h1>
+                <span className="bg-tan/90 text-white text-sm px-3 py-2 rounded-full flex items-center">
+                  {React.createElement(vehicleTypes[singleVehicle.vehicleType]?.icon || FaCar, { className: "mr-2" })}
+                  {vehicleTypes[singleVehicle.vehicleType]?.label || singleVehicle.vehicleType}
+                </span>
+              </div>
+              
+              {/* Basic Vehicle Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div>
+                  <h3 className="font-semibold text-charcoal mb-4 text-lg">Vehicle Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Seats:</span>
+                      <span className="font-medium">{singleVehicle.seatingCapacity}</span>
+                    </div>
+                    {singleVehicle.vehicleYear && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Year:</span>
+                        <span className="font-medium">{singleVehicle.vehicleYear}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Base Location:</span>
+                      <span className="font-medium">{singleVehicle.baseLocation}</span>
+                    </div>
+                    {singleVehicle.hasAC && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Air Conditioning:</span>
+                        <span className="text-green-600 font-medium">✓ Available</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-charcoal mb-4 text-lg">Pricing</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Per Day:</span>
+                      <span className="font-bold text-tan text-lg">Rs. {singleVehicle.pricePerDay?.toLocaleString()}</span>
+                    </div>
+                    {singleVehicle.pricePerKm ? (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Per Km:</span>
+                        <span className="font-medium">Rs. {singleVehicle.pricePerKm}</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Per Km:</span>
+                        <span className="text-gray-500 italic">Not specified</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Features */}
+              {singleVehicle.features && singleVehicle.features.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="font-semibold text-charcoal mb-4 text-lg">Features</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {singleVehicle.features.map(feature => (
+                      <span key={feature} className="bg-tan/10 text-tan px-3 py-2 rounded-lg text-sm">
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Service Areas */}
+              {singleVehicle.servingAreas && singleVehicle.servingAreas.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="font-semibold text-charcoal mb-4 text-lg">Service Areas</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {singleVehicle.servingAreas.map(area => (
+                      <span key={area} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Information */}
+              <div className="border-t pt-8 mt-8">
+                <h3 className="font-semibold text-charcoal mb-6 text-lg">Contact Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <svg className="h-6 w-6 mr-3 text-tan" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm text-gray-600">Phone</p>
+                      <p className="font-medium">{singleVehicle.contactPhone}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <svg className="h-6 w-6 mr-3 text-tan" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm text-gray-600">Email</p>
+                      <p className="font-medium">{singleVehicle.contactEmail}</p>
+                    </div>
+                  </div>
+
+                  {singleVehicle.whatsapp && (
+                    <div className="flex items-center p-4 bg-green-50 rounded-lg">
+                      <svg className="w-6 h-6 mr-3 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                      </svg>
+                      <div>
+                        <p className="text-sm text-gray-600">WhatsApp</p>
+                        <p className="font-medium">{singleVehicle.whatsapp}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                  <a 
+                    href={`tel:${singleVehicle.contactPhone}`}
+                    className="flex-1 bg-tan text-cream py-3 px-6 rounded-lg hover:bg-gold transition duration-200 text-center font-medium"
+                  >
+                    Call Now
+                  </a>
+                  <a 
+                    href={`mailto:${singleVehicle.contactEmail}`}
+                    className="flex-1 border border-tan text-tan py-3 px-6 rounded-lg hover:bg-tan hover:text-cream transition duration-200 text-center font-medium"
+                  >
+                    Send Email
+                  </a>
+                  {singleVehicle.whatsapp && (
+                    <a 
+                      href={`https://wa.me/${singleVehicle.whatsapp.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition duration-200 text-center font-medium"
+                    >
+                      WhatsApp
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  } // This closing brace ends the if condition block
+
+  // Regular vehicle list view begins here
   return (
     <div className="min-h-screen bg-cream px-4 py-10">
       <div className="max-w-7xl mx-auto">
@@ -114,312 +396,249 @@ const VehiclesPage = () => {
           <h1 className="text-3xl font-bold text-charcoal mb-4 md:mb-0">
             Travel Vehicles
           </h1>
-          <Link 
-            to="/vehicle-registration" 
-            className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200"
-          >
-            Register Your Vehicle
-          </Link>
+          <div className="flex items-center space-x-4">
+            <Link 
+              to="/vehicle-registration" 
+              className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200"
+            >
+              Register Your Vehicle
+            </Link>
+            <Link 
+              to="/partnership/vehicle-premium" 
+              className="bg-gold/10 text-gold px-6 py-3 rounded-lg hover:bg-gold/20 transition duration-200 flex items-center gap-2 border border-gold/30"
+            >
+              <FaCrown className="text-gold" />
+              Boost Your Listing
+            </Link>
+          </div>
         </div>
-
-        {/* Filter UI */}
-        <div className="mb-8">
-          <button 
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center mb-4 bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition duration-200"
-          >
-            <MdFilterAlt className="mr-2" />
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
-          </button>
-
-          {showFilters && (
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6 animate-fadeIn">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-charcoal">Filter Vehicles</h2>
-                <button 
-                  onClick={resetFilters}
-                  className="text-tan hover:text-gold"
+        
+        {/* Filters */}
+        <div className="bg-white rounded-xl shadow mb-8 overflow-hidden">
+          <div className="p-4 bg-tan/10 border-b flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="font-semibold text-charcoal">Vehicle Type:</h2>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className={`px-3 py-1.5 rounded-full text-sm ${
+                    selectedType === 'all' 
+                      ? 'bg-tan text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  onClick={() => setSelectedType('all')}
                 >
-                  Reset All Filters
+                  All Types
                 </button>
+                
+                {Object.entries(vehicleTypes).map(([type, { icon: Icon, label }]) => (
+                  <button
+                    key={type}
+                    className={`px-3 py-1.5 rounded-full text-sm flex items-center ${
+                      selectedType === type 
+                        ? 'bg-tan text-white' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    onClick={() => setSelectedType(type)}
+                  >
+                    <Icon className="mr-1" />
+                    {label}
+                  </button>
+                ))}
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Vehicle Type Filter */}
+            </div>
+            
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center text-sm px-4 py-2 rounded-full bg-white border hover:bg-gray-50"
+            >
+              {showFilters ? (
+                <>
+                  <MdClose className="mr-1" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <FaFilter className="mr-1" />
+                  More Filters
+                </>
+              )}
+            </button>
+          </div>
+          
+          {showFilters && (
+            <div className="p-6 border-b">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-2">Vehicle Type</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setSelectedType('all')}
-                      className={`py-2 px-3 rounded-md text-sm ${
-                        selectedType === 'all' ? 'bg-tan text-cream' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      All Types
-                    </button>
-                    {Object.entries(vehicleTypes).map(([type, { label }]) => (
-                      <button
-                        key={type}
-                        onClick={() => setSelectedType(type)}
-                        className={`py-2 px-3 rounded-md text-sm ${
-                          selectedType === type ? 'bg-tan text-cream' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Seating Capacity */}
-                <div>
-                  <label className="block text-sm font-medium text-charcoal mb-2">Minimum Seats</label>
+                  <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+                    <MdAirlineSeatReclineNormal className="mr-1" />
+                    Minimum Seats
+                  </label>
                   <input
                     type="number"
                     value={filters.minSeats}
                     onChange={(e) => setFilters({ ...filters, minSeats: e.target.value })}
-                    className="w-full px-3 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-                    placeholder="Min seats"
-                    min="1"
-                    max="60"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tan"
+                    placeholder="Min. seats"
                   />
                 </div>
-
-                {/* Price Range */}
+                
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-2">Max Price per Day (Rs.)</label>
+                  <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+                    <MdAttachMoney className="mr-1" />
+                    Max Price (per day)
+                  </label>
                   <input
                     type="number"
                     value={filters.maxPrice}
                     onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
-                    className="w-full px-3 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-                    placeholder="Max price"
-                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tan"
+                    placeholder="Max. price per day"
                   />
                 </div>
-
-                {/* Location */}
+                
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-2">Service Area</label>
+                  <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+                    <FaMapMarkerAlt className="mr-1" />
+                    Location
+                  </label>
                   <select
                     value={filters.location}
                     onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-                    className="w-full px-3 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tan"
                   >
-                    <option value="">Any location</option>
+                    <option value="">Any Location</option>
                     {sriLankanProvinces.map(province => (
                       <option key={province} value={province}>{province}</option>
                     ))}
                   </select>
                 </div>
               </div>
-
-              {/* AC and Features */}
+              
               <div className="mt-4">
-                <div className="flex items-center mb-4">
-                  <input
-                    type="checkbox"
-                    id="has-ac"
-                    checked={filters.hasAC}
-                    onChange={(e) => setFilters({ ...filters, hasAC: e.target.checked })}
-                    className="rounded border-tan text-gold focus:ring-gold h-4 w-4"
-                  />
-                  <label htmlFor="has-ac" className="ml-2 text-sm text-charcoal">Air Conditioning</label>
-                </div>
-
                 <label className="block text-sm font-medium text-charcoal mb-2">Features</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {features.map(feature => (
                     <label key={feature} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={filters.features.includes(feature)}
                         onChange={() => handleFeatureChange(feature)}
-                        className="rounded border-tan text-gold focus:ring-gold h-4 w-4"
+                        className="rounded border-gray-300 text-tan focus:ring-tan"
                       />
                       <span className="text-sm">{feature}</span>
                     </label>
                   ))}
                 </div>
               </div>
-
-              {/* Current filter summary */}
-              <div className="mt-6 text-sm">
-                <div className="flex flex-wrap items-center">
-                  <span className="font-medium mr-2">Active filters:</span>
-                  {selectedType !== 'all' && (
-                    <span className="bg-tan text-cream px-2 py-1 rounded-full text-xs mr-2 mb-2 flex items-center">
-                      {vehicleTypes[selectedType]?.label}
-                      <button onClick={() => setSelectedType('all')} className="ml-1">
-                        <MdClose />
-                      </button>
-                    </span>
-                  )}
-                  {filters.hasAC && (
-                    <span className="bg-tan text-cream px-2 py-1 rounded-full text-xs mr-2 mb-2 flex items-center">
-                      AC
-                      <button onClick={() => setFilters({...filters, hasAC: false})} className="ml-1">
-                        <MdClose />
-                      </button>
-                    </span>
-                  )}
-                  {filters.minSeats && (
-                    <span className="bg-tan text-cream px-2 py-1 rounded-full text-xs mr-2 mb-2 flex items-center">
-                      Min {filters.minSeats} seats
-                      <button onClick={() => setFilters({...filters, minSeats: ''})} className="ml-1">
-                        <MdClose />
-                      </button>
-                    </span>
-                  )}
-                  {filters.maxPrice && (
-                    <span className="bg-tan text-cream px-2 py-1 rounded-full text-xs mr-2 mb-2 flex items-center">
-                      Max Rs.{filters.maxPrice}/day
-                      <button onClick={() => setFilters({...filters, maxPrice: ''})} className="ml-1">
-                        <MdClose />
-                      </button>
-                    </span>
-                  )}
-                  {filters.location && (
-                    <span className="bg-tan text-cream px-2 py-1 rounded-full text-xs mr-2 mb-2 flex items-center">
-                      {filters.location}
-                      <button onClick={() => setFilters({...filters, location: ''})} className="ml-1">
-                        <MdClose />
-                      </button>
-                    </span>
-                  )}
-                  {filters.features.map(feature => (
-                    <span key={feature} className="bg-tan text-cream px-2 py-1 rounded-full text-xs mr-2 mb-2 flex items-center">
-                      {feature}
-                      <button onClick={() => handleFeatureChange(feature)} className="ml-1">
-                        <MdClose />
-                      </button>
-                    </span>
-                  ))}
-                  {selectedType === 'all' && !filters.hasAC && !filters.minSeats && !filters.maxPrice && !filters.location && filters.features.length === 0 && (
-                    <span className="text-gray-500">None</span>
-                  )}
-                </div>
+              
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={resetFilters}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Reset Filters
+                </button>
               </div>
             </div>
           )}
-
-          <div className="text-sm text-gray-600 mb-2">
-            Showing {filteredVehicles.length} of {vehicles.length} vehicles
-          </div>
         </div>
-
-        {/* Vehicle cards */}
-        {filteredVehicles.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVehicles.map(vehicle => (
-              <div key={vehicle._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-                <div className="relative">
-                  {vehicle.vehicleImages?.[0] ? (
-                    <img
-                      src={vehicle.vehicleImages[0]}
-                      alt={vehicle.vehicleModel}
-                      className="w-full h-52 object-cover"
+        
+        {/* Results count */}
+        <div className="mb-6 text-gray-600">
+          Found {sortedVehicles.length} vehicle{sortedVehicles.length !== 1 && 's'} {selectedType !== 'all' && `in "${vehicleTypes[selectedType]?.label || selectedType}" category`}
+        </div>
+        
+        {/* Vehicle Cards */}
+        {sortedVehicles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedVehicles.map(vehicle => (
+              <div key={vehicle._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative h-40">
+                  {vehicle.vehicleImages && vehicle.vehicleImages[0] ? (
+                    <img 
+                      src={vehicle.vehicleImages[0]} 
+                      alt={vehicle.vehicleModel} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = '/placeholder-vehicle.jpg';
+                      }}
                     />
                   ) : (
-                    <div className="w-full h-52 flex items-center justify-center bg-gray-100">
-                      {vehicleTypes[vehicle.vehicleType]?.icon && React.createElement(vehicleTypes[vehicle.vehicleType].icon, {
-                        className: "w-20 h-20 text-gray-300"
-                      })}
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <FaCar className="text-4xl text-gray-400" />
                     </div>
                   )}
                   
-                  {/* Tags on image */}
-                  <div className="absolute top-3 right-3 flex flex-col gap-2">
-                    {vehicle.hasAC && (
-                      <span className="bg-tan text-cream px-2 py-1 rounded-full text-sm font-medium shadow-md">
-                        AC
+                  {vehicle.isPremium && (
+                    <div className="absolute top-2 right-2">
+                      <span className="bg-gradient-to-r from-gold to-tan text-white text-xs px-2 py-1 rounded-full flex items-center shadow-md">
+                        <FaCrown className="mr-1" />
+                        PREMIUM
                       </span>
-                    )}
-                    <span className="bg-white/90 text-charcoal px-2 py-1 rounded-full text-sm font-medium shadow-md">
-                      {vehicleTypes[vehicle.vehicleType]?.label || "Vehicle"}
+                    </div>
+                  )}
+                  
+                  <div className="absolute bottom-2 left-2">
+                    <span className="bg-white/80 backdrop-blur-sm text-charcoal text-xs px-2 py-1 rounded-full">
+                      {vehicleTypes[vehicle.vehicleType]?.label || vehicle.vehicleType}
                     </span>
                   </div>
                 </div>
                 
-                <div className="p-6 flex flex-col flex-grow">
-                  <div className="mb-4">
-                    <h3 className="text-xl font-semibold text-charcoal">{vehicle.vehicleModel}</h3>
-                    <div className="flex items-center mt-1">
-                      <span className="bg-gold/10 text-gold text-xs px-2 py-1 rounded-full font-medium">
-                        {vehicle.seatingCapacity} Seats
-                      </span>
-                      <span className="mx-2 text-gray-300">•</span>
-                      <span className="text-sm text-gray-600 font-medium">
-                        Rs. {vehicle.pricePerDay}/day
-                      </span>
-                    </div>
+                <div className="p-3">
+                  <h3 className="font-semibold text-lg text-charcoal">{vehicle.vehicleModel}</h3>
+                  
+                  <div className="mt-1 flex justify-between items-center">
+                    <span className="text-sm text-gray-600">{vehicle.seatingCapacity} seats</span>
+                    <span className="font-bold text-tan">Rs. {vehicle.pricePerDay?.toLocaleString()}/day</span>
                   </div>
-
-                  <div className="space-y-3 flex-grow mb-4">
-                    <p className="flex items-start text-sm text-gray-600">
-                      <FaMapMarkerAlt className="mr-2 mt-1 flex-shrink-0 text-tan" />
-                      <span>{vehicle.baseLocation}</span>
-                    </p>
-                    
-                    {/* Features */}
-                    {vehicle.features.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium text-charcoal mb-1">Features:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {vehicle.features.slice(0, 3).map(feature => (
-                            <span key={feature} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
-                              {feature}
-                            </span>
-                          ))}
-                          {vehicle.features.length > 3 && (
-                            <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
-                              +{vehicle.features.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                  
+                  <div className="mt-2 text-sm text-gray-600 line-clamp-1">
+                    <span className="font-medium">Base: </span>
+                    {vehicle.baseLocation}
                   </div>
-
-                  <div className="border-t pt-4 mt-auto">
-                    <div className="flex flex-wrap justify-center items-center text-sm text-gray-500 gap-3">
-                      <div className="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-tan" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                        </svg>
-                        <span className="break-all">{vehicle.contactPhone}</span>
-                      </div>
-                      
-                      {vehicle.whatsapp && (
-                        <div className="flex items-center">
-                          <svg className="h-4 w-4 mr-1 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                          </svg>
-                          <span className="break-all">{vehicle.whatsapp}</span>
-                        </div>
+                  
+                  {vehicle.features && vehicle.features.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {vehicle.features.slice(0, 2).map(feature => (
+                        <span key={feature} className="bg-tan/10 text-tan text-xs px-2 py-0.5 rounded-full">
+                          {feature}
+                        </span>
+                      ))}
+                      {vehicle.features.length > 2 && (
+                        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+                          +{vehicle.features.length - 2} more
+                        </span>
                       )}
                     </div>
-                  </div>
+                  )}
+                  
+                  <Link 
+                    to={`/vehicles/${vehicle._id}`}
+                    className="mt-3 block text-center bg-tan text-cream py-2 rounded hover:bg-gold transition text-sm"
+                  >
+                    View Details
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 bg-white rounded-lg shadow-md">
-            <FaCarAlt className="mx-auto text-4xl text-tan mb-4" />
-            <h3 className="text-xl font-medium text-charcoal mb-2">No vehicles match your filters</h3>
-            <p className="text-gray-600 mb-4">Try adjusting your filter criteria</p>
-            <button
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="text-4xl text-gray-300 mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-charcoal mb-2">No vehicles found</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your filters or check back later.</p>
+            <button 
               onClick={resetFilters}
-              className="bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition duration-200"
+              className="bg-tan text-cream px-4 py-2 rounded hover:bg-gold transition"
             >
-              Reset All Filters
+              Reset Filters
             </button>
           </div>
         )}
       </div>
     </div>
   );
-};
+}; // This semicolon ends the function declaration
 
 export default VehiclesPage;

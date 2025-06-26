@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   FaUsers, FaMapMarkedAlt, FaCar, FaUserTie, FaBlog, 
-  FaLink, FaRoute, FaBuilding, FaCheck, FaTimes 
+  FaLink, FaRoute, FaBuilding, FaCheck, FaTimes,
+  FaCreditCard, FaClock, FaChartLine
 } from 'react-icons/fa';
 import api from '../../utils/api';
 
@@ -26,11 +27,21 @@ const AdminDashboard = () => {
     users: []
   });
 
+  // Payment-related state
+  const [payments, setPayments] = useState([]);
+  const [paymentStats, setPaymentStats] = useState({
+    totalRevenue: 0,
+    pendingPayments: 0,
+    completedPayments: 0,
+    monthlyRevenue: 0
+  });
+
   const [activeTab, setActiveTab] = useState('tourGuides');
 
   useEffect(() => {
     fetchDashboardStats();
     fetchPendingSubmissions();
+    fetchPayments();
   }, []);
 
   const fetchDashboardStats = async () => {
@@ -50,10 +61,8 @@ const AdminDashboard = () => {
         api.get('/admin/pending/blogs'),
         api.get('/admin/pending/businessListings'),
         api.get('/admin/pending/tours'),
-        api.get('/admin/users')  // This endpoint returns all users
+        api.get('/admin/users')
       ]);
-
-      console.log('Users data:', usersResponse.data); // Debug log
 
       setPendingSubmissions({
         tourGuides: tourGuides.data || [],
@@ -61,12 +70,95 @@ const AdminDashboard = () => {
         blogs: blogs.data || [],
         businessListings: businessListings.data || [],
         tours: tours.data || [],
-        users: Array.isArray(usersResponse.data) ? usersResponse.data : [] // Ensure it's an array
+        users: Array.isArray(usersResponse.data) ? usersResponse.data : []
       });
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
+
+  const fetchPayments = async () => {
+    try {
+      console.log('🔄 Fetching payments data...');
+      const response = await api.get('/admin/payments');
+      const paymentsData = response.data || [];
+      console.log('📊 Payments data received:', paymentsData.length, 'payments');
+      
+      setPayments(paymentsData);
+      
+      // Calculate payment statistics with better logging
+      const completedPayments = paymentsData.filter(p => p.status === 'completed');
+      const pendingPayments = paymentsData.filter(p => p.status === 'pending');
+      
+      console.log('✅ Completed payments:', completedPayments.length);
+      console.log('⏳ Pending payments:', pendingPayments.length);
+      
+      const totalRevenue = completedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      console.log('💰 Total revenue:', totalRevenue);
+      
+      // Calculate monthly revenue (current month)
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyRevenue = completedPayments
+        .filter(p => {
+          const paymentDate = new Date(p.createdAt);
+          return paymentDate.getMonth() === currentMonth && 
+                 paymentDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, p) => sum + (p.amount || 0), 0);
+      
+      console.log('📅 Monthly revenue:', monthlyRevenue);
+      
+      const newPaymentStats = {
+        totalRevenue,
+        pendingPayments: pendingPayments.length,
+        completedPayments: completedPayments.length,
+        monthlyRevenue
+      };
+      
+      console.log('📈 Setting payment stats:', newPaymentStats);
+      setPaymentStats(newPaymentStats);
+      
+    } catch (error) {
+      console.error('❌ Error fetching payments:', error);
+      // Set default values if there's an error
+      setPaymentStats({
+        totalRevenue: 0,
+        pendingPayments: 0,
+        completedPayments: 0,
+        monthlyRevenue: 0
+      });
+    }
+  };
+
+  // Add this useEffect to watch for payments changes
+  useEffect(() => {
+    if (payments.length > 0) {
+      console.log('🔄 Payments data changed, recalculating stats...');
+      
+      const completedPayments = payments.filter(p => p.status === 'completed');
+      const pendingPayments = payments.filter(p => p.status === 'pending');
+      
+      const totalRevenue = completedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyRevenue = completedPayments
+        .filter(p => {
+          const paymentDate = new Date(p.createdAt);
+          return paymentDate.getMonth() === currentMonth && 
+                 paymentDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, p) => sum + (p.amount || 0), 0);
+      
+      setPaymentStats({
+        totalRevenue,
+        pendingPayments: pendingPayments.length,
+        completedPayments: completedPayments.length,
+        monthlyRevenue
+      });
+    }
+  }, [payments]); // This will trigger when payments array changes
 
   const handleStatusUpdate = async (type, id, status) => {
     try {
@@ -111,6 +203,20 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleCompletePayment = async (paymentId) => {
+    try {
+      await api.patch(`/payments/${paymentId}/complete`, {
+        paymentMethod: 'admin_manual',
+        transactionId: `ADMIN_${Date.now()}`
+      });
+      fetchPayments();
+      alert('Payment completed successfully');
+    } catch (error) {
+      console.error('Error completing payment:', error);
+      alert('Failed to complete payment');
+    }
+  };
+
   const DashboardCard = ({ title, count, icon: Icon, link, bgColor }) => (
     <Link to={link} className="block">
       <div className={`${bgColor} rounded-lg p-6 transition-transform duration-300 hover:transform hover:scale-105 hover:shadow-lg`}>
@@ -124,6 +230,20 @@ const AdminDashboard = () => {
         </div>
       </div>
     </Link>
+  );
+
+  const PaymentStatsCard = ({ title, value, icon: Icon, bgColor, isAmount = false }) => (
+    <div className={`${bgColor} rounded-lg p-6`}>
+      <div className="flex justify-between items-center">
+        <div>
+          <p className="text-white text-sm mb-1 opacity-80">{title}</p>
+          <p className="text-white text-2xl font-bold">
+            {isAmount ? `LKR ${value.toLocaleString()}` : value}
+          </p>
+        </div>
+        <Icon className="text-white/50 text-3xl" />
+      </div>
+    </div>
   );
 
   const StatusBadge = ({ status }) => {
@@ -156,7 +276,9 @@ const AdminDashboard = () => {
         case 'tours':
           return ['Tour Name', 'Type', 'Duration', 'Contact', 'Status', 'Actions'];
         case 'users':
-          return ['Username', 'Email', 'Role', 'Joined Date']; // Removed 'Actions'
+          return ['Username', 'Email', 'Role', 'Joined Date'];
+        case 'payments':
+          return ['User', 'Service', 'Amount', 'Date', 'Status', 'Actions'];
         default:
           return [];
       }
@@ -286,6 +408,42 @@ const AdminDashboard = () => {
               </td>
             </tr>
           );
+        case 'payments':
+          return (
+            <tr key={item._id} className="hover:bg-cream">
+              <td className="px-6 py-4">{item.customerDetails?.name || 'N/A'}</td>
+              <td className="px-6 py-4">{item.description}</td>
+              <td className="px-6 py-4 font-medium">LKR {item.amount.toLocaleString()}</td>
+              <td className="px-6 py-4">{new Date(item.createdAt).toLocaleDateString()}</td>
+              <td className="px-6 py-4">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  item.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                </span>
+              </td>
+              <td className="px-6 py-4 text-sm space-x-2">
+                {item.status === 'pending' && (
+                  <button
+                    onClick={() => handleCompletePayment(item._id)}
+                    className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
+                  >
+                    Complete
+                  </button>
+                )}
+                <button
+                  onClick={() => alert(`Payment ID: ${item.orderId}`)}
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700"
+                >
+                  View
+                </button>
+              </td>
+            </tr>
+          );
+        default:
+          return null;
       }
     };
 
@@ -334,6 +492,13 @@ const AdminDashboard = () => {
             label="Users"
             count={stats.users}
           />
+          <TabButton 
+            active={activeTab === 'payments'} 
+            onClick={() => setActiveTab('payments')}
+            icon={FaCreditCard}
+            label="Payments"
+            count={paymentStats.pendingPayments}
+          />
         </div>
 
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -348,7 +513,7 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {submissions.map(renderTableRow)}
+              {activeTab === 'payments' ? payments.map(renderTableRow) : submissions.map(renderTableRow)}
             </tbody>
           </table>
         </div>
@@ -436,10 +601,74 @@ const AdminDashboard = () => {
           />
         </div>
 
-        {/* Pending Submissions Section */}
+        {/* Payment Statistics Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <PaymentStatsCard 
+            title="Total Revenue"
+            value={paymentStats.totalRevenue}
+            icon={FaCreditCard}
+            bgColor="bg-green-600"
+            isAmount={true}
+          />
+          <PaymentStatsCard 
+            title="Monthly Revenue"
+            value={paymentStats.monthlyRevenue}
+            icon={FaChartLine}
+            bgColor="bg-blue-600"
+            isAmount={true}
+          />
+          <PaymentStatsCard 
+            title="Pending Payments"
+            value={paymentStats.pendingPayments}
+            icon={FaClock}
+            bgColor="bg-yellow-600"
+          />
+          <PaymentStatsCard 
+            title="Completed Payments"
+            value={paymentStats.completedPayments}
+            icon={FaCheck}
+            bgColor="bg-green-700"
+          />
+        </div>
+
+        {/* Debug/Refresh Section - Remove this after testing */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-charcoal">Debug Payment Stats</h2>
+            <button
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered');
+                fetchPayments();
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Refresh Payment Stats
+            </button>
+          </div>
+          <div className="mt-4 grid grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="font-medium">Total Payments:</p>
+              <p>{payments.length}</p>
+            </div>
+            <div>
+              <p className="font-medium">Completed:</p>
+              <p>{paymentStats.completedPayments}</p>
+            </div>
+            <div>
+              <p className="font-medium">Pending:</p>
+              <p>{paymentStats.pendingPayments}</p>
+            </div>
+            <div>
+              <p className="font-medium">Total Revenue:</p>
+              <p>LKR {paymentStats.totalRevenue.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Management Dashboard Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
           <h2 className="text-2xl font-semibold text-charcoal mb-4">
-            Pending Submissions
+            Management Dashboard
           </h2>
           {renderPendingSubmissionsTable()}
         </div>
