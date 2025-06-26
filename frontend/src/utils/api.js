@@ -1,10 +1,22 @@
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid'; // You'll need to install uuid: npm install uuid
+
+// Generate a session ID if one doesn't exist
+const getSessionId = () => {
+  let sessionId = localStorage.getItem('sessionId');
+  if (!sessionId) {
+    sessionId = uuidv4();
+    localStorage.setItem('sessionId', sessionId);
+  }
+  return sessionId;
+};
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
   timeout: 10000, // 10 second timeout
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-Session-ID': getSessionId() // Add session ID to each request
   }
 });
 

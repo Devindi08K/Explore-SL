@@ -54,8 +54,8 @@ const VehiclePremiumPage = () => {
             
             <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
               <FaChartLine className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Booking Analytics</h3>
-              <p className="text-gray-600 text-sm mt-2">Track views, inquiries, and monitor your listing performance</p>
+              <h3 className="font-semibold text-charcoal">Performance Analytics</h3>
+              <p className="text-gray-600 text-sm mt-2">Track views and monitor your listing performance</p>
             </div>
           </div>
         </div>
@@ -142,13 +142,13 @@ const VehiclePremiumPage = () => {
                   <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                  <span>Priority placement in search results</span>
+                  <span>Premium badge on vehicle listing</span>
                 </li>
                 <li className="flex items-start text-sm">
                   <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                  <span>Premium badge on vehicle listing</span>
+                  <span>Priority placement in search results</span>
                 </li>
                 <li className="flex items-start text-sm">
                   <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -160,13 +160,7 @@ const VehiclePremiumPage = () => {
                   <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                  <span>Advanced booking calendar</span>
-                </li>
-                <li className="flex items-start text-sm">
-                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Booking request notifications</span>
+                  <span>Performance analytics</span>
                 </li>
               </ul>
               
@@ -238,18 +232,14 @@ const VehiclePremiumPage = () => {
         {/* Stats/Testimonial Section */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
           <h2 className="text-2xl font-bold mb-6 text-center">Why Upgrade?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-center mb-8">
             <div className="p-6">
               <div className="text-3xl font-bold text-tan mb-2">3.5x</div>
-              <p className="text-gray-600">More booking inquiries for premium vehicles</p>
+              <p className="text-gray-600">More visibility for premium vehicles</p>
             </div>
             <div className="p-6">
               <div className="text-3xl font-bold text-tan mb-2">78%</div>
               <p className="text-gray-600">Of travelers prefer premium verified vehicles</p>
-            </div>
-            <div className="p-6">
-              <div className="text-3xl font-bold text-tan mb-2">2.2x</div>
-              <p className="text-gray-600">Higher conversion rate than standard listings</p>
             </div>
           </div>
           
@@ -274,7 +264,6 @@ const VehiclePremiumPage = () => {
 
 const VehiclePremiumDetails = ({ vehicle }) => {
   if (!vehicle.isPremium) return null;
-  const conversionRate = vehicle.viewCount > 0 ? ((vehicle.inquiryCount / vehicle.viewCount) * 100).toFixed(1) : 0;
   return (
     <div className="mt-3 space-y-3">
       <div className="p-3 bg-gradient-to-r from-gold/10 to-tan/10 border border-gold/20 rounded-lg">
@@ -286,14 +275,6 @@ const VehiclePremiumDetails = ({ vehicle }) => {
           <div className="flex items-center text-green-600">
             <FaEye className="mr-1" />
             <span>Total Views: {vehicle.viewCount}</span>
-          </div>
-          <div className="flex items-center text-green-600">
-            <FaEnvelope className="mr-1" />
-            <span>Inquiries: {vehicle.inquiryCount}</span>
-          </div>
-          <div className="flex items-center text-green-600">
-            <FaChartLine className="mr-1" />
-            <span>Conversion: {conversionRate}%</span>
           </div>
         </div>
       </div>

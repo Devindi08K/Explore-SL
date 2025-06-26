@@ -320,8 +320,8 @@ const processSuccessfulPayment = async (payment) => {
             vehicle.featuredStatus = 'homepage';
             
             // Initialize analytics if not present
-            if (!vehicle.viewCount) vehicle.viewCount = Math.floor(Math.random() * 50) + 10;
-            if (!vehicle.inquiryCount) vehicle.inquiryCount = Math.floor(Math.random() * 8) + 2;
+            if (!vehicle.viewCount) vehicle.viewCount = 0;
+            if (!vehicle.inquiryCount) vehicle.inquiryCount = 0;
             
             await vehicle.save();
             console.log(`✅ Vehicle ${vehicle._id} upgraded to premium`);

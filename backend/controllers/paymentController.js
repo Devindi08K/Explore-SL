@@ -129,11 +129,10 @@ exports.makePremiumForTesting = async (req, res) => {
     
     vehicle.isPremium = true;
     vehicle.premiumExpiry = expiryDate;
-    vehicle.viewCount = 120; // Test data
-    vehicle.inquiryCount = 8; // Test data
-    vehicle.maxPhotos = 10;
+    vehicle.maxPhotos = 3; // More realistic value
     vehicle.analyticsEnabled = true;
     vehicle.bookingNotifications = true;
+    // Don't set viewCount or inquiryCount - let them accumulate naturally
     
     // Add some test availability data
     if (!vehicle.availabilityCalendar) {

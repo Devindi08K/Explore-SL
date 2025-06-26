@@ -4,6 +4,8 @@ const Vehicle = require('../models/Vehicle');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const vehicleService = require('../services/vehicleService');
 const Destination = require("../models/Destination");
+const VehicleView = require('../models/VehicleView');
+const VehicleInquiry = require('../models/VehicleInquiry'); // Import VehicleInquiry model
 
 // Get all vehicles
 router.get('/', async (req, res) => {
@@ -451,12 +453,75 @@ router.post('/:id/availability', protect, async (req, res) => {
   }
 });
 
-// Track vehicle view (for analytics)
+// Track vehicle view with session/user tracking to prevent duplicate counts
 router.post('/:id/view', async (req, res) => {
   try {
-    await vehicleService.incrementViewCount(req.params.id);
+    const { id } = req.params;
+    const sessionId = req.headers['x-session-id'] || req.cookies?.sessionId;
+    const userId = req.user?._id;
+    
+    // Check if we have a unique identifier
+    if (!sessionId && !userId) {
+      // If no way to track, just increment the view
+      await Vehicle.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
+      return res.status(200).send();
+    }
+    
+    // Check for recent view from same user/session (last 4 hours)
+    const fourHoursAgo = new Date();
+    fourHoursAgo.setHours(fourHoursAgo.getHours() - 4);
+    
+    const recentView = await VehicleView.findOne({
+      vehicleId: id,
+      $or: [
+        { userId: userId || null },
+        { sessionId: sessionId || null }
+      ],
+      viewedAt: { $gt: fourHoursAgo }
+    });
+    
+    if (!recentView) {
+      // No recent view found, increment the counter
+      await Vehicle.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
+      
+      // Record this view
+      await new VehicleView({
+        vehicleId: id,
+        userId: userId || null,
+        sessionId: sessionId || null,
+        viewedAt: new Date()
+      }).save();
+    }
+    
     res.status(200).send();
   } catch (error) {
+    console.error('Error tracking view:', error);
+    res.status(500).send();
+  }
+});
+
+// Track vehicle inquiry
+router.post('/:id/inquiry', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sessionId = req.headers['x-session-id'] || req.cookies?.sessionId;
+    const userId = req.user?._id;
+    
+    // Increment inquiry count
+    await Vehicle.findByIdAndUpdate(id, { $inc: { inquiryCount: 1 } });
+    
+    // Optional: Record inquiry details for more advanced analytics
+    await new VehicleInquiry({
+      vehicleId: id,
+      userId: userId || null,
+      sessionId: sessionId || null,
+      inquiryType: req.body.inquiryType || 'general',
+      contactDetails: req.body.contactDetails || {}
+    }).save();
+    
+    res.status(200).send();
+  } catch (error) {
+    console.error('Error tracking inquiry:', error);
     res.status(500).send();
   }
 });

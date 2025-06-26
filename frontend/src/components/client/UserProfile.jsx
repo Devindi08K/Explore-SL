@@ -208,7 +208,9 @@ const UserProfile = () => {
   const VehiclePremiumDetails = ({ vehicle }) => {
     if (!vehicle.isPremium) return null;
 
-    const conversionRate = vehicle.viewCount > 0 ? ((vehicle.inquiryCount / vehicle.viewCount) * 100).toFixed(1) : 0;
+    const conversionRate = vehicle.viewCount 
+      ? ((vehicle.inquiryCount / vehicle.viewCount) * 100).toFixed(1)
+      : '0';
 
     return (
       <div className="mt-3 space-y-3">
@@ -232,10 +234,6 @@ const UserProfile = () => {
             <div className="flex items-center text-green-600">
               <FaCheck className="mr-1" />
               <span>Analytics Enabled</span>
-            </div>
-            <div className="flex items-center text-green-600">
-              <FaCheck className="mr-1" />
-              <span>Booking Notifications</span>
             </div>
             <div className="flex items-center text-green-600">
               <FaCheck className="mr-1" />
@@ -263,23 +261,11 @@ const UserProfile = () => {
               Performance Analytics
             </h4>
             
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-3">
               <div className="bg-white p-2 rounded text-center">
                 <FaEye className="text-blue-500 mx-auto mb-1" />
                 <div className="text-lg font-bold text-blue-600">{vehicle.viewCount || 0}</div>
                 <div className="text-xs text-gray-600">Total Views</div>
-              </div>
-              
-              <div className="bg-white p-2 rounded text-center">
-                <FaEnvelope className="text-green-500 mx-auto mb-1" />
-                <div className="text-lg font-bold text-green-600">{vehicle.inquiryCount || 0}</div>
-                <div className="text-xs text-gray-600">Inquiries</div>
-              </div>
-              
-              <div className="bg-white p-2 rounded text-center">
-                <FaChartLine className="text-purple-500 mx-auto mb-1" />
-                <div className="text-lg font-bold text-purple-600">{conversionRate}%</div>
-                <div className="text-xs text-gray-600">Conversion</div>
               </div>
               
               <div className="bg-white p-2 rounded text-center">
@@ -297,12 +283,6 @@ const UserProfile = () => {
                   <div className="flex items-center text-green-600">
                     <FaCheck className="mr-1" />
                     <span>High visibility - Great exposure!</span>
-                  </div>
-                )}
-                {conversionRate > 5 && (
-                  <div className="flex items-center text-green-600">
-                    <FaCheck className="mr-1" />
-                    <span>Good conversion rate</span>
                   </div>
                 )}
                 {vehicle.featuredStatus === 'homepage' && (
@@ -350,54 +330,6 @@ const UserProfile = () => {
           </div>
         )}
 
-        {/* Booking Management */}
-        {vehicle.isPremium && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-green-800 mb-2 flex items-center">
-              <FaCalendarAlt className="mr-2" />
-              Premium Booking Features
-            </h4>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center text-green-700">
-                <FaCheck className="mr-1 text-green-500" />
-                <span>Advanced Calendar</span>
-              </div>
-              <div className="flex items-center text-green-700">
-                <FaCheck className="mr-1 text-green-500" />
-                <span>Instant Notifications</span>
-              </div>
-              <div className="flex items-center text-green-700">
-                <FaCheck className="mr-1 text-green-500" />
-                <span>Priority Support</span>
-              </div>
-              <div className="flex items-center text-green-700">
-                <FaCheck className="mr-1 text-green-500" />
-                <span>Enhanced Profile</span>
-              </div>
-            </div>
-            
-            {vehicle.analyticsEnabled && (
-              <div className="mt-2 flex space-x-2">
-                <Link 
-                  to={`/vehicle-analytics/${vehicle._id}`}
-                  className="bg-green-600 text-white text-xs px-3 py-1 rounded hover:bg-green-700 transition flex items-center"
-                >
-                  <FaChartLine className="mr-1" />
-                  View Analytics
-                </Link>
-                <Link 
-                  to={`/vehicle-calendar/${vehicle._id}`}
-                  className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700 transition flex items-center"
-                >
-                  <FaCalendarAlt className="mr-1" />
-                  Manage Calendar
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Upgrade Benefits Achieved */}
         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <h4 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center">
@@ -417,10 +349,6 @@ const UserProfile = () => {
             <div className="flex items-center text-yellow-700">
               <FaUsers className="mr-1 text-yellow-500" />
               <span>Trust badge display</span>
-            </div>
-            <div className="flex items-center text-yellow-700">
-              <FaChartLine className="mr-1 text-yellow-500" />
-              <span>Performance tracking</span>
             </div>
           </div>
           
