@@ -6,11 +6,13 @@ const AdminBlogForm = () => {
   const [blog, setBlog] = useState({
     title: "",
     content: "",
-    image: "",
     author: "",
   });
-  const [blogs, setBlogs] = useState([]); // State to hold all blogs
-  const [editingId, setEditingId] = useState(null); // Track the blog being edited
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [blogs, setBlogs] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [fileInputKey, setFileInputKey] = useState(Date.now()); // Add state for resetting file input
   const navigate = useNavigate();
 
   // Fetch blogs from backend
@@ -20,7 +22,7 @@ const AdminBlogForm = () => {
 
   const fetchBlogs = async () => {
     try {
-      const response = await api.get("/blogs/all"); // Use /blogs/all instead of /blogs
+      const response = await api.get("/blogs/all");
       setBlogs(response.data);
     } catch (error) {
       console.error("Error fetching blogs:", error);
@@ -31,19 +33,38 @@ const AdminBlogForm = () => {
     setBlog({ ...blog, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   // Add or update blog
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formData = new FormData();
+    formData.append('title', blog.title);
+    formData.append('content', blog.content);
+    formData.append('author', blog.author);
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
     try {
       if (editingId) {
-        await api.put(`/blogs/${editingId}`, blog);
+        await api.put(`/blogs/${editingId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         alert("Blog updated successfully!");
         setEditingId(null);
       } else {
-        await api.post("/blogs", blog);
+        await api.post("/blogs", formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         alert("Blog added successfully!");
       }
-      setBlog({ title: "", content: "", image: "", author: "" });
+      setBlog({ title: "", content: "", author: "" });
+      setImageFile(null);
+      setImagePreview("");
+      setFileInputKey(Date.now()); // Reset the file input by changing its key
       fetchBlogs();
     } catch (error) {
       console.error("Error saving blog:", error);
@@ -51,9 +72,19 @@ const AdminBlogForm = () => {
   };
 
   // Load blog details into form for editing
-  const handleEdit = (blog) => {
-    setBlog(blog);
-    setEditingId(blog._id);
+  const handleEdit = (blogToEdit) => {
+    setBlog(blogToEdit);
+    setEditingId(blogToEdit._id);
+    if (blogToEdit.image) {
+      const imageUrl = blogToEdit.image.startsWith('http')
+        ? blogToEdit.image
+        : `${import.meta.env.VITE_BACKEND_URL}/${blogToEdit.image.replace(/\\/g, '/')}`;
+      setImagePreview(imageUrl);
+    } else {
+      setImagePreview("");
+    }
+    setImageFile(null);
+    setFileInputKey(Date.now()); // Reset the file input by changing its key
   };
 
   // Delete a blog post
@@ -97,17 +128,15 @@ const AdminBlogForm = () => {
           className="w-full p-2 border border-gray-300 rounded-md"
         />
         <input
-          type="text"
+          key={fileInputKey} // Add the key here
+          type="file"
           name="image"
-          placeholder="Image URL"
-          value={blog.image}
-          onChange={handleChange}
-          required
+          onChange={handleFileChange}
           className="w-full p-2 border border-gray-300 rounded-md"
         />
 
-        {blog.image && (
-          <img src={blog.image} alt="Preview" className="w-32 h-32 object-cover mt-2 rounded-md" />
+        {imagePreview && (
+          <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover mt-2 rounded-md" />
         )}
 
         <input
@@ -149,8 +178,14 @@ const AdminBlogForm = () => {
                     </span>
                   )}
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">Author: {b.authorName}</p>
-                <img src={b.image} alt={b.title} className="mt-2 rounded-md w-32 h-32 object-cover" />
+                <p className="text-sm text-gray-600 mt-1">Author: {b.author}</p>
+                {b.image && (
+                  <img 
+                    src={b.image.startsWith('http') ? b.image : `${import.meta.env.VITE_BACKEND_URL}/${b.image.replace(/\\/g, '/')}`} 
+                    alt={b.title} 
+                    className="mt-2 rounded-md w-32 h-32 object-cover" 
+                  />
+                )}
                 <p className="mt-2 text-gray-600">
                   {b.content?.length > 100 ? b.content.substring(0, 100) + "..." : b.content}
                 </p>

@@ -83,23 +83,30 @@ const UserProfile = () => {
         api.get('/vehicles/my-submissions').catch(err => {
           console.warn('Vehicles API failed:', err.response?.status);
           return { data: [] };
+        }),
+        api.get('/blogs/my-submissions').catch(err => {
+          console.warn('Blogs API failed:', err.response?.status);
+          return { data: [] };
         })
       ];
       
       // Make sure we get valid responses before proceeding
-      const [tourGuideRes, vehicleRes] = await Promise.all(promises);
+      const [tourGuideRes, vehicleRes, blogRes] = await Promise.all(promises);
       
       // Ensure we have valid data to work with
       const tourGuideData = Array.isArray(tourGuideRes.data) ? tourGuideRes.data : [];
       const vehicleData = Array.isArray(vehicleRes.data) ? vehicleRes.data : [];
+      const blogData = Array.isArray(blogRes.data) ? blogRes.data : [];
       
       console.log('📊 Fetched data:', {
         tourGuides: tourGuideData.length || 0,
-        vehicles: vehicleData.length || 0
+        vehicles: vehicleData.length || 0,
+        blogs: blogData.length || 0
       });
       
       setTourGuideSubmissions(tourGuideData);
       setVehicleSubmissions(vehicleData);
+      setBlogSubmissions(blogData);
       
       // Debug for premium items
       const premiumVehicles = vehicleData.filter(v => v.isPremium);
@@ -191,10 +198,36 @@ const UserProfile = () => {
       'vehicle_premium_monthly': 'Vehicle Premium (Monthly)',
       'vehicle_premium_yearly': 'Vehicle Premium (Yearly)',
       'business_listing': 'Business Listing Premium',
-      'blog_post': 'Blog Post Sponsorship',
-      'tour_partner': 'Tour Partner Premium'
+      'sponsored_blog_post': 'Sponsored Blog Post',
+      'tour_partnership': 'Tour Partnership'
     };
-    return serviceNames[serviceType] || serviceType;
+    return serviceNames[serviceType] || serviceType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const renderPendingActions = () => {
+    const pendingBlog = paymentHistory.find(p => p.serviceType === 'sponsored_blog_post' && p.subscriptionDetails?.awaitingSubmission);
+    const pendingTour = paymentHistory.find(p => p.serviceType === 'tour_partnership' && p.subscriptionDetails?.awaitingSubmission);
+
+    if (!pendingBlog && !pendingTour) return null;
+
+    return (
+      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded-r-lg shadow-md">
+        <h4 className="font-bold text-yellow-800">Action Required</h4>
+        <p className="text-sm text-yellow-700 mt-1">You have pending submissions for your recent purchases.</p>
+        <div className="mt-3 space-y-2">
+          {pendingBlog && (
+            <Link to="/submit-sponsored-blog" className="inline-block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 text-sm font-semibold">
+              Complete Your Sponsored Blog Submission
+            </Link>
+          )}
+          {pendingTour && (
+            <Link to="/submit-tour-partnership" className="inline-block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 text-sm font-semibold">
+              Complete Your Tour Partnership Submission
+            </Link>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const VehiclePremiumDetails = ({ vehicle }) => {
@@ -748,6 +781,9 @@ const UserProfile = () => {
           )}
         </div>
 
+        {/* Render Pending Actions */}
+        {renderPendingActions()}
+
         {/* Enhanced Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="flex border-b border-gray-200">
@@ -983,8 +1019,8 @@ const UserProfile = () => {
                   </div>
                 )}
 
-                {/* Blog Submissions - Removed for now */}
-                {/* {blogSubmissions.length > 0 && (
+                {/* Blog Submissions */}
+                {blogSubmissions.length > 0 && (
                   <div>
                     <h3 className="text-xl font-semibold mb-4 flex items-center">
                       <FaPenFancy className="mr-2 text-orange-500" />
@@ -994,11 +1030,16 @@ const UserProfile = () => {
                       {blogSubmissions.map((blog) => (
                         <div key={blog._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-lg">{blog.title}</h4>
-                            {blog.isSponsored && <FaCrown className="text-yellow-500" />}
+                            <h4 className="font-medium text-lg truncate" title={blog.title}>{blog.title}</h4>
+                            {blog.isSponsored && (
+                              <span className="text-yellow-500" title="Sponsored">
+                                <FaCrown />
+                              </span>
+                            )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{blog.destination}</p>
-                          <p className="text-sm text-gray-600 mb-3">{blog.content?.substring(0, 100)}...</p>
+                          <p className="text-sm text-gray-500 mb-3">
+                            {blog.isExternal ? 'External Link' : 'On-site Post'}
+                          </p>
                           <div className="flex justify-between items-center">
                             <span className={getStatusBadge(blog.status)}>
                               {blog.status}
@@ -1011,10 +1052,10 @@ const UserProfile = () => {
                       ))}
                     </div>
                   </div>
-                )} */}
+                )}
 
                 {/* No submissions message */}
-                {tourGuideSubmissions.length === 0 && vehicleSubmissions.length === 0 && (
+                {tourGuideSubmissions.length === 0 && vehicleSubmissions.length === 0 && blogSubmissions.length === 0 && (
                   <div className="bg-gray-50 rounded-lg p-12 text-center">
                     <div className="text-6xl text-gray-300 mb-4">📝</div>
                     <h3 className="text-xl font-semibold text-gray-600 mb-4">No Submissions Yet</h3>

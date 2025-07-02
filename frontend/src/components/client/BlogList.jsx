@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from '../../utils/api';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaLink } from 'react-icons/fa'; // Import FaLink
 
 const BlogList = (props) => {
     const [blogs, setBlogs] = useState([]);
@@ -111,9 +111,23 @@ const BlogList = (props) => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {blogs.map((blog) => (
-                    <div key={blog._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                        <img src={blog.image} alt={blog.title} className="w-full h-48 object-cover" />
-                        <div className="p-4">
+                    <div key={blog._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
+                        {/* Conditionally render image or a placeholder */}
+                        <Link to={`/blogs/${blog._id}`}>
+                            {blog.image ? (
+                                <img 
+                                    src={blog.image.startsWith('http') ? blog.image : `${import.meta.env.VITE_BACKEND_URL}/${blog.image.replace(/\\/g, '/')}`} 
+                                    alt={blog.title} 
+                                    className="w-full h-48 object-cover" 
+                                    onError={(e) => e.target.src = 'https://placehold.co/600x400?text=Image+Not+Found'}
+                                />
+                            ) : (
+                                <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                                    <FaLink className="text-gray-400 text-5xl" />
+                                </div>
+                            )}
+                        </Link>
+                        <div className="p-4 flex flex-col flex-grow">
                             <h3 className="text-xl font-semibold text-charcoal mb-2">{blog.title}</h3>
                             <p className="text-sm text-gray-600 mb-2">By {blog.author}</p>
                             
@@ -143,9 +157,11 @@ const BlogList = (props) => {
                                 </button>
                             </div>
                             
-                            <Link to={`/blogs/${blog._id}`} className="inline-block mt-2 text-tan hover:text-gold font-medium">
-                                Read More →
-                            </Link>
+                            <div className="mt-auto pt-2">
+                                <Link to={`/blogs/${blog._id}`} className="inline-block text-tan hover:text-gold font-medium">
+                                    Read More →
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 ))}

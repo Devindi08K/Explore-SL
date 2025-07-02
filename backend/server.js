@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const path = require('path'); // Import the path module
 require("dotenv").config();
 
 const app = express();
@@ -15,6 +16,9 @@ app.use(cors({
 app.use(express.json()); // Regular JSON parsing for most routes
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Special handling for Stripe webhook (must be before the express.json middleware)
 app.post('/api/payments/stripe/webhook', 

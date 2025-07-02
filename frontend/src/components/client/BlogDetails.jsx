@@ -100,55 +100,38 @@ const BlogDetails = ({ user }) => {
             {blog.averageRating ? blog.averageRating.toFixed(1) : '0'} ({blog.totalReviews || 0} reviews)
           </span>
         </div>
-        <p className="text-gray-600 mb-4">By {blog.authorName}</p>
+        <p className="text-gray-600 mb-4">By {blog.author}</p>
         
-        {/* Display blog image if available */}
-        {blog.image && (
+        {/* Display blog image only if it's an internal post and has an image */}
+        {!blog.isExternal && blog.image && (
           <div className="mb-6">
             <img 
-              src={blog.image} 
+              src={blog.image.startsWith('http') ? blog.image : `${import.meta.env.VITE_BACKEND_URL}/${blog.image.replace(/\\/g, '/')}`} 
               alt={blog.title} 
-              className="w-full h-64 object-cover rounded-lg"
+              className="w-full h-auto max-h-96 object-cover rounded-lg"
+              onError={(e) => e.target.style.display = 'none'}
             />
           </div>
         )}
         
-        {/* Display blog content */}
+        {/* Display blog content or external link */}
         <div className="prose max-w-none mb-6">
-          {blog.content ? (
-            <div dangerouslySetInnerHTML={{ __html: blog.content }} />
-          ) : (
-            <p>
-              This is an external blog post. View the complete article at:{' '}
+          {blog.isExternal ? (
+            <div>
+              <p>This is an external blog post. Please visit the original source to read the full article.</p>
               <a 
                 href={formattedUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-tan hover:text-gold hover:underline"
+                className="inline-block mt-4 bg-tan text-cream px-6 py-2 rounded-lg hover:bg-gold transition duration-200 no-underline"
               >
-                {formattedUrl}
+                Visit Original Blog
               </a>
-            </p>
+            </div>
+          ) : (
+            <div dangerouslySetInnerHTML={{ __html: blog.content }} />
           )}
         </div>
-
-        {/* External blog link */}
-        {blog.blogUrl && (
-          <a 
-            href={blog.blogUrl.startsWith('http') ? blog.blogUrl : `https://${blog.blogUrl}`} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="inline-block bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition duration-200 z-10 relative cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault();
-              const url = blog.blogUrl.startsWith('http') ? blog.blogUrl : `https://${blog.blogUrl}`;
-              console.log("Opening URL:", url);
-              window.open(url, '_blank', 'noopener,noreferrer');
-            }}
-          >
-            Visit Original Blog
-          </a>
-        )}
       </div>
       
       {/* Reviews Section */}
