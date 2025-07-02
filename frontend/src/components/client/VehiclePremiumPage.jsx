@@ -15,7 +15,15 @@ const VehiclePremiumPage = () => {
   const [premiumStatus, setPremiumStatus] = useState(null);
 
   useEffect(() => {
-    api.get('/vehicles/my-premium-status').then(res => setPremiumStatus(res.data));
+    api.get('/vehicles/my-premium-status')
+      .then(res => setPremiumStatus(res.data))
+      .catch(err => {
+        console.error('Failed to fetch vehicle premium status:', err);
+        setPremiumStatus({
+          hasActivePremiumSubscription: false,
+          activePlanType: null,
+        });
+      });
   }, []);
 
   const handlePremiumPurchase = (type, amount, description, duration) => {
@@ -61,27 +69,27 @@ const VehiclePremiumPage = () => {
         </div>
 
         {/* How It Works Section */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-          <h3 className="font-semibold text-blue-800 mb-3">🚗 How It Works</h3>
+        <div className="bg-tan/5 border border-tan/20 rounded-xl p-6 mb-8">
+          <h3 className="font-semibold text-tan mb-3">🚗 How It Works</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="bg-white rounded-lg p-4">
-              <h4 className="font-medium text-blue-800 mb-2">Option 1: Vehicle First (Recommended)</h4>
-              <ol className="text-blue-700 space-y-1">
+              <h4 className="font-medium text-charcoal mb-2">Option 1: Vehicle First (Recommended)</h4>
+              <ol className="text-gray-700 space-y-1">
                 <li>1️⃣ Register your vehicle(s) first</li>
                 <li>2️⃣ Purchase premium subscription</li>
                 <li>3️⃣ Your vehicles get instant premium upgrade</li>
               </ol>
             </div>
             <div className="bg-white rounded-lg p-4">
-              <h4 className="font-medium text-blue-800 mb-2">Option 2: Premium First</h4>
-              <ol className="text-blue-700 space-y-1">
+              <h4 className="font-medium text-charcoal mb-2">Option 2: Premium First</h4>
+              <ol className="text-gray-700 space-y-1">
                 <li>1️⃣ Purchase premium subscription</li>
                 <li>2️⃣ Register your vehicle(s)</li>
                 <li>3️⃣ Vehicles automatically get premium features</li>
               </ol>
             </div>
           </div>
-          <p className="text-blue-600 text-sm mt-3">
+          <p className="text-tan text-sm mt-3">
             💡 <strong>Tip:</strong> Both options work perfectly! Your premium benefits will apply to all vehicles you register.
           </p>
         </div>
@@ -166,12 +174,20 @@ const VehiclePremiumPage = () => {
               
               <button 
                 onClick={() => handlePremiumPurchase('vehicle_premium_monthly', 500, 'Vehicle Premium Monthly', 'monthly')}
-                disabled={premiumStatus?.activePlanType === 'monthly'}
-                className="bg-tan text-cream py-2 px-4 rounded text-center hover:bg-gold transition"
+                disabled={premiumStatus?.activePlanType === 'monthly' || premiumStatus?.activePlanType === 'yearly'}
+                className={`w-full py-2 px-4 rounded text-center transition ${
+                  premiumStatus?.activePlanType === 'monthly'
+                    ? 'bg-green-600 text-white cursor-not-allowed'
+                    : premiumStatus?.activePlanType === 'yearly'
+                      ? 'bg-green-700 text-white cursor-not-allowed'
+                      : 'bg-tan text-cream hover:bg-gold'
+                }`}
               >
                 {premiumStatus?.activePlanType === 'monthly'
                   ? 'Already Subscribed'
-                  : 'Subscribe Now'}
+                  : premiumStatus?.activePlanType === 'yearly'
+                    ? 'Annual Plan Active'
+                    : 'Subscribe Now'}
               </button>
             </div>
             
@@ -213,11 +229,19 @@ const VehiclePremiumPage = () => {
               <button 
                 onClick={() => handlePremiumPurchase('vehicle_premium_yearly', 4800, 'Vehicle Premium Yearly', 'yearly')}
                 disabled={premiumStatus?.activePlanType === 'yearly'}
-                className="bg-tan/80 text-cream py-2 px-4 rounded text-center hover:bg-gold transition"
+                className={`w-full py-2 px-4 rounded text-center transition ${
+                  premiumStatus?.activePlanType === 'yearly'
+                    ? 'bg-green-600 text-white cursor-not-allowed'
+                    : premiumStatus?.activePlanType === 'monthly'
+                      ? 'bg-gold text-charcoal hover:bg-yellow-500'
+                      : 'bg-tan/80 text-cream hover:bg-gold'
+                }`}
               >
                 {premiumStatus?.activePlanType === 'yearly'
                   ? 'Already Subscribed'
-                  : 'Subscribe Yearly'}
+                  : premiumStatus?.activePlanType === 'monthly'
+                    ? 'Upgrade to Annual'
+                    : 'Subscribe Annually'}
               </button>
             </div>
           </div>

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaStar, FaSearch, FaArrowUp, FaMedal, FaChartLine } from 'react-icons/fa';
 import PaymentModal from './PaymentModal';
+import api from '../../utils/api';
 
 const TourGuidePremiumPage = () => {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -11,6 +12,32 @@ const TourGuidePremiumPage = () => {
     description: '',
     duration: ''
   });
+  const [premiumStatus, setPremiumStatus] = useState(null);
+
+  useEffect(() => {
+    // This simplified logic matches the working VehiclePremiumPage.jsx
+    api.get('/tour-guides/my-premium-status')
+      .then(res => {
+        console.log('Received premium status:', res.data);
+        setPremiumStatus(res.data);
+      })
+      .catch(err => {
+        console.error('Failed to fetch premium status:', err);
+        // Set a default state on error to prevent crashes
+        setPremiumStatus({
+          hasActivePremiumSubscription: false,
+          activePlanType: null,
+          premiumExpiry: null
+        });
+      });
+  }, []);
+
+  // For debugging: 
+  useEffect(() => {
+    console.log("Current premium status state:", premiumStatus);
+    console.log("activePlanType value:", premiumStatus?.activePlanType);
+    console.log("Monthly condition check:", premiumStatus?.activePlanType === 'monthly');
+  }, [premiumStatus]);
 
   const handlePremiumPurchase = (type, amount, description, duration) => {
     setSelectedPlan({ type, amount, description, duration });
@@ -128,21 +155,26 @@ const TourGuidePremiumPage = () => {
                   <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                  <span>Featured in destination pages</span>
-                </li>
-                <li className="flex items-start text-sm">
-                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Direct inquiry form</span>
+                  <span>Featured on home page</span>
                 </li>
               </ul>
               
               <button 
                 onClick={() => handlePremiumPurchase('guide_premium_monthly', 500, 'Tour Guide Premium Monthly', 'monthly')}
-                className="bg-tan text-cream py-2 px-4 rounded text-center hover:bg-gold transition"
+                disabled={premiumStatus?.activePlanType === 'monthly' || premiumStatus?.activePlanType === 'yearly'}
+                className={`w-full py-2 px-4 rounded text-center transition ${
+                  premiumStatus?.activePlanType === 'monthly'
+                    ? 'bg-green-600 text-white cursor-not-allowed'
+                    : premiumStatus?.activePlanType === 'yearly'
+                      ? 'bg-green-700 text-white cursor-not-allowed'
+                      : 'bg-tan text-cream hover:bg-gold'
+                }`}
               >
-                Subscribe Now
+                {premiumStatus?.activePlanType === 'monthly'
+                  ? 'Already Subscribed'
+                  : premiumStatus?.activePlanType === 'yearly'
+                    ? 'Annual Plan Active'
+                    : 'Subscribe Now'}
               </button>
             </div>
             
@@ -171,21 +203,26 @@ const TourGuidePremiumPage = () => {
                   <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                  <span>Social media promotion</span>
-                </li>
-                <li className="flex items-start text-sm">
-                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
                   <span>20% savings vs monthly</span>
                 </li>
               </ul>
               
               <button 
                 onClick={() => handlePremiumPurchase('guide_premium_yearly', 4800, 'Tour Guide Premium Yearly', 'yearly')}
-                className="bg-tan/80 text-cream py-2 px-4 rounded text-center hover:bg-gold transition"
+                disabled={premiumStatus?.activePlanType === 'yearly'}
+                className={`w-full py-2 px-4 rounded text-center transition ${
+                  premiumStatus?.activePlanType === 'yearly'
+                    ? 'bg-green-600 text-white cursor-not-allowed'
+                    : premiumStatus?.activePlanType === 'monthly'
+                      ? 'bg-gold text-charcoal hover:bg-yellow-500'
+                      : 'bg-tan/80 text-cream hover:bg-gold'
+                }`}
               >
-                Subscribe Annually
+                {premiumStatus?.activePlanType === 'yearly'
+                  ? 'Already Subscribed'
+                  : premiumStatus?.activePlanType === 'monthly'
+                    ? 'Upgrade to Annual'
+                    : 'Subscribe Annually'}
               </button>
             </div>
           </div>

@@ -45,8 +45,21 @@ const tourSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  submittedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
 
-  // Review fields
+  // Add these new fields for premium partnerships
+  isPremium: {
+    type: Boolean,
+    default: false
+  },
+  premiumExpiry: {
+    type: Date
+  },
+  
   reviews: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Review'

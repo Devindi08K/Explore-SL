@@ -47,7 +47,12 @@ const AdminDashboard = () => {
   const fetchDashboardStats = async () => {
     try {
       const response = await api.get('/admin/dashboard-stats');
-      setStats(response.data);
+      setStats({
+        ...response.data,
+        // Add derived stats for premium counts
+        premiumVehicles: response.data.premiumVehicles || 0,
+        premiumGuides: response.data.premiumGuides || 0
+      });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
     }

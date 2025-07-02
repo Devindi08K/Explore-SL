@@ -2,28 +2,37 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // Add this import!
 
 const protect = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ error: "No token provided" });
-    }
+  let token;
+  
+  // Check for token in headers or cookies
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies && req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
 
-    const token = authHeader.split(' ')[1];
+  if (!token) {
+    console.log('⚠️ No token provided');
+    return res.status(401).json({ error: 'Not authorized, no token' });
+  }
+
+  try {
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('✅ Token verified for user:', decoded.id);
     
-    // The issue is here! decoded only contains the payload, not the actual user object
-    // You need to fetch the user from the database first
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({ error: "User not found" });
+    // Attach user to request object
+    req.user = await User.findById(decoded.id).select('-password');
+    
+    if (!req.user) {
+      console.log('⚠️ User not found but token was valid');
+      return res.status(404).json({ error: 'User not found' });
     }
     
-    req.user = user; // Set the actual user object with _id property
     next();
   } catch (error) {
-    console.error("Auth error:", error);
-    res.status(401).json({ error: "Invalid token" });
+    console.log('❌ Token verification failed:', error.message);
+    res.status(401).json({ error: 'Not authorized, token invalid' });
   }
 };
 

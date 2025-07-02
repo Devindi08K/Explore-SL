@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid'; // You'll need to install uuid: npm install uuid
+import { v4 as uuidv4 } from 'uuid';
 
 // Generate a session ID if one doesn't exist
 const getSessionId = () => {
@@ -17,7 +17,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'X-Session-ID': getSessionId() // Add session ID to each request
-  }
+  },
+  withCredentials: true
 });
 
 // Add request interceptor for auth token
@@ -38,16 +39,35 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
-    
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
+    // Handle auth errors
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.log('Authentication error, redirecting to login...');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    
+    console.error('API Error:', error.response?.data || error.message);
     
     return Promise.reject(error);
   }
 );
+
+// Improved fetch tour guides function that uses the api instance
+api.fetchTourGuides = async () => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    const response = await api.get('/tour-guides', { 
+      signal: controller.signal 
+    });
+    
+    clearTimeout(timeoutId);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tour guides:", error);
+    return [];
+  }
+};
 
 export default api;

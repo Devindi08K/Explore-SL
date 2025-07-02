@@ -21,7 +21,8 @@ import {
   FaTrophy,
   FaUsers,
   FaStar,
-  FaClock
+  FaClock,
+  FaBolt
 } from 'react-icons/fa';
 
 const UserProfile = () => {
@@ -54,6 +55,7 @@ const UserProfile = () => {
   // Also add this useEffect to fetch submissions on component mount
   useEffect(() => {
     fetchSubmissions(); // Always fetch submissions on mount
+    fetchPaymentHistory(); // Fetch payment history on mount for stats
   }, []);
 
   const fetchProfile = async () => {
@@ -68,59 +70,49 @@ const UserProfile = () => {
     }
   };
 
+  // Modified fetchSubmissions function that only gets tour guides and vehicles:
   const fetchSubmissions = async () => {
     try {
       console.log('🔍 Fetching user submissions...');
       
       const promises = [
-        api.get('/tour-guides/user').catch(err => {
+        api.get('/tour-guides/my-submissions').catch(err => {
           console.warn('Tour guides API failed:', err.response?.status);
           return { data: [] };
         }),
-        api.get('/vehicles/user').catch(err => {
+        api.get('/vehicles/my-submissions').catch(err => {
           console.warn('Vehicles API failed:', err.response?.status);
-          return { data: [] };
-        }),
-        api.get('/blogs/user').catch(err => {
-          console.warn('Blogs API failed:', err.response?.status);
-          return { data: [] };
-        }),
-        api.get('/affiliate-links/user').catch(err => {  // Note: changed from '/affiliate/user'
-          console.warn('Affiliate API failed:', err.response?.status);
           return { data: [] };
         })
       ];
       
-      const [tourGuideRes, vehicleRes, blogRes, affiliateRes] = await Promise.all(promises);
+      // Make sure we get valid responses before proceeding
+      const [tourGuideRes, vehicleRes] = await Promise.all(promises);
+      
+      // Ensure we have valid data to work with
+      const tourGuideData = Array.isArray(tourGuideRes.data) ? tourGuideRes.data : [];
+      const vehicleData = Array.isArray(vehicleRes.data) ? vehicleRes.data : [];
       
       console.log('📊 Fetched data:', {
-        tourGuides: tourGuideRes.data?.length || 0,
-        vehicles: vehicleRes.data?.length || 0,
-        blogs: blogRes.data?.length || 0,
-        affiliates: affiliateRes.data?.length || 0
+        tourGuides: tourGuideData.length || 0,
+        vehicles: vehicleData.length || 0
       });
       
-      setTourGuideSubmissions(tourGuideRes.data || []);
-      setVehicleSubmissions(vehicleRes.data || []);
-      setBlogSubmissions(blogRes.data || []);
-      setAffiliateSubmissions(affiliateRes.data || []);
+      setTourGuideSubmissions(tourGuideData);
+      setVehicleSubmissions(vehicleData);
       
-      // Debug: Check if any vehicles are premium
-      const premiumVehicles = (vehicleRes.data || []).filter(v => v.isPremium);
+      // Debug for premium items
+      const premiumVehicles = vehicleData.filter(v => v.isPremium);
+      const premiumGuides = tourGuideData.filter(g => g.isPremium);
+      
       console.log('🎯 Premium vehicles found:', premiumVehicles.length);
-      if (premiumVehicles.length > 0) {
-        console.log('Premium vehicle details:', premiumVehicles.map(v => ({
-          id: v._id,
-          model: v.vehicleModel,
-          isPremium: v.isPremium,
-          analyticsEnabled: v.analyticsEnabled,
-          viewCount: v.viewCount,
-          inquiryCount: v.inquiryCount
-        })));
-      }
+      console.log('🎯 Premium guides found:', premiumGuides.length);
       
     } catch (error) {
       console.error('❌ Error fetching submissions:', error);
+      // Set empty arrays to prevent UI errors
+      setTourGuideSubmissions([]);
+      setVehicleSubmissions([]);
     }
   };
 
@@ -442,6 +434,235 @@ const UserProfile = () => {
     );
   };
 
+  const TourGuidePremiumDetails = ({ guide }) => {
+    if (!guide.isPremium) return null;
+    
+    return (
+      <div className="mt-3 space-y-3">
+        {/* Premium Badge */}
+        <div className="p-3 bg-gradient-to-r from-gold/10 to-tan/10 border border-gold/20 rounded-lg">
+          <div className="flex items-center mb-2">
+            <FaCrown className="text-gold mr-2 text-sm" />
+            <span className="text-sm font-semibold text-charcoal">Premium Features Active</span>
+          </div>
+          
+          {/* Premium Features Grid */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center text-green-600">
+              <FaCheck className="mr-1" />
+              <span>Priority Listing</span>
+            </div>
+            <div className="flex items-center text-green-600">
+              <FaCheck className="mr-1" />
+              <span>Premium Badge</span>
+            </div>
+            <div className="flex items-center text-green-600">
+              <FaCheck className="mr-1" />
+              <span>Analytics Enabled</span>
+            </div>
+            <div className="flex items-center text-green-600">
+              <FaCheck className="mr-1" />
+              <span>Enhanced Visibility</span>
+            </div>
+          </div>
+          
+          {guide.premiumExpiry && (
+            <div className="mt-2 pt-2 border-t border-gold/20 text-xs text-gray-600">
+              Premium expires: {new Date(guide.premiumExpiry).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+
+        {/* Analytics Section */}
+        {guide.analyticsEnabled && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
+              <FaChartLine className="mr-2" />
+              Performance Analytics
+            </h4>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white p-2 rounded text-center">
+                <FaEye className="text-blue-500 mx-auto mb-1" />
+                <div className="text-lg font-bold text-blue-600">{guide.viewCount || 0}</div>
+                <div className="text-xs text-gray-600">Profile Views</div>
+              </div>
+              
+              <div className="bg-white p-2 rounded text-center">
+                <FaCrown className="text-gold mx-auto mb-1" />
+                <div className="text-lg font-bold text-gold">Premium</div>
+                <div className="text-xs text-gray-600">Status</div>
+              </div>
+            </div>
+            
+            <div className="mt-3 p-2 bg-white rounded">
+              <h5 className="text-xs font-semibold text-gray-700 mb-1">Insights</h5>
+              <div className="text-xs text-gray-600 space-y-1">
+                {guide.viewCount > 50 && (
+                  <div className="flex items-center text-green-600">
+                    <FaCheck className="mr-1" />
+                    <span>High visibility - Great exposure!</span>
+                  </div>
+                )}
+                {guide.featuredStatus === 'homepage' && (
+                  <div className="flex items-center text-blue-600">
+                    <FaCrown className="mr-1" />
+                    <span>Featured on homepage</span>
+                  </div>
+                )}
+                {guide.viewCount < 10 && (
+                  <div className="flex items-center text-orange-600">
+                    <span>💡 Tip: Complete your profile to increase views</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Featured Status */}
+        {guide.featuredStatus && guide.featuredStatus !== 'none' && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <h4 className="text-sm font-semibold text-red-800 mb-2 flex items-center">
+              <FaCrown className="mr-2" />
+              Featured Placement
+            </h4>
+            <div className="space-y-2">
+              {guide.featuredStatus === 'homepage' && (
+                <div className="flex items-center text-red-700">
+                  <FaCheck className="mr-2 text-red-500" />
+                  <span className="text-sm">Featured on Homepage</span>
+                  <span className="ml-auto bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">ACTIVE</span>
+                </div>
+              )}
+              {guide.featuredStatus === 'destination' && (
+                <div className="flex items-center text-red-700">
+                  <FaCheck className="mr-2 text-red-500" />
+                  <span className="text-sm">Featured in Destination Pages</span>
+                  <span className="ml-auto bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">ACTIVE</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Premium Benefits */}
+        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h4 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center">
+            <FaTrophy className="mr-2" />
+            Premium Benefits Unlocked
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center text-yellow-700">
+              <FaTrophy className="mr-1 text-yellow-500" />
+              <span>Top search placement</span>
+            </div>
+            <div className="flex items-center text-yellow-700">
+              <FaEye className="mr-1 text-yellow-500" />
+              <span>4x more visibility</span>
+            </div>
+            <div className="flex items-center text-yellow-700">
+              <FaUsers className="mr-1 text-yellow-500" />
+              <span>Trust badge display</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const TourGuideUpgradePrompt = ({ guide }) => {
+    if (guide.isPremium) return null;
+
+    return (
+      <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-sm font-semibold text-gray-700">Basic Guide Profile</h4>
+          <FaBolt className="text-gray-400" />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+          <div className="flex items-center text-gray-600">
+            <FaCheck className="mr-1 text-gray-400" />
+            <span>Basic listing</span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <FaCheck className="mr-1 text-gray-400" />
+            <span>Standard search visibility</span>
+          </div>
+          <div className="flex items-center text-gray-500">
+            <FaTimes className="mr-1 text-red-400" />
+            <span className="line-through">Priority placement</span>
+          </div>
+          <div className="flex items-center text-gray-500">
+            <FaTimes className="mr-1 text-red-400" />
+            <span className="line-through">Premium badge</span>
+          </div>
+          <div className="flex items-center text-gray-500">
+            <FaTimes className="mr-1 text-red-400" />
+            <span className="line-through">Analytics</span>
+          </div>
+        </div>
+        
+        <Link 
+          to="/partnership/tour-guide-premium"
+          className="w-full bg-gradient-to-r from-tan to-gold text-white text-xs px-3 py-2 rounded hover:from-gold hover:to-tan transition flex items-center justify-center"
+        >
+          <FaCrown className="mr-1" />
+          Upgrade to Premium
+        </Link>
+      </div>
+    );
+  };
+
+  // Next, add a pending guide message component
+  const PendingGuideMessage = ({ guide }) => {
+    if (guide.status !== 'pending' || guide.isVerified) return null;
+    
+    const submittedDate = new Date(guide.submittedAt);
+    const waitingDays = Math.floor((new Date() - submittedDate) / (1000 * 60 * 60 * 24));
+    
+    return (
+      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h4 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center">
+          <FaClock className="mr-2" />
+          Under Review
+        </h4>
+        
+        <div className="text-sm text-yellow-700">
+          <p className="mb-2">
+            Your tour guide profile is currently being reviewed by our team and will be published within 48 hours.
+          </p>
+          
+          <ul className="space-y-1 list-disc list-inside">
+            <li>Submitted: {submittedDate.toLocaleDateString()}</li>
+            <li>Waiting time: {waitingDays} day{waitingDays !== 1 ? 's' : ''}</li>
+          </ul>
+          
+          <div className="mt-3 text-xs italic">
+            Our review process ensures that all tour guides meet our quality and professionalism standards.
+            {waitingDays > 2 && " If your submission has been pending for more than 48 hours, please contact our support team."}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const refreshPremiumStatus = async (guideId) => {
+    try {
+      const response = await api.post(`/tour-guides/refresh-premium/${guideId}`);
+      console.log('Premium status refreshed:', response.data);
+      fetchSubmissions(); // Refresh the submissions to show the updated status
+      
+      // Show more detailed success message
+      alert('Premium features activated successfully! Your guide now has premium badge and is featured in destination pages.');
+    } catch (error) {
+      console.error('Error refreshing premium status:', error);
+      alert('Failed to activate premium features. Please try again or contact support.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
@@ -642,17 +863,44 @@ const UserProfile = () => {
                         <div key={guide._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-medium text-lg">{guide.name}</h4>
-                            {guide.isPremium && <FaCrown className="text-yellow-500" />}
+                            {guide.isPremium && (
+                              <span className="bg-gradient-to-r from-gold to-tan text-white text-xs px-2 py-1 rounded-full flex items-center shadow-md">
+                                <FaCrown className="mr-1" />
+                                PREMIUM
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm text-gray-600 mb-2">{guide.languages?.join(', ')}</p>
                           <p className="text-sm text-gray-600 mb-3">{guide.bio?.substring(0, 100)}...</p>
-                          <div className="flex justify-between items-center">
+                          
+                          {/* Premium features display */}
+                          {guide.isPremium ? (
+                            <TourGuidePremiumDetails guide={guide} />
+                          ) : (
+                            <>
+                              <TourGuideUpgradePrompt guide={guide} />
+                              
+                              {/* Add premium refresh button for guides that should be premium */}
+                              <div className="mt-2">
+                                <button
+                                  onClick={() => refreshPremiumStatus(guide._id)}
+                                  className="w-full bg-gradient-to-r from-gold to-tan text-white text-xs px-3 py-2 rounded hover:from-tan hover:to-gold transition flex items-center justify-center"
+                                >
+                                  <FaCrown className="mr-1" />
+                                  Refresh Premium Status
+                                </button>
+                              </div>
+                            </>
+                          )}
+                          
+                          {/* Show pending message for non-premium pending guides */}
+                          {!guide.isPremium && <PendingGuideMessage guide={guide} />}
+                          
+                          <div className="flex justify-between items-center mt-3">
                             <span className={getStatusBadge(guide.status)}>
                               {guide.status}
                             </span>
-                            <Link to={`/tour-guides/${guide._id}`} className="text-tan text-sm hover:underline">
-                              View Details
-                            </Link>
+                            {/* The div containing the links has been removed */}
                           </div>
                         </div>
                       ))}
@@ -735,8 +983,8 @@ const UserProfile = () => {
                   </div>
                 )}
 
-                {/* Blog Submissions */}
-                {blogSubmissions.length > 0 && (
+                {/* Blog Submissions - Removed for now */}
+                {/* {blogSubmissions.length > 0 && (
                   <div>
                     <h3 className="text-xl font-semibold mb-4 flex items-center">
                       <FaPenFancy className="mr-2 text-orange-500" />
@@ -763,16 +1011,15 @@ const UserProfile = () => {
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* No submissions message */}
-                {tourGuideSubmissions.length === 0 && vehicleSubmissions.length === 0 && 
-                 blogSubmissions.length === 0 && affiliateSubmissions.length === 0 && (
+                {tourGuideSubmissions.length === 0 && vehicleSubmissions.length === 0 && (
                   <div className="bg-gray-50 rounded-lg p-12 text-center">
                     <div className="text-6xl text-gray-300 mb-4">📝</div>
                     <h3 className="text-xl font-semibold text-gray-600 mb-4">No Submissions Yet</h3>
                     <p className="text-gray-500 mb-6">
-                      Start your journey by registering as a tour guide, adding your vehicle, or submitting a blog post!
+                      Start your journey by registering as a tour guide or adding your vehicle!
                     </p>
                     <div className="flex justify-center space-x-4">
                       <Link to="/tour-guide-registration" className="bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition">
@@ -780,9 +1027,6 @@ const UserProfile = () => {
                       </Link>
                       <Link to="/vehicle-registration" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                         Add Vehicle
-                      </Link>
-                      <Link to="/blog-submission" className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition">
-                        Write Blog
                       </Link>
                     </div>
                   </div>

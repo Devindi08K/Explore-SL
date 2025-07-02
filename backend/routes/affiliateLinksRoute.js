@@ -138,4 +138,17 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
   }
 });
 
+// Get affiliate links submitted by the current user
+router.get("/user", protect, async (req, res) => {
+  try {
+    const userAffiliates = await Affiliate.find({ 
+      submittedBy: req.user._id 
+    }).sort({ submittedAt: -1 });
+    res.json(userAffiliates);
+  } catch (error) {
+    console.error("Error fetching user's affiliate links:", error);
+    res.status(500).json({ error: "Error fetching user's submissions" });
+  }
+});
+
 module.exports = router;

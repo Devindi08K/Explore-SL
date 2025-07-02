@@ -1,6 +1,13 @@
 const express = require("express");
 const Tour = require("../models/Tour");
 const { protect, authorize } = require("../middleware/authMiddleware");
+const Payment = require('../models/Payment');
+const User = require('../models/User');
+const multer = require('multer');
+
+// Configure multer for image uploads
+const upload = multer({ dest: 'uploads/' });
+
 const router = express.Router();
 
 // Get all tours (public - only verified)
@@ -116,6 +123,45 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error("Tour deletion error:", error);
     res.status(400).json({ error: "Error deleting tour" });
+  }
+});
+
+// Submit a tour partnership
+router.post('/partnership', protect, upload.single('image'), async (req, res) => {
+  try {
+    const { paymentId, ...tourData } = req.body;
+
+    // 1. Verify the payment voucher
+    const payment = await Payment.findById(paymentId);
+    if (!payment || payment.userId.toString() !== req.user._id.toString() || payment.serviceType !== 'tour_partnership' || !payment.subscriptionDetails.awaitingSubmission) {
+      return res.status(403).json({ error: 'Invalid or used payment voucher.' });
+    }
+
+    // 2. Create the tour
+    const premiumExpiryDate = new Date();
+    premiumExpiryDate.setFullYear(premiumExpiryDate.getFullYear() + 1); // 1 year partnership
+
+    const newTour = new Tour({
+      ...tourData,
+      image: req.file ? req.file.path : null,
+      submittedBy: req.user._id,
+      isPremium: true,
+      premiumExpiry: premiumExpiryDate,
+      status: 'pending',
+    });
+
+    const savedTour = await newTour.save();
+
+    // 3. Mark the payment voucher as used
+    payment.subscriptionDetails.awaitingSubmission = false;
+    payment.subscriptionDetails.itemId = savedTour._id;
+    payment.description = `Tour Partnership: ${savedTour.name}`;
+    await payment.save();
+
+    res.status(201).json(savedTour);
+  } catch (error) {
+    console.error('Error submitting tour partnership:', error);
+    res.status(500).json({ error: 'Failed to submit tour partnership.' });
   }
 });
 

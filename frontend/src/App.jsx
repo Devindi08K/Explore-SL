@@ -28,6 +28,7 @@ import UserProfile from './components/client/UserProfile';
 import ReviewList from './components/client/ReviewForm';
 import TourGuidePremiumPage from './components/client/TourGuidePremiumPage';
 import VehiclePremiumPage from './components/client/VehiclePremiumPage';
+import TourGuideProfilePage from './components/client/TourGuideProfilePage';
 
 // Admin Components
 import AdminDashboard from './components/client/AdminDashboard';
@@ -44,6 +45,10 @@ import AuthCallback from './components/auth/AuthCallback';
 // Payment Components
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentCancelPage from './pages/PaymentCancelPage';
+
+// Sponsored Content Components
+import SubmitSponsoredBlogPage from './components/client/SubmitSponsoredBlogPage';
+import SubmitTourPartnershipPage from './components/client/SubmitTourPartnershipPage';
 
 // Create a separate component for the app content
 const AppContent = () => {
@@ -123,7 +128,10 @@ const AppContent = () => {
             <Route path="/partnership/tour-guide-premium" element={<TourGuidePremiumPage />} />
             <Route path="/partnership/vehicle-premium" element={<VehiclePremiumPage />} />
             <Route path="/vehicles/:id" element={<VehiclesPage />} />
-
+            <Route path="/tour-guides/:id" element={<TourGuideProfilePage />} />
+            <Route path="/submit-sponsored-blog" element={<SubmitSponsoredBlogPage />} />
+            <Route path="/submit-tour-partnership" element={<SubmitTourPartnershipPage />} />
+            
             {/* Protected Admin Routes */}
             <Route path="/admin" element={
               <ProtectedRoute adminOnly>

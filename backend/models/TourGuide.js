@@ -7,23 +7,17 @@ const tourGuideSchema = new mongoose.Schema({
   bio: { type: String, required: true },
   
   // Professional Details
-  languages: {
-    type: [String],
-    default: []
-  },
-  specialization: {
-    type: [String],
-    default: []
-  },
+  languages: [{ type: String }],
+  specialization: [{ type: String }],
   yearsOfExperience: { type: Number, required: true },
-  certifications: {
-    type: [{
-      name: String,
-      issuedBy: String,
-      year: Number
-    }],
-    default: []
-  },
+  
+  // Add this certifications array to your schema
+  certifications: [{
+    name: { type: String },
+    issuedBy: { type: String },
+    year: { type: String }
+  }],
+
   licenseNumber: { type: String },
   
   // Contact Information
@@ -83,11 +77,44 @@ const tourGuideSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  premiumExpiry: Date,
+  premiumExpiry: {
+    type: Date,
+    default: null
+  },
   premiumLevel: {
     type: String,
-    enum: ['standard', 'featured'],
-    default: 'standard'
+    enum: ['none', 'standard', 'premium'],
+    default: 'none'
+  },
+  viewCount: {
+    type: Number,
+    default: 0
+  },
+  featuredStatus: {
+    type: String,
+    enum: ['none', 'homepage', 'destination'],
+    default: 'none'
+  },
+  analyticsEnabled: {
+    type: Boolean,
+    default: false
+  },
+
+  // Review Fields
+  needsReview: {
+    type: Boolean,
+    default: false
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  reviewedAt: Date,
+
+  // New Field
+  hadPremiumBefore: {
+    type: Boolean,
+    default: false
   }
 });
 

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { FaMapMarkedAlt, FaUserTie, FaHotel, FaArrowDown, FaRegCheckSquare, FaCompass } from 'react-icons/fa';
+import { FaMapMarkedAlt, FaUserTie, FaHotel, FaArrowDown, FaRegCheckSquare, FaCompass, FaCrown } from 'react-icons/fa';
 import { MdTour, MdBusinessCenter } from 'react-icons/md';
 import { BiSolidBadgeCheck } from 'react-icons/bi';
 import { RiQuillPenFill } from 'react-icons/ri';
+import api from '../../utils/api'; // Fixed import path
 
 const featuredDestinations = [
   {
@@ -75,6 +76,7 @@ const heroImages = [
 
 const HomePage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [featuredGuides, setFeaturedGuides] = useState([]);
 
   // Add ref for the scrollable container
   const scrollContainerRef = React.useRef(null);
@@ -104,6 +106,19 @@ const HomePage = () => {
     }, 5000); // Change image every 5 seconds
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const fetchFeaturedGuides = async () => {
+      try {
+        const response = await api.get('/tour-guides/featured/homepage');
+        setFeaturedGuides(response.data);
+      } catch (error) {
+        console.error('Error fetching featured guides:', error);
+      }
+    };
+    
+    fetchFeaturedGuides();
   }, []);
 
   return (
@@ -414,6 +429,58 @@ const HomePage = () => {
           </Link>
         </div>
       </section>
+
+      {/* Featured Tour Guides Section */}
+      {featuredGuides.length > 0 && (
+        <section className="py-16 px-6 bg-cream">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-charcoal">Premium Tour Guides</h2>
+              <Link to="/tour-guides" className="text-tan hover:text-gold transition">
+                View all guides →
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuredGuides.map(guide => (
+                <div key={guide._id} className="bg-white rounded-lg shadow-md overflow-hidden relative">
+                  <div className="p-4 flex items-center">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-tan">
+                      <img
+                        src={guide.image || 'https://via.placeholder.com/300x300?text=Guide'}
+                        alt={guide.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="font-semibold text-lg">{guide.name}</h3>
+                      <p className="text-sm text-gray-600">{guide.yearsOfExperience} years experience</p>
+                    </div>
+                    {guide.isPremium && (
+                      <span className="absolute top-2 right-2 bg-gradient-to-r from-gold to-tan text-white text-xs px-2 py-1 rounded-full flex items-center shadow-md">
+                        <FaCrown className="mr-1" />
+                        PREMIUM
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="p-4 border-t border-gray-100">
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">{guide.bio}</p>
+                    <div className="flex justify-end">
+                      <Link
+                        to={`/tour-guides/${guide._id}`}
+                        className="text-tan hover:text-gold text-sm font-medium"
+                      >
+                        View Profile →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

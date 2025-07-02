@@ -200,6 +200,26 @@ const PaymentSuccess = () => {
         )}
         
         <div className="mt-8 flex flex-col space-y-3">
+          {/* Next Step for Blog Post */}
+          {payment.serviceType === 'sponsored_blog_post' && payment.status === 'completed' && (
+            <Link 
+              to="/submit-sponsored-blog"
+              className="bg-gold text-white px-6 py-3 rounded-lg text-center hover:bg-tan transition font-bold animate-pulse"
+            >
+              Next Step: Submit Your Blog Post
+            </Link>
+          )}
+
+          {/* Next Step for Tour Partnership */}
+          {payment.serviceType === 'tour_partnership' && payment.status === 'completed' && (
+            <Link 
+              to="/submit-tour-partnership"
+              className="bg-gold text-white px-6 py-3 rounded-lg text-center hover:bg-tan transition font-bold animate-pulse"
+            >
+              Next Step: Submit Your Tour Details
+            </Link>
+          )}
+          
           <Link to="/profile?tab=payments" className="bg-tan text-white px-6 py-3 rounded-lg text-center hover:bg-gold transition font-medium">
             View Payment History
           </Link>
@@ -213,32 +233,37 @@ const PaymentSuccess = () => {
           )}
         </div>
         
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h3 className="font-semibold text-blue-800 mb-2">Next Steps:</h3>
-          <ul className="text-sm text-blue-700 space-y-1">
-            {hasVehicles ? (
-              <>
-                <li>• All your registered vehicles have been upgraded to premium status</li>
-                <li>• Enjoy priority placement and enhanced analytics</li>
-              </>
-            ) : (
-              <>
-                <li>• Register your vehicles to enjoy premium benefits</li>
-                <li>• Your vehicles will automatically get premium features</li>
-              </>
+        {/* Conditional "Next Steps" for Vehicle Premium */}
+        {payment.serviceType.startsWith('vehicle_premium') && (
+          <>
+            <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-2">Next Steps:</h3>
+              <ul className="text-sm text-blue-700 space-y-1">
+                {hasVehicles ? (
+                  <>
+                    <li>• All your registered vehicles have been upgraded to premium status</li>
+                    <li>• Enjoy priority placement and enhanced analytics</li>
+                  </>
+                ) : (
+                  <>
+                    <li>• Register your vehicles to enjoy premium benefits</li>
+                    <li>• Your vehicles will automatically get premium features</li>
+                  </>
+                )}
+              </ul>
+            </div>
+            
+            {!hasVehicles && payment.status === 'completed' && (
+              <div className="mt-4">
+                <Link 
+                  to="/vehicle-registration" 
+                  className="block bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition font-medium text-center"
+                >
+                  Register Your First Vehicle
+                </Link>
+              </div>
             )}
-          </ul>
-        </div>
-        
-        {!hasVehicles && payment.status === 'completed' && (
-          <div className="mt-4">
-            <Link 
-              to="/vehicle-registration" 
-              className="block bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition font-medium text-center"
-            >
-              Register Your First Vehicle
-            </Link>
-          </div>
+          </>
         )}
       </div>
     </div>

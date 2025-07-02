@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../../utils/api';
 
 const TourGuideRegistrationForm = () => {
@@ -22,6 +22,24 @@ const TourGuideRegistrationForm = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [loadingCheck, setLoadingCheck] = useState(true);
+  const [hasSubmission, setHasSubmission] = useState(false);
+
+  useEffect(() => {
+    const checkExistingSubmission = async () => {
+      try {
+        const { data } = await api.get('/tour-guides/my-submissions');
+        if (data && data.length > 0) {
+          setHasSubmission(true);
+        }
+      } catch (err) {
+        console.error("Could not verify submission status.", err);
+      } finally {
+        setLoadingCheck(false);
+      }
+    };
+    checkExistingSubmission();
+  }, []);
 
   const languageCategories = {
     local: ['English', 'Sinhala', 'Tamil'],
@@ -86,7 +104,8 @@ const TourGuideRegistrationForm = () => {
         yearsOfExperience: parseInt(formData.yearsOfExperience),
         status: 'pending',
         isVerified: false,
-        submittedAt: new Date()
+        submittedAt: new Date(),
+        submittedBy: currentUser._id // Make sure this is added if not automatically handled
       };
 
       const response = await api.post("/tour-guides", dataToSubmit);
@@ -130,6 +149,33 @@ const TourGuideRegistrationForm = () => {
       certifications: [...formData.certifications, { name: "", issuedBy: "", year: "" }]
     });
   };
+
+  if (loadingCheck) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tan"></div>
+      </div>
+    );
+  }
+
+  if (hasSubmission) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+        <div className="max-w-md mx-auto text-center bg-white p-8 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-charcoal mb-4">Already Registered</h2>
+          <p className="text-gray-600 mb-6">
+            You have already submitted a tour guide registration. You can view its status on your profile page.
+          </p>
+          <Link 
+            to="/profile"
+            className="inline-block bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition"
+          >
+            Go to My Profile
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cream px-4 py-10">
@@ -213,7 +259,8 @@ const TourGuideRegistrationForm = () => {
                 onChange={(e) => setFormData({ ...formData, yearsOfExperience: e.target.value })}
                 className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
                 required
-                min="0"
+                min="1"
+                max="40"
               />
             </div>
 

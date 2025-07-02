@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from '../../utils/api';
-import { FaFilter, FaTimes, FaChevronDown, FaChevronUp, FaCrown } from 'react-icons/fa';
+import { FaFilter, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaCrown } from 'react-icons/fa';
 
 const TourGuidePage = () => {
   const [guides, setGuides] = useState([]);
@@ -43,15 +44,29 @@ const TourGuidePage = () => {
 
   const fetchGuides = async () => {
     try {
-      const response = await api.get("/tour-guides");
+      setLoading(true);
+      console.log("Fetching tour guides...");
+      
+      // Use the enhanced fetchTourGuides function
+      const guidesData = await api.fetchTourGuides();
+      console.log("Raw guides data:", guidesData); // Log the raw data
+      
+      // Check how many guides are verified
+      const verifiedCount = guidesData.filter(guide => guide.isVerified).length;
+      console.log(`Found ${guidesData.length} guides, ${verifiedCount} are verified`);
+      
       // Ensure all guides have the required array properties
-      const processedGuides = response.data.filter(guide => guide.isVerified).map(guide => ({
-        ...guide,
-        languages: guide.languages || [],
-        specialization: guide.specialization || [],
-        preferredAreas: guide.preferredAreas || [],
-        certifications: guide.certifications || []
-      }));
+      const processedGuides = guidesData
+        .filter(guide => true) // TEMPORARY: Remove the verification filter to see all guides
+        .map(guide => ({
+          ...guide,
+          languages: guide.languages || [],
+          specialization: guide.specialization || [],
+          preferredAreas: guide.preferredAreas || [],
+          certifications: guide.certifications || []
+        }));
+      
+      console.log(`Processed ${processedGuides.length} guides for display`);
       setGuides(processedGuides);
     } catch (error) {
       console.error("Error fetching guides:", error);
@@ -272,71 +287,55 @@ const TourGuidePage = () => {
             ) : sortedGuides.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {sortedGuides.map((guide) => (
-                  <div key={guide._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-auto">
-                    <div className="p-3 flex items-center">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-tan">
-                        <img
-                          src={guide.image || 'https://via.placeholder.com/300x300?text=Guide'}
-                          alt={guide.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-lg font-semibold text-charcoal">{guide.name}</h3>
-                        <span className="bg-tan text-cream px-2 py-0.5 rounded-full text-xs">
-                          {guide.yearsOfExperience} Yrs Exp
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="px-4 py-2 border-t border-gray-100 text-sm">
-                      <p className="text-gray-600 line-clamp-2 mb-2">{guide.bio}</p>
-                      
-                      <div className="space-y-1 mb-3 text-xs">
-                        <p className="flex">
-                          <span className="font-medium w-24 text-gray-700">Specializations:</span>
-                          <span className="text-gray-600 truncate flex-1">
-                            {guide.specialization?.join(', ') || 'Not specified'}
-                          </span>
-                        </p>
-                        <p className="flex">
-                          <span className="font-medium w-24 text-gray-700">Languages:</span>
-                          <span className="text-gray-600 truncate flex-1">
-                            {guide.languages?.join(', ') || 'Not specified'}
-                          </span>
-                        </p>
-                        <p className="flex">
-                          <span className="font-medium w-24 text-gray-700">Rate:</span>
-                          <span className="text-gray-600">{guide.ratePerDay || 'Not specified'}</span>
-                        </p>
-                      </div>
-                      
-                      <div className="mt-2 pt-2 border-t border-gray-100">
-                        <div className="flex flex-col space-y-2 text-xs">
-                          <div>
-                            <p className="font-medium text-charcoal">Phone:</p>
-                            <p className="text-gray-700">{guide.contactPhone || 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium text-charcoal">Email:</p>
-                            <p className="text-gray-700 break-words">{guide.contactEmail || 'N/A'}</p>
-                          </div>
-                          
-                          {guide.licenseNumber && (
-                            <p className="text-xs text-center text-gray-500 mt-1">
-                              License: {guide.licenseNumber}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
+                  <div key={guide._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-auto relative">
+                    {/* Premium Badge */}
                     {guide.isPremium && (
-                      <span className="absolute top-2 right-2 bg-tan/90 text-white text-xs font-bold px-2 py-1 rounded-full z-10 shadow-lg flex items-center">
+                      <span className="absolute top-3 right-3 bg-gradient-to-r from-gold to-tan text-white text-xs px-3 py-1 rounded-full flex items-center shadow-lg z-10">
                         <FaCrown className="mr-1" />
                         PREMIUM
                       </span>
                     )}
+                    
+                    <Link to={`/tour-guides/${guide._id}`} className="flex flex-col flex-grow">
+                      <div className="p-3 flex items-center">
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-tan">
+                          <img
+                            src={guide.image || 'https://via.placeholder.com/300x300?text=Guide'}
+                            alt={guide.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-lg font-semibold text-charcoal">{guide.name}</h3>
+                          <span className="bg-tan text-cream px-2 py-0.5 rounded-full text-xs">
+                            {guide.yearsOfExperience} Yrs Exp
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="px-4 py-2 border-t border-gray-100 text-sm flex-grow">
+                        <p className="text-gray-600 line-clamp-2 mb-2">{guide.bio}</p>
+                        
+                        <div className="space-y-1 mb-3 text-xs">
+                          <p className="flex">
+                            <span className="font-medium w-24 text-gray-700">Specializations:</span>
+                            <span className="text-gray-600 truncate flex-1">
+                              {guide.specialization?.join(', ') || 'Not specified'}
+                            </span>
+                          </p>
+                          <p className="flex">
+                            <span className="font-medium w-24 text-gray-700">Languages:</span>
+                            <span className="text-gray-600 truncate flex-1">
+                              {guide.languages?.join(', ') || 'Not specified'}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-auto p-4 bg-gray-50 text-center text-sm font-medium text-tan hover:bg-tan/20 transition-colors">
+                        View Profile
+                      </div>
+                    </Link>
                   </div>
                 ))}
               </div>

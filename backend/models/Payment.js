@@ -22,9 +22,9 @@ const paymentSchema = new mongoose.Schema({
   serviceType: {
     type: String,
     enum: [
-      'blog_post', 
+      'sponsored_blog_post', // Changed from 'blog_post'
+      'tour_partnership',    // Changed from 'tour_partner'
       'business_listing', 
-      'tour_partner',
       'guide_premium_monthly',
       'guide_premium_yearly',
       'vehicle_premium_monthly',
@@ -58,7 +58,29 @@ const paymentSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     },
-    plan: String
+    plan: String,
+    // Add these fields for pay-to-create flows
+    awaitingSubmission: {
+      type: Boolean,
+      default: false
+    },
+    submissionType: {
+      type: String,
+      enum: [null, 'blog', 'tour']
+    },
+    // Add these fields for other premium services
+    awaitingGuideRegistration: {
+      type: Boolean,
+      default: false
+    },
+    awaitingVehicleRegistration: {
+      type: Boolean,
+      default: false
+    },
+    vehicleIds: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Vehicle'
+    }]
   },
   createdAt: {
     type: Date,

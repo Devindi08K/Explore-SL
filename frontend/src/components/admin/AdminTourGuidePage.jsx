@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from 'react-router-dom';
 import api from '../../utils/api';
+import { FaCrown, FaStar } from 'react-icons/fa';
 
 const AdminTourGuidePage = () => {
   const [guides, setGuides] = useState([]);
@@ -114,6 +115,37 @@ const AdminTourGuidePage = () => {
     }
   };
 
+  const handleFeatureStatusUpdate = async (id, status) => {
+    try {
+      await api.patch(`/admin/tour-guides/${id}/feature`, { status });
+      fetchGuides();
+    } catch (error) {
+      console.error("Error updating feature status:", error);
+    }
+  };
+
+  const handleExtendPremium = async (id) => {
+    try {
+      await api.post(`/admin/tour-guides/${id}/extend-premium`);
+      fetchGuides();
+      alert("Premium subscription extended by 30 days");
+    } catch (error) {
+      console.error("Error extending premium:", error);
+    }
+  };
+
+  const handleCancelPremium = async (id) => {
+    if (window.confirm("Are you sure you want to cancel this premium subscription?")) {
+      try {
+        await api.delete(`/admin/tour-guides/${id}/premium`);
+        fetchGuides();
+        alert("Premium subscription cancelled");
+      } catch (error) {
+        console.error("Error cancelling premium:", error);
+      }
+    }
+  };
+
   const handleCertificationChange = (index, field, value) => {
     const newCertifications = [...formData.certifications];
     newCertifications[index] = { ...newCertifications[index], [field]: value };
@@ -145,6 +177,36 @@ const AdminTourGuidePage = () => {
       tourAreas: [],
       isVerified: false
     });
+  };
+
+  // Update the handleRestorePremium function to check payment history
+  const handleRestorePremium = async (id) => {
+    try {
+      // First check if this guide ever had a premium subscription
+      const paymentHistoryResponse = await api.get(`/admin/tour-guides/${id}/payment-history`);
+      const hadPremiumBefore = paymentHistoryResponse.data.hadPremium;
+      
+      if (!hadPremiumBefore) {
+        alert('This guide never had premium subscription before. Please use the regular premium upgrade process.');
+        return;
+      }
+      
+      const days = prompt('Enter number of days for premium access:', '30');
+      if (!days) return; // User cancelled
+      
+      const durationDays = parseInt(days, 10);
+      if (isNaN(durationDays) || durationDays <= 0) {
+        alert('Please enter a valid number of days');
+        return;
+      }
+      
+      await api.patch(`/tour-guides/${id}/restore-premium`, { durationDays });
+      fetchGuides();
+      alert(`Premium status restored for ${durationDays} days`);
+    } catch (error) {
+      console.error('Error restoring premium status:', error);
+      alert('Failed to restore premium status');
+    }
   };
 
   return (
@@ -450,6 +512,49 @@ const AdminTourGuidePage = () => {
           </button>
         </div>
 
+        {/* Premium Status - New Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Premium Status</label>
+            <div className="mt-2 flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.isPremium || false}
+                onChange={(e) => setFormData({...formData, isPremium: e.target.checked})}
+                className="form-checkbox rounded border-tan text-gold focus:ring-gold"
+              />
+              <span className="ml-2">Premium Account</span>
+            </div>
+          </div>
+
+          {formData.isPremium && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Featured Status</label>
+              <select
+                value={formData.featuredStatus || 'none'}
+                onChange={(e) => setFormData({...formData, featuredStatus: e.target.value})}
+                className="mt-1 block w-full p-2 border border-tan rounded-md"
+              >
+                <option value="none">None</option>
+                <option value="homepage">Homepage</option>
+                <option value="destination">Destination Pages</option>
+              </select>
+            </div>
+          )}
+          
+          {formData.isPremium && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Premium Expiry</label>
+              <input
+                type="date"
+                value={formData.premiumExpiry ? new Date(formData.premiumExpiry).toISOString().split('T')[0] : ''}
+                onChange={(e) => setFormData({...formData, premiumExpiry: new Date(e.target.value)})}
+                className="mt-1 block w-full p-2 border border-tan rounded-md"
+              />
+            </div>
+          )}
+        </div>
+
         <button
           type="submit"
           className="w-full bg-tan text-cream py-3 rounded-lg hover:bg-gold transition duration-200"
@@ -466,17 +571,32 @@ const AdminTourGuidePage = () => {
             <div key={guide._id} className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-xl font-semibold text-charcoal">
+                  <h3 className="text-xl font-semibold text-charcoal flex items-center">
                     {guide.name}
                     {guide.isVerified && (
                       <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
                         Verified
                       </span>
                     )}
+                    {guide.isPremium && (
+                      <span className="ml-2 text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex items-center">
+                        <FaCrown className="mr-1" />
+                        Premium
+                      </span>
+                    )}
+                    {guide.featuredStatus !== 'none' && (
+                      <span className="ml-2 text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded flex items-center">
+                        <FaStar className="mr-1" />
+                        Featured
+                      </span>
+                    )}
                   </h3>
                   <p className="text-gray-600 mt-1">{guide.yearsOfExperience} years experience</p>
                   <p className="text-gray-600 mt-1">Languages: {guide.languages.join(', ')}</p>
                   <p className="text-gray-600 mt-1">Contact: {guide.contactEmail}</p>
+                  {guide.isPremium && guide.premiumExpiry && (
+                    <p className="text-green-600 mt-1">Premium until: {new Date(guide.premiumExpiry).toLocaleDateString()}</p>
+                  )}
                 </div>
                 <div className="flex space-x-2">
                   <button
@@ -489,6 +609,21 @@ const AdminTourGuidePage = () => {
                   >
                     {guide.isVerified ? 'Unverify' : 'Verify'}
                   </button>
+                  
+                  {guide.isPremium && (
+                    <button
+                      onClick={() => handleFeatureStatusUpdate(guide._id, 
+                        guide.featuredStatus === 'homepage' ? 'none' : 'homepage')}
+                      className={`px-4 py-2 rounded-md ${
+                        guide.featuredStatus === 'homepage' 
+                          ? 'bg-purple-200 text-purple-700 hover:bg-purple-300'
+                          : 'bg-purple-600 text-white hover:bg-purple-700'
+                      }`}
+                    >
+                      {guide.featuredStatus === 'homepage' ? 'Unfeature' : 'Feature'}
+                    </button>
+                  )}
+                  
                   <button
                     onClick={() => handleEdit(guide)}
                     className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
@@ -515,6 +650,36 @@ const AdminTourGuidePage = () => {
                   <p className="text-gray-600">{guide.preferredAreas.join(', ')}</p>
                 </div>
               </div>
+
+              {/* Premium Actions - Extend/Cancel Premium */}
+              {guide.isPremium && (
+                <div className="mt-3 flex space-x-2">
+                  <button
+                    onClick={() => handleExtendPremium(guide._id)}
+                    className="px-4 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
+                  >
+                    Extend Premium
+                  </button>
+                  <button
+                    onClick={() => handleCancelPremium(guide._id)}
+                    className="px-4 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                  >
+                    Cancel Premium
+                  </button>
+                </div>
+              )}
+
+              {/* Restore Premium Button - Only show for guides that had premium before */}
+              {!guide.isPremium && guide.hadPremiumBefore && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => handleRestorePremium(guide._id)}
+                    className="px-4 py-1 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm"
+                  >
+                    Restore Premium
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

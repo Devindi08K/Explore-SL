@@ -109,6 +109,12 @@ const affiliateSchema = new mongoose.Schema({
   totalReviews: {
     type: Number,
     default: 0
+  },
+
+  submittedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   }
 });
 

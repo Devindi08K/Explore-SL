@@ -14,51 +14,33 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 // Create Stripe checkout session
 exports.createStripeCheckout = async (req, res) => {
   try {
-    const { serviceType, amount, description, itemId, customerName, customerEmail, customerPhone } = req.body;
-    
-    console.log('💳 Creating Stripe checkout for:', { serviceType, amount, description });
-    
-    // Create a unique order ID
-    const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-    
-    // Check for existing active subscription for vehicle premium
-    if (serviceType === 'vehicle_premium_monthly' || serviceType === 'vehicle_premium_yearly') {
-      const existing = await Payment.findOne({
-        userId: req.user._id,
-        serviceType,
-        status: 'completed',
-        'subscriptionDetails.isActive': true
-      });
+    const { serviceType, amount, description, itemId, customerName, customerEmail } = req.body;
 
-      if (existing) {
-        return res.status(400).json({
-          error: `You already have an active ${serviceType === 'vehicle_premium_yearly' ? 'yearly' : 'monthly'} vehicle premium subscription.`
-        });
-      }
-    }
-    
-    // Create payment record in database
+    // 1. Create a unique order ID
+    const orderId = `STRIPE-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+    // 2. Create a pending payment record in your database
     const payment = new Payment({
       userId: req.user._id,
       amount,
-      description,
-      serviceType,
+      currency: 'lkr',
       orderId,
-      itemId: itemId || null,
+      serviceType,
+      description,
+      status: 'pending',
+      paymentMethod: 'stripe',
       customerDetails: {
         name: customerName || req.user.userName,
         email: customerEmail || req.user.email,
-        phone: customerPhone || ''
       },
-      status: 'pending'
+      itemId: itemId || null,
     });
-    
     await payment.save();
-    console.log('✅ Payment record created:', orderId);
-    
-    // Create Stripe checkout session
+
+    // 3. Create the Stripe session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
+      customer_email: customerEmail,
       line_items: [
         {
           price_data: {
@@ -71,21 +53,19 @@ exports.createStripeCheckout = async (req, res) => {
           quantity: 1,
         },
       ],
-      mode: 'payment',
-      success_url: `${FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&orderId=${orderId}`,
-      cancel_url: `${FRONTEND_URL}/payment/cancel`,
-      client_reference_id: orderId,
-      customer_email: customerEmail || req.user.email,
+      mode: "payment",
+      success_url: `${process.env.FRONTEND_URL}/payment/success?orderId=${orderId}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
       metadata: {
-        orderId: orderId,
-        serviceType: serviceType,
+        orderId, // Pass the orderId to the webhook
+        serviceType,
         userId: req.user._id.toString(),
-        itemId: itemId || ''
-      }
+        itemId: itemId || '',
+        description
+      },
     });
-    
-    console.log('✅ Stripe checkout session created:', session.id);
-    return res.json({ url: session.url });
+
+    res.json({ url: session.url });
   } catch (error) {
     console.error('❌ Error creating Stripe checkout:', error);
     return res.status(500).json({ error: 'Failed to initialize payment' });
@@ -185,72 +165,38 @@ exports.checkPaymentStatus = async (req, res) => {
 // Process successful payment
 const processSuccessfulPayment = async (payment) => {
   try {
-    console.log('🔄 Processing successful payment for service:', payment.serviceType);
-    
-    const { serviceType, itemId, userId } = payment;
-    
+    const { serviceType, userId, itemId, description } = payment;
+    const user = await User.findById(userId);
+
     switch (serviceType) {
-      case 'business_listing':
-        const listing = await AffiliateLink.findById(itemId);
-        if (listing) {
-          const startDate = new Date();
-          const endDate = new Date();
-          endDate.setDate(startDate.getDate() + 30);
-          
-          payment.subscriptionDetails = {
-            startDate,
-            endDate,
-            isActive: true,
-            plan: 'premium'
-          };
-          
-          listing.listingType = 'affiliate';
-          listing.isPremium = true;
-          listing.premiumExpiry = endDate;
-          
-          await listing.save();
-          await payment.save();
-          console.log('✅ Business listing upgraded to premium');
-        }
+      case 'sponsored_blog_post': {
+        payment.status = 'completed';
+        payment.subscriptionDetails = {
+          awaitingSubmission: true,
+          submissionType: 'blog'
+        };
+        await payment.save();
+        console.log('✅ Payment for sponsored blog post recorded. Awaiting submission.');
         break;
-        
-      case 'blog_post':
-        const blog = await Blog.findById(itemId);
-        if (blog) {
-          blog.isSponsored = true;
-          blog.sponsorshipDate = new Date();
-          await blog.save();
-          await payment.save();
-          console.log('✅ Blog post sponsored');
-        }
+      }
+
+      case 'tour_partnership': {
+        payment.status = 'completed';
+        payment.subscriptionDetails = {
+          awaitingSubmission: true,
+          submissionType: 'tour'
+        };
+        await payment.save();
+        console.log('✅ Payment for tour partnership recorded. Awaiting submission.');
         break;
-        
-      case 'tour_partner':
-        const tour = await Tour.findById(itemId);
-        if (tour) {
-          const startDate = new Date();
-          const endDate = new Date();
-          endDate.setDate(startDate.getDate() + 30);
-          
-          payment.subscriptionDetails = {
-            startDate,
-            endDate,
-            isActive: true,
-            plan: 'premium'
-          };
-          
-          tour.isPremium = true;
-          tour.premiumExpiry = endDate;
-          await tour.save();
-          await payment.save();
-          console.log('✅ Tour made premium');
-        }
-        break;
-        
+      }
+
       case 'guide_premium_monthly':
       case 'guide_premium_yearly': {
-        const guide = await TourGuide.findOne({ submittedBy: userId });
+        const guide = await TourGuide.findOne({ submittedBy: userId }).sort({ submittedAt: -1 });
+        
         if (guide) {
+          // Calculate dates
           const startDate = new Date();
           const endDate = new Date();
           
@@ -270,10 +216,26 @@ const processSuccessfulPayment = async (payment) => {
           guide.isPremium = true;
           guide.premiumExpiry = endDate;
           guide.premiumLevel = 'standard';
+          guide.analyticsEnabled = true;
+          guide.featuredStatus = 'destination'; // Featured in destination pages by default
+          guide.needsReview = true; // Add this line to flag for admin review
           
           await guide.save();
           await payment.save();
+          
           console.log('✅ Tour guide upgraded to premium');
+        } else {
+          // Store the payment with a flag indicating we need to apply premium to the next guide registered
+          payment.subscriptionDetails = {
+            startDate: new Date(),
+            endDate: new Date(Date.now() + (serviceType === 'guide_premium_yearly' ? 14 : 3) * 30 * 24 * 60 * 60 * 1000),
+            isActive: true, // This is crucial
+            plan: serviceType === 'guide_premium_yearly' ? 'yearly' : 'monthly',
+            awaitingGuideRegistration: true
+          };
+          await payment.save();
+          
+          console.log('⚠️ No guide found, flagging payment for future premium upgrade');
         }
         break;
       }

@@ -141,8 +141,8 @@ const PartnershipPage = () => {
               <div className="flex space-x-3 mt-6">
                 <button 
                   onClick={() => handlePaymentClick(
-                    'blog_post', 
-                    25000, 
+                    'sponsored_blog_post', 
+                    700, 
                     'Sponsored Blog Post'
                   )}
                   className="flex-1 flex justify-center items-center bg-tan text-cream py-3 px-4 rounded-md hover:bg-gold transition duration-200"
@@ -150,10 +150,10 @@ const PartnershipPage = () => {
                   Pay Now
                 </button>
                 <Link 
-                  to="/partnership/blog-submission"
+                  to="/submit-sponsored-blog"
                   className="flex-1 flex justify-center items-center bg-gray-100 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-200 transition duration-200"
                 >
-                  Learn More
+                  Submit Post
                 </Link>
               </div>
             </div>
@@ -292,25 +292,25 @@ const PartnershipPage = () => {
                   </ul>
                 </div>
                 
-                <p className="text-center font-bold text-tan text-lg">Starting from LKR 500/mo</p>
+                <p className="text-center font-bold text-tan text-lg">Starting from LKR 600/mo</p>
               </div>
               
               <div className="flex space-x-3 mt-6">
                 <button 
                   onClick={() => handlePaymentClick(
-                    'tour_partner', 
-                    10000, 
-                    'Tour Partner Registration'
+                    'tour_partnership', 
+                    600, 
+                    'Tour Partnership (Monthly)'
                   )}
                   className="flex-1 flex justify-center items-center bg-tan text-cream py-3 px-4 rounded-md hover:bg-gold transition duration-200"
                 >
                   Pay Now
                 </button>
                 <Link 
-                  to="/partnership/tour-operator"
+                  to="/submit-tour-partnership"
                   className="flex-1 flex justify-center items-center bg-gray-100 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-200 transition duration-200"
                 >
-                  Learn More
+                  Submit Tour
                 </Link>
               </div>
             </div>

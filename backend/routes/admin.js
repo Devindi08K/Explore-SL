@@ -56,7 +56,9 @@ router.get("/dashboard-stats", protect, authorize(["admin"]), async (req, res) =
       users: await User.countDocuments(),
       destinations: await Destination.countDocuments(),
       vehicles: await Vehicle.countDocuments({ isVerified: true }),
+      premiumVehicles: await Vehicle.countDocuments({ isPremium: true }),
       tourGuides: await TourGuide.countDocuments({ isVerified: true }),
+      premiumGuides: await TourGuide.countDocuments({ isPremium: true }),
       blogs: await Blog.countDocuments(),
       affiliates: await AffiliateLink.countDocuments(),
       tours: await Tour.countDocuments(),
@@ -439,6 +441,95 @@ router.get("/payments", protect, authorize(["admin"]), async (req, res) => {
   } catch (error) {
     console.error('❌ Error fetching payments:', error);
     res.status(500).json({ error: 'Error fetching payments' });
+  }
+});
+
+// Get all premium tour guides
+router.get("/tour-guides/premium", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const premiumGuides = await TourGuide.find({
+      isPremium: true,
+      premiumExpiry: { $gt: new Date() }
+    }).sort({ premiumExpiry: 1 });
+    
+    res.json(premiumGuides);
+  } catch (error) {
+    console.error('Error fetching premium tour guides:', error);
+    res.status(500).json({ error: 'Error fetching premium tour guides' });
+  }
+});
+
+// Update tour guide featured status
+router.patch("/tour-guides/:id/feature", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const { status } = req.body;
+    const guide = await TourGuide.findById(req.params.id);
+    
+    if (!guide) {
+      return res.status(404).json({ error: 'Tour guide not found' });
+    }
+    
+    if (!guide.isPremium) {
+      return res.status(400).json({ error: 'Only premium guides can be featured' });
+    }
+    
+    guide.featuredStatus = status;
+    await guide.save();
+    
+    res.json(guide);
+  } catch (error) {
+    console.error('Error updating guide feature status:', error);
+    res.status(500).json({ error: 'Error updating feature status' });
+  }
+});
+
+// Extend tour guide premium subscription
+router.post("/tour-guides/:id/extend-premium", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const guide = await TourGuide.findById(req.params.id);
+    
+    if (!guide) {
+      return res.status(404).json({ error: 'Tour guide not found' });
+    }
+    
+    // Add 30 days to current expiry or from today if expired
+    const currentExpiry = guide.premiumExpiry && guide.premiumExpiry > new Date() 
+      ? new Date(guide.premiumExpiry) 
+      : new Date();
+    
+    currentExpiry.setDate(currentExpiry.getDate() + 30);
+    guide.premiumExpiry = currentExpiry;
+    guide.isPremium = true;
+    
+    await guide.save();
+    
+    res.json(guide);
+  } catch (error) {
+    console.error('Error extending guide premium:', error);
+    res.status(500).json({ error: 'Error extending premium subscription' });
+  }
+});
+
+// Cancel tour guide premium subscription
+router.delete("/tour-guides/:id/premium", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const guide = await TourGuide.findById(req.params.id);
+    
+    if (!guide) {
+      return res.status(404).json({ error: 'Tour guide not found' });
+    }
+    
+    guide.isPremium = false;
+    guide.featuredStatus = 'none';
+    guide.premiumExpiry = null;
+    guide.hadPremiumBefore = true; // Mark that this guide had premium before
+    
+    await guide.save();
+    
+    res.json({ message: 'Premium subscription cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling guide premium:', error);
+    res.status(500).json({ error: 'Error cancelling premium subscription' });
   }
 });
 

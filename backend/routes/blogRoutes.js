@@ -1,6 +1,12 @@
 const express = require("express");
 const Blog = require("../models/blog");
 const { protect, authorize } = require("../middleware/authMiddleware");
+const multer = require('multer'); // Assuming you use multer for uploads
+const Payment = require('../models/Payment');
+const User = require('../models/User');
+
+// Configure multer for image uploads
+const upload = multer({ dest: 'uploads/' }); 
 
 const router = express.Router();
 
@@ -26,6 +32,45 @@ router.get("/all", protect, authorize(["admin"]), async (req, res) => {
   } catch (error) {
     console.error("Error fetching all blogs:", error);
     res.status(500).json({ error: "Error fetching blogs" });
+  }
+});
+
+// Submit a sponsored blog post
+router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
+  try {
+    const { title, content, paymentId } = req.body;
+    const user = await User.findById(req.user._id);
+
+    // 1. Verify the payment voucher
+    const payment = await Payment.findById(paymentId);
+    if (!payment || payment.userId.toString() !== req.user._id.toString() || payment.serviceType !== 'sponsored_blog_post' || !payment.subscriptionDetails.awaitingSubmission) {
+      return res.status(403).json({ error: 'Invalid or used payment voucher.' });
+    }
+
+    // 2. Create the blog post
+    const newBlog = new Blog({
+      title,
+      content,
+      image: req.file ? req.file.path : null,
+      author: user.userName,
+      isSponsored: true,
+      sponsorshipDate: new Date(),
+      submittedBy: req.user._id,
+      status: 'pending',
+    });
+
+    const savedBlog = await newBlog.save();
+
+    // 3. Mark the payment voucher as used
+    payment.subscriptionDetails.awaitingSubmission = false;
+    payment.subscriptionDetails.itemId = savedBlog._id;
+    payment.description = `Sponsored Blog Post: ${savedBlog.title}`;
+    await payment.save();
+
+    res.status(201).json(savedBlog);
+  } catch (error) {
+    console.error('Error submitting sponsored blog:', error);
+    res.status(500).json({ error: 'Failed to submit sponsored blog post.' });
   }
 });
 

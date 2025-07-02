@@ -1,18 +1,32 @@
 const mongoose = require("mongoose");
 
 const blogSchema = new mongoose.Schema({
-  authorName: { type: String, required: true },
-  blogUrl: { type: String, required: true },
-  email: { type: String, required: true },
-  message: String,
-  isVerified: {
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  image: { type: String },
+  author: { type: String, required: true },
+  
+  // Add these new fields
+  isSponsored: {
     type: Boolean,
     default: false
+  },
+  sponsorshipDate: {
+    type: Date
+  },
+  submittedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
   },
   submittedAt: {
     type: Date,
@@ -22,18 +36,6 @@ const blogSchema = new mongoose.Schema({
   verifiedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  },
-  reviews: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Review'
-  }],
-  averageRating: {
-    type: Number,
-    default: 0
-  },
-  totalReviews: {
-    type: Number,
-    default: 0
   }
 });
 
