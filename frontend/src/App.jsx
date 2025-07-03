@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { useContext } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import api from './utils/api';
 
@@ -50,129 +50,128 @@ import PaymentCancelPage from './pages/PaymentCancelPage';
 import SubmitSponsoredBlogPage from './components/client/SubmitSponsoredBlogPage';
 import SubmitTourPartnershipPage from './components/client/SubmitTourPartnershipPage';
 
-// Create a separate component for the app content
+// Create a separate component for the app content that needs router hooks
 const AppContent = () => {
-  const { user, login: authLogin } = useContext(AuthContext); // Now this is inside the provider
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    if (token && storedUser) {
-      setIsLoggedIn(true);
-    }
-  }, []);
+  const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    window.location.href = '/login';
+    logout();
+    navigate('/login');
   };
 
-  const handleLoginSuccess = (userData) => {
-    console.log('App: Login success with data:', userData);
-    setIsLoggedIn(true);
-    authLogin(userData, userData.token); // Use AuthContext login
+  const handleLoginSuccess = () => {
+    // This function is now primarily for callbacks if needed,
+    // as AuthContext handles the state update.
+    console.log("Login successful.");
   };
 
-  // Protected Route component
+  // This is the definitive ProtectedRoute component.
   const ProtectedRoute = ({ children, adminOnly = false }) => {
-    const token = localStorage.getItem('token');
-    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!token || !storedUser) {
+    const { currentUser, isAuthReady } = useContext(AuthContext);
+
+    if (!isAuthReady) {
+      // While context is checking localStorage, show a loading indicator.
+      return (
+        <div className="min-h-screen bg-cream flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tan"></div>
+        </div>
+      );
+    }
+
+    if (!currentUser) {
+      // If the check is done and there's no user, redirect to login.
       return <Navigate to="/login" replace />;
     }
-    if (adminOnly && storedUser.role !== 'admin') {
+
+    if (adminOnly && currentUser.role !== 'admin') {
+      // If route is for admins only and user is not an admin, redirect.
       return <Navigate to="/" replace />;
     }
+
     return children;
   };
 
   return (
-    <BrowserRouter>
-      <div className="flex flex-col min-h-screen">
-        <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} userRole={user?.role} user={user} />
-        <main className="flex-grow">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/blogs" element={<BlogList user={user} />} />
-            <Route path="/blogs/:id" element={<BlogDetails user={user} />} />
-            <Route path="/map" element={<MapComponent />} />
-            <Route path="/tours" element={<TourPage />} />
-            <Route path="/affiliate-links" element={<AffiliatePage />} />
-            <Route path="/partnership" element={<PartnershipPage />} />
-            <Route path="/destination/:id" element={<DestinationDetails />} />
-            <Route path="/partnership/blog-submission" element={<BlogSubmissionForm />} />
-            <Route path="/partnership/business-listing" element={<BusinessListingForm />} />
-            <Route path="/partnership/tour-operator" element={<TourOperatorForm />} />
-            <Route path="/tour-guides" element={<TourGuidePage />} />
-            <Route path="/tour-guide-registration" element={<TourGuideRegistrationForm />} />
-            <Route path="/destinations" element={<DestinationsPage />} />
-            <Route path="/vehicles" element={<VehiclesPage />} />
-            <Route path="/vehicle-registration" element={<VehicleRegistrationForm />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <UserProfile />
-              </ProtectedRoute>
-            } />
-            <Route path="/auth/callback" element={
-              <AuthCallback onLoginSuccess={handleLoginSuccess} />
-            } />
-            <Route path="/reviews" element={<ReviewList />} />
-            <Route path="/payment/success" element={<PaymentSuccessPage />} />
-            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
-            <Route path="/partnership/tour-guide-premium" element={<TourGuidePremiumPage />} />
-            <Route path="/partnership/vehicle-premium" element={<VehiclePremiumPage />} />
-            <Route path="/vehicles/:id" element={<VehiclesPage />} />
-            <Route path="/tour-guides/:id" element={<TourGuideProfilePage />} />
-            <Route path="/submit-sponsored-blog" element={<SubmitSponsoredBlogPage />} />
-            <Route path="/submit-tour-partnership" element={<SubmitTourPartnershipPage />} />
-            
-            {/* Protected Admin Routes */}
-            <Route path="/admin" element={
-              <ProtectedRoute adminOnly>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/destinations" element={
-              <ProtectedRoute adminOnly>
-                <ManageDestinations />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/affiliate-links" element={
-              <ProtectedRoute adminOnly>
-                <AdminAffiliatePage />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/blogs" element={
-              <ProtectedRoute adminOnly>
-                <AdminBlogForm />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/tours" element={
-              <ProtectedRoute adminOnly>
-                <AdminTour />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/tour-guides" element={
-              <ProtectedRoute adminOnly>
-                <AdminTourGuidePage />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/vehicles" element={
-              <ProtectedRoute adminOnly>
-                <AdminVehiclesPage />
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </BrowserRouter>
+    <div className="flex flex-col min-h-screen">
+      <Navbar onLogout={handleLogout} />
+      <main className="flex-grow">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/blogs" element={<BlogList />} />
+          <Route path="/blogs/:id" element={<BlogDetails />} />
+          <Route path="/map" element={<MapComponent />} />
+          <Route path="/tours" element={<TourPage />} />
+          <Route path="/affiliate-links" element={<AffiliatePage />} />
+          <Route path="/partnership" element={<PartnershipPage />} />
+          <Route path="/destination/:id" element={<DestinationDetails />} />
+          <Route path="/partnership/blog-submission" element={<BlogSubmissionForm />} />
+          <Route path="/partnership/business-listing" element={<BusinessListingForm />} />
+          <Route path="/partnership/tour-operator" element={<TourOperatorForm />} />
+          <Route path="/tour-guides" element={<TourGuidePage />} />
+          <Route path="/tour-guide-registration" element={<TourGuideRegistrationForm />} />
+          <Route path="/destinations" element={<DestinationsPage />} />
+          <Route path="/vehicles" element={<VehiclesPage />} />
+          <Route path="/vehicle-registration" element={<VehicleRegistrationForm />} />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/reviews" element={<ReviewList />} />
+          <Route path="/payment/success" element={<PaymentSuccessPage />} />
+          <Route path="/payment/cancel" element={<PaymentCancelPage />} />
+          <Route path="/partnership/tour-guide-premium" element={<TourGuidePremiumPage />} />
+          <Route path="/partnership/vehicle-premium" element={<VehiclePremiumPage />} />
+          <Route path="/vehicles/:id" element={<VehiclesPage />} />
+          <Route path="/tour-guides/:id" element={<TourGuideProfilePage />} />
+          <Route path="/submit-sponsored-blog" element={<SubmitSponsoredBlogPage />} />
+          <Route path="/submit-tour-partnership" element={<SubmitTourPartnershipPage />} />
+          
+          {/* Protected Admin Routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute adminOnly>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/destinations" element={
+            <ProtectedRoute adminOnly>
+              <ManageDestinations />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/affiliate-links" element={
+            <ProtectedRoute adminOnly>
+              <AdminAffiliatePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/blogs" element={
+            <ProtectedRoute adminOnly>
+              <AdminBlogForm />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/tours" element={
+            <ProtectedRoute adminOnly>
+              <AdminTour />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/tour-guides" element={
+            <ProtectedRoute adminOnly>
+              <AdminTourGuidePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/vehicles" element={
+            <ProtectedRoute adminOnly>
+              <AdminVehiclesPage />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
   );
 };
 
@@ -180,7 +179,9 @@ const AppContent = () => {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </AuthProvider>
   );
 }

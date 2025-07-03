@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from '../../utils/api';
-import { FaStar, FaLink } from 'react-icons/fa'; // Import FaLink
+import { FaStar, FaLink, FaPlus } from 'react-icons/fa'; // Import FaLink
 
 const BlogList = (props) => {
     const [blogs, setBlogs] = useState([]);
@@ -106,21 +106,48 @@ const BlogList = (props) => {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-10">
-            <h2 className="text-3xl font-bold text-center text-charcoal mb-8">
-                Latest Travel Blogs
-            </h2>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
+                <h2 className="text-3xl font-bold text-center md:text-left text-charcoal mb-4 md:mb-0">
+                    Latest Travel Blogs
+                </h2>
+                <div className="flex justify-center md:justify-end">
+                    <Link 
+                        to="/partnership#blog-section"
+                        className="inline-flex items-center bg-tan hover:bg-gold text-cream font-medium py-2 px-4 rounded-lg transition duration-300"
+                    >
+                        <FaPlus className="mr-2" /> Submit Blog
+                    </Link>
+                </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {blogs.map((blog) => (
                     <div key={blog._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
                         {/* Conditionally render image or a placeholder */}
                         <Link to={`/blogs/${blog._id}`}>
                             {blog.image ? (
-                                <img 
-                                    src={blog.image.startsWith('http') ? blog.image : `${import.meta.env.VITE_BACKEND_URL}/${blog.image.replace(/\\/g, '/')}`} 
-                                    alt={blog.title} 
-                                    className="w-full h-48 object-cover" 
-                                    onError={(e) => e.target.src = 'https://placehold.co/600x400?text=Image+Not+Found'}
-                                />
+                                <>
+                                    {/* Debug output - will show in browser console */}
+                                    {console.log('Blog Image Debug:', {
+                                        blogId: blog._id,
+                                        rawPath: blog.image,
+                                        constructedUrl: blog.image.startsWith('http') 
+                                            ? blog.image 
+                                            : `${import.meta.env.VITE_BACKEND_URL}/${blog.image.replace(/\\/g, '/')}`
+                                    })}
+                                    <img 
+                                        src={blog.image.startsWith('http') 
+                                            ? blog.image 
+                                            : `http://localhost:5000/${blog.image.replace(/\\/g, '/')}`} 
+                                        alt={blog.title} 
+                                        className="w-full h-48 object-cover" 
+                                        onError={(e) => {
+                                            console.log('Image load error for blog:', blog._id, blog.title);
+                                            console.log('Failed URL:', e.target.src);
+                                            e.target.onerror = null; 
+                                            e.target.src = 'https://placehold.co/600x400?text=Image+Not+Found';
+                                        }}
+                                    />
+                                </>
                             ) : (
                                 <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
                                     <FaLink className="text-gray-400 text-5xl" />

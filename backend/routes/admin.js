@@ -26,28 +26,29 @@ router.get("/users", protect, authorize(["admin"]), async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
-    console.error("Error fetching users:", error);
     res.status(500).json({ error: "Error fetching users" });
   }
 });
 
-// Update user role
-router.patch("/users/:id/role", protect, authorize(["admin"]), async (req, res) => {
+// Add this new route
+// Get a single tour by ID (for admin view/edit)
+router.get("/tours/:id", protect, authorize(["admin"]), async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { role: req.body.role },
-      { new: true }
-    ).select('-password');
-    
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    const tour = await Tour.findById(req.params.id)
+      .populate('submittedBy', 'userName email')
+      .populate('reviews.user', 'userName');
+      
+    if (!tour) {
+      return res.status(404).json({ error: "Tour not found" });
     }
-    res.json(user);
+    
+    res.json(tour);
   } catch (error) {
-    res.status(500).json({ error: "Error updating user role" });
+    console.error("Error fetching tour details for admin:", error);
+    res.status(500).json({ error: "Error fetching tour details" });
   }
 });
+
 
 // Get dashboard statistics
 router.get("/dashboard-stats", protect, authorize(["admin"]), async (req, res) => {

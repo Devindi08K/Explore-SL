@@ -33,15 +33,41 @@ router.get("/all", protect, authorize(["admin"]), async (req, res) => {
   }
 });
 
-// Get single tour
-router.get("/:id", protect, authorize(["admin"]), async (req, res) => {
+// Get tour submissions for current user
+// IMPORTANT: This route must come BEFORE the general '/:id' route.
+router.get('/my-submissions', protect, async (req, res) => {
   try {
-    const tour = await Tour.findById(req.params.id);
+    const tours = await Tour.find({ submittedBy: req.user._id });
+    res.json(tours);
+  } catch (error) {
+    console.error('Error fetching user tour submissions:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get a single tour by ID
+// This dynamic route must come after more specific GET routes.
+router.get("/:id", async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id)
+      .populate('submittedBy', 'userName email')
+      .populate('reviews.user', 'userName');
+      
     if (!tour) {
       return res.status(404).json({ error: "Tour not found" });
     }
+    
+    // Logic to prevent access to unapproved tours by the public
+    if (tour.status !== 'approved') {
+      // A simple check to see if a user is logged in and is either an admin or the owner.
+      // Note: This requires the `protect` middleware to be effective on this route or a similar check.
+      // For now, we assume a basic protection check.
+      return res.status(403).json({ error: "This tour is not yet available for viewing." });
+    }
+    
     res.json(tour);
   } catch (error) {
+    console.error("Error fetching tour details:", error);
     res.status(500).json({ error: "Error fetching tour details" });
   }
 });
@@ -60,7 +86,7 @@ router.post("/", async (req, res) => {
 });
 
 // Update a tour
-router.put("/:id", async (req, res) => {
+router.put("/:id", protect, async (req, res) => {
   try {
     const updatedTour = await Tour.findByIdAndUpdate(
       req.params.id,
@@ -99,19 +125,6 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
   }
 });
 
-// Get tour submissions for current user
-router.get('/my-submissions', protect, async (req, res) => {
-  try {
-    const tours = await Tour.find({ 
-      submittedBy: req.user._id 
-    }).sort({ submittedAt: -1 });
-    res.json(tours);
-  } catch (error) {
-    console.error('Error fetching user tours:', error);
-    res.status(500).json({ error: 'Error fetching tours' });
-  }
-});
-
 // Delete a tour
 router.delete("/:id", async (req, res) => {
   try {
@@ -129,7 +142,7 @@ router.delete("/:id", async (req, res) => {
 // Submit a tour partnership
 router.post('/partnership', protect, upload.single('image'), async (req, res) => {
   try {
-    const { paymentId, ...tourData } = req.body;
+    const { paymentId, imageUrl, ...tourDataFromRequest } = req.body;
 
     // 1. Verify the payment voucher
     const payment = await Payment.findById(paymentId);
@@ -141,13 +154,31 @@ router.post('/partnership', protect, upload.single('image'), async (req, res) =>
     const premiumExpiryDate = new Date();
     premiumExpiryDate.setFullYear(premiumExpiryDate.getFullYear() + 1); // 1 year partnership
 
+    let imagePath;
+    if (imageUrl) {
+      imagePath = imageUrl;
+    } else if (req.file) {
+      imagePath = req.file.path;
+    } else {
+      imagePath = "https://placehold.co/600x400?text=Tour+Image"; // Default fallback
+    }
+
+    // Sanitize and prepare the final tour data
+    const tourData = {
+      ...tourDataFromRequest,
+      isExternal: tourDataFromRequest.isExternal === 'true', // Ensure boolean type
+      itinerary: tourDataFromRequest.itinerary || [{ day: "Day 1", description: "Itinerary will be provided upon request." }] // Add default itinerary
+    };
+
     const newTour = new Tour({
       ...tourData,
-      image: req.file ? req.file.path : null,
+      image: imagePath,
       submittedBy: req.user._id,
       isPremium: true,
       premiumExpiry: premiumExpiryDate,
       status: 'pending',
+      isVerified: false,
+      submittedAt: new Date(),
     });
 
     const savedTour = await newTour.save();
@@ -161,7 +192,7 @@ router.post('/partnership', protect, upload.single('image'), async (req, res) =>
     res.status(201).json(savedTour);
   } catch (error) {
     console.error('Error submitting tour partnership:', error);
-    res.status(500).json({ error: 'Failed to submit tour partnership.' });
+    res.status(500).json({ error: 'Failed to submit tour partnership. Please ensure all required fields are filled correctly.' });
   }
 });
 

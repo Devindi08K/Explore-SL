@@ -1,13 +1,29 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useContext, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaUserCircle, FaCog, FaSignOutAlt, FaUser } from "react-icons/fa";
+import { AuthContext } from '../../context/AuthContext';
 
-const Navbar = ({ isLoggedIn, onLogout, userRole, user }) => {
+const Navbar = ({ onLogout }) => {
+    const { currentUser, isAuthReady } = useContext(AuthContext);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const navigate = useNavigate();
+    
+    // Determine if user is logged in based on context
+    const isLoggedIn = Boolean(currentUser);
+    
+    useEffect(() => {
+        console.log("Navbar auth state:", { isLoggedIn, userName: currentUser?.userName });
+    }, [currentUser, isLoggedIn]);
+    
+    // Handle logout with proper cleanup
+    const handleLogout = () => {
+        setShowProfileMenu(false);
+        onLogout();
+    };
 
     // Close the menu when clicking outside
-    React.useEffect(() => {
+    useEffect(() => {
         function handleClickOutside(event) {
             if (showProfileMenu && !event.target.closest('.profile-menu-container')) {
                 setShowProfileMenu(false);
@@ -19,7 +35,7 @@ const Navbar = ({ isLoggedIn, onLogout, userRole, user }) => {
     }, [showProfileMenu]);
 
     return (
-        <nav className="bg-tan shadow-lg sticky top-0 z-50">
+        <nav className="bg-charcoal text-cream py-4 sticky top-0 z-50 shadow-md">
             <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <Link className="text-2xl font-bold text-cream" to="/">
                     Explore Sri Lanka
@@ -45,7 +61,7 @@ const Navbar = ({ isLoggedIn, onLogout, userRole, user }) => {
                                 aria-haspopup="true"
                             >
                                 <FaUserCircle className="w-8 h-8" />
-                                <span className="font-medium">{user?.userName}</span>
+                                <span className="font-medium">{currentUser?.userName}</span>
                             </button>
                             
                             {showProfileMenu && (
@@ -59,7 +75,7 @@ const Navbar = ({ isLoggedIn, onLogout, userRole, user }) => {
                                         My Profile
                                     </Link>
                                     
-                                    {userRole === 'admin' && (
+                                    {currentUser.role === 'admin' && (
                                         <Link 
                                             to="/admin" 
                                             className="flex items-center px-4 py-2 text-gray-700 hover:bg-cream hover:text-charcoal"
@@ -74,7 +90,7 @@ const Navbar = ({ isLoggedIn, onLogout, userRole, user }) => {
                                     
                                     <button 
                                         onClick={() => {
-                                            onLogout();
+                                            handleLogout();
                                             setShowProfileMenu(false);
                                         }}
                                         className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-cream hover:text-charcoal"
@@ -138,7 +154,7 @@ const Navbar = ({ isLoggedIn, onLogout, userRole, user }) => {
                                 aria-haspopup="true"
                             >
                                 <FaUserCircle className="w-8 h-8" />
-                                <span className="font-medium">{user?.userName}</span>
+                                <span className="font-medium">{currentUser?.userName}</span>
                             </button>
                             
                             {showProfileMenu && (
@@ -152,7 +168,7 @@ const Navbar = ({ isLoggedIn, onLogout, userRole, user }) => {
                                         My Profile
                                     </Link>
                                     
-                                    {userRole === 'admin' && (
+                                    {currentUser.role === 'admin' && (
                                         <Link 
                                             to="/admin" 
                                             className="flex items-center px-4 py-2 text-gray-700 hover:bg-cream hover:text-charcoal"
@@ -167,7 +183,7 @@ const Navbar = ({ isLoggedIn, onLogout, userRole, user }) => {
                                     
                                     <button 
                                         onClick={() => {
-                                            onLogout();
+                                            handleLogout();
                                             setShowProfileMenu(false);
                                         }}
                                         className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-cream hover:text-charcoal"

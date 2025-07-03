@@ -89,3 +89,30 @@ exports.checkAuth = (req, res) => {
         res.json({ role: null });
     }
 };
+
+// GET CURRENT USER
+exports.getCurrentUser = async (req, res) => {
+  try {
+    // req.user should be available from the auth middleware
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Return user data (excluding password)
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      _id: user._id,
+      userName: user.userName,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt
+    });
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};

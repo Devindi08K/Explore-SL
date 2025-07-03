@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, loginUser, logoutUser, checkAuth } = require('../controllers/authController');
+const { registerUser, loginUser, logoutUser, checkAuth, getCurrentUser } = require('../controllers/authController');
 const passport = require('passport');
 const User = require('../models/User'); // Make sure to import the User model
 const { protect } = require('../middleware/authMiddleware'); // Import the protect middleware
@@ -50,5 +50,8 @@ router.get("/profile", protect, async (req, res) => {
     res.status(500).json({ error: "Error fetching user profile" });
   }
 });
+
+// Add this route to your existing routes
+router.get('/me', protect, getCurrentUser);
 
 module.exports = router;

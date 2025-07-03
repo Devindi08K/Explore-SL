@@ -22,7 +22,8 @@ import {
   FaUsers,
   FaStar,
   FaClock,
-  FaBolt
+  FaBolt,
+  FaMapMarkedAlt
 } from 'react-icons/fa';
 
 const UserProfile = () => {
@@ -38,6 +39,7 @@ const UserProfile = () => {
   const [vehicleSubmissions, setVehicleSubmissions] = useState([]);
   const [blogSubmissions, setBlogSubmissions] = useState([]);
   const [affiliateSubmissions, setAffiliateSubmissions] = useState([]);
+  const [tourSubmissions, setTourSubmissions] = useState([]);
   
   // Payment history state
   const [paymentHistory, setPaymentHistory] = useState([]);
@@ -87,26 +89,39 @@ const UserProfile = () => {
         api.get('/blogs/my-submissions').catch(err => {
           console.warn('Blogs API failed:', err.response?.status);
           return { data: [] };
+        }),
+        api.get('/affiliate-links/my-submissions').catch(err => {
+          console.warn('Affiliate links API failed:', err.response?.status);
+          return { data: [] };
+        }),
+        api.get('/tours/my-submissions').catch(err => {
+          console.warn('Tours API failed:', err.response?.status);
+          return { data: [] };
         })
       ];
       
       // Make sure we get valid responses before proceeding
-      const [tourGuideRes, vehicleRes, blogRes] = await Promise.all(promises);
+      const [tourGuideRes, vehicleRes, blogRes, affiliateRes, tourRes] = await Promise.all(promises);
       
       // Ensure we have valid data to work with
       const tourGuideData = Array.isArray(tourGuideRes.data) ? tourGuideRes.data : [];
       const vehicleData = Array.isArray(vehicleRes.data) ? vehicleRes.data : [];
       const blogData = Array.isArray(blogRes.data) ? blogRes.data : [];
+      const affiliateData = Array.isArray(affiliateRes.data) ? affiliateRes.data : [];
+      const tourData = Array.isArray(tourRes.data) ? tourRes.data : [];
       
       console.log('📊 Fetched data:', {
         tourGuides: tourGuideData.length || 0,
         vehicles: vehicleData.length || 0,
-        blogs: blogData.length || 0
+        blogs: blogData.length || 0,
+        tours: tourData.length || 0
       });
       
       setTourGuideSubmissions(tourGuideData);
       setVehicleSubmissions(vehicleData);
       setBlogSubmissions(blogData);
+      setAffiliateSubmissions(affiliateData);
+      setTourSubmissions(tourData);
       
       // Debug for premium items
       const premiumVehicles = vehicleData.filter(v => v.isPremium);
@@ -808,9 +823,9 @@ const UserProfile = () => {
             >
               <FaHistory className="mr-2" />
               My Submissions
-              {(tourGuideSubmissions.length + vehicleSubmissions.length + blogSubmissions.length + affiliateSubmissions.length) > 0 && (
+              {(tourGuideSubmissions.length + vehicleSubmissions.length + blogSubmissions.length + affiliateSubmissions.length + tourSubmissions.length) > 0 && (
                 <span className="ml-2 bg-tan text-cream text-xs px-2 py-1 rounded-full">
-                  {tourGuideSubmissions.length + vehicleSubmissions.length + blogSubmissions.length + affiliateSubmissions.length}
+                  {tourGuideSubmissions.length + vehicleSubmissions.length + blogSubmissions.length + affiliateSubmissions.length + tourSubmissions.length}
                 </span>
               )}
             </button>
@@ -858,7 +873,7 @@ const UserProfile = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-blue-50 p-4 rounded-lg text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {tourGuideSubmissions.length + vehicleSubmissions.length + blogSubmissions.length + affiliateSubmissions.length}
+                        {tourGuideSubmissions.length + vehicleSubmissions.length + blogSubmissions.length + affiliateSubmissions.length + tourSubmissions.length}
                       </div>
                       <div className="text-sm text-blue-600">Total Submissions</div>
                     </div>
@@ -868,14 +883,14 @@ const UserProfile = () => {
                     </div>
                     <div className="bg-yellow-50 p-4 rounded-lg text-center">
                       <div className="text-2xl font-bold text-yellow-600">
-                        {[...tourGuideSubmissions, ...vehicleSubmissions, ...blogSubmissions, ...affiliateSubmissions]
+                        {[...tourGuideSubmissions, ...vehicleSubmissions, ...blogSubmissions, ...affiliateSubmissions, ...tourSubmissions]
                           .filter(item => item.isPremium).length}
                       </div>
                       <div className="text-sm text-yellow-600">Premium Services</div>
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {[...tourGuideSubmissions, ...vehicleSubmissions, ...blogSubmissions, ...affiliateSubmissions]
+                        {[...tourGuideSubmissions, ...vehicleSubmissions, ...blogSubmissions, ...affiliateSubmissions, ...tourSubmissions]
                           .filter(item => item.status === 'approved').length}
                       </div>
                       <div className="text-sm text-purple-600">Approved Items</div>
@@ -1054,13 +1069,71 @@ const UserProfile = () => {
                   </div>
                 )}
 
-                {/* No submissions message */}
-                {tourGuideSubmissions.length === 0 && vehicleSubmissions.length === 0 && blogSubmissions.length === 0 && (
+                {/* Tour Submissions - Add this section */}
+                {tourSubmissions.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4 flex items-center">
+                      <FaMapMarkedAlt className="mr-2 text-green-600" />
+                      Tour Submissions
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {tourSubmissions.map((tour) => (
+                        <div key={tour._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-lg">{tour.name}</h4>
+                            {tour.isPremium && (
+                              <span className="bg-gradient-to-r from-gold to-tan text-white text-xs px-2 py-1 rounded-full flex items-center shadow-md">
+                                <FaCrown className="mr-1" />
+                                PREMIUM
+                              </span>
+                            )}
+                          </div>
+                          
+                          {tour.image && (
+                            <div className="mb-2">
+                              <img 
+                                src={tour.image.startsWith('http') 
+                                  ? tour.image 
+                                  : `${import.meta.env.VITE_BACKEND_URL}/${tour.image.replace(/\\/g, '/')}`}
+                                alt={tour.name}
+                                className="w-full h-32 object-cover rounded-md"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "https://placehold.co/600x400?text=Tour+Image";
+                                }}
+                              />
+                            </div>
+                          )}
+                          
+                          <p className="text-sm text-gray-600 mb-2">{tour.type}</p>
+                          <p className="text-sm text-gray-600 mb-2">Duration: {tour.duration || 'Not specified'}</p>
+                          <p className="text-sm text-gray-600 mb-3">{tour.description?.substring(0, 80)}...</p>
+                          
+                          <div className="flex justify-between items-center mt-3">
+                            <span className={getStatusBadge(tour.status)}>
+                              {tour.status}
+                            </span>
+                            <Link to={`/tours/${tour._id}`} className="text-tan text-sm hover:underline">
+                              View Details
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No submissions message - update to include tours */}
+                {tourGuideSubmissions.length === 0 && 
+                 vehicleSubmissions.length === 0 && 
+                 blogSubmissions.length === 0 && 
+                 affiliateSubmissions.length === 0 && 
+                 tourSubmissions.length === 0 && (
                   <div className="bg-gray-50 rounded-lg p-12 text-center">
                     <div className="text-6xl text-gray-300 mb-4">📝</div>
                     <h3 className="text-xl font-semibold text-gray-600 mb-4">No Submissions Yet</h3>
                     <p className="text-gray-500 mb-6">
-                      Start your journey by registering as a tour guide or adding your vehicle!
+                      Start your journey by registering as a tour guide, adding your vehicle, or submitting a tour!
                     </p>
                     <div className="flex justify-center space-x-4">
                       <Link to="/tour-guide-registration" className="bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition">
@@ -1068,6 +1141,9 @@ const UserProfile = () => {
                       </Link>
                       <Link to="/vehicle-registration" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                         Add Vehicle
+                      </Link>
+                      <Link to="/tour-submission" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        Submit Tour
                       </Link>
                     </div>
                   </div>

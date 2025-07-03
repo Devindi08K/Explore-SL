@@ -17,7 +17,7 @@ app.use(express.json()); // Regular JSON parsing for most routes
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve static files from the 'uploads' directory
+// Serve static files from the 'uploads' directory and its subdirectories
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Special handling for Stripe webhook (must be before the express.json middleware)

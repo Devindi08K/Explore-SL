@@ -1,38 +1,52 @@
 // filepath: frontend/src/components/auth/AuthCallback.jsx
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../utils/api';
+import { AuthContext } from '../../context/AuthContext';
 
-const AuthCallback = ({ onLoginSuccess }) => {
+const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { setCurrentUser } = useContext(AuthContext);
 
   useEffect(() => {
     const token = searchParams.get('token');
-    if (token) {
-      localStorage.setItem('token', token);
-      // Get user data
-      const fetchUserData = async () => {
-        try {
-          const response = await api.get('/auth/me');
-          const userData = response.data;
+    
+    if (!token) {
+      navigate('/login?error=auth_failed');
+      return;
+    }
+    
+    const fetchUserData = async () => {
+      try {
+        // Temporarily set header to fetch user data
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        const response = await api.get('/auth/me');
+        
+        if (response.data) {
+          const userData = {
+            ...response.data,
+            token: token
+          };
           
-          localStorage.setItem('user', JSON.stringify(userData));
-          onLoginSuccess(userData);
+          // This will handle setting state, localStorage, and axios headers correctly
+          setCurrentUser(userData);
           
           navigate(userData.role === 'admin' ? '/admin' : '/');
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          navigate('/login');
+        } else {
+          throw new Error("Invalid user data received from /auth/me");
         }
-      };
-      
-      fetchUserData();
-    } else {
-      navigate('/login');
-    }
-  }, [searchParams, navigate, onLoginSuccess]);
+      } catch (error) {
+        console.error('❌ Error in auth callback:', error);
+        setCurrentUser(null); // Clear any partial auth state
+        navigate('/login?error=callback_failed');
+      }
+    };
+    
+    fetchUserData();
+  }, [searchParams, navigate, setCurrentUser]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from '../../utils/api';
-import { FaRegClock, FaUsers, FaMapMarkerAlt, FaTag } from 'react-icons/fa';
+import { FaRegClock, FaUsers, FaMapMarkerAlt, FaTag, FaCheck, FaTimes } from 'react-icons/fa';
 
 const TourPage = () => {
   const [tours, setTours] = useState([]);
@@ -11,7 +11,7 @@ const TourPage = () => {
     const fetchTours = async () => {
       try {
         setLoading(true);
-        const response = await api.get("/tours"); // This endpoint now only returns verified tours
+        const response = await api.get("/tours"); // This endpoint only returns verified tours
         setTours(response.data);
       } catch (error) {
         console.error("Error fetching tours:", error);
@@ -51,29 +51,27 @@ const TourPage = () => {
             <div className="flex justify-center gap-2">
               <button 
                 onClick={() => setSelectedType("all")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-                  ${selectedType === "all" 
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  selectedType === "all" 
                     ? "bg-tan text-cream" 
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
               >
                 All Tours
               </button>
-              
               <button 
                 onClick={() => setSelectedType("external")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-                  ${selectedType === "external" 
-                    ? "bg-green-600 text-white" 
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  selectedType === "external" 
+                    ? "bg-tan text-cream" 
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
               >
                 Direct Booking
               </button>
-              
               <button 
                 onClick={() => setSelectedType("local")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-                  ${selectedType === "local" 
-                    ? "bg-blue-600 text-white" 
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  selectedType === "local" 
+                    ? "bg-tan text-cream" 
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
               >
                 Contact Required
@@ -109,12 +107,14 @@ const TourPage = () => {
                   {/* Image Section with Tag */}
                   <div className="relative">
                     <img
-                      src={tour.image}
+                      src={tour.image && tour.image.startsWith('http') 
+                        ? tour.image 
+                        : `${import.meta.env.VITE_BACKEND_URL}/${tour.image?.replace(/\\/g, '/')}`}
                       alt={tour.name}
                       className="w-full h-56 object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = "https://images.pexels.com/photos/1371360/pexels-photo-1371360.jpeg?cs=srgb&dl=pexels-te-lensfix-380994-1371360.jpg&fm=jpg";
+                        e.target.src = "https://placehold.co/600x400?text=Tour+Image";
                       }}
                     />
                     <div className="absolute top-4 right-4">
@@ -176,7 +176,7 @@ const TourPage = () => {
                         </a>
                       </div>
                     ) : (
-                      // Local Tour - Highlights and Contact
+                      // Local Tour - Highlights, Included/Not Included, and Contact
                       <div className="space-y-3 flex-grow">
                         {tour.highlights && (
                           <div className="mb-3">
@@ -184,6 +184,27 @@ const TourPage = () => {
                             <p className="text-sm text-gray-600 line-clamp-2">{tour.highlights}</p>
                           </div>
                         )}
+
+                        {/* Added: Display included/not included if available */}
+                        <div className="grid grid-cols-1 gap-3">
+                          {tour.included && (
+                            <div>
+                              <h4 className="text-sm font-medium text-charcoal mb-1 flex items-center">
+                                <FaCheck className="text-green-500 mr-1" /> What's Included:
+                              </h4>
+                              <p className="text-sm text-gray-600 line-clamp-2">{tour.included}</p>
+                            </div>
+                          )}
+                          
+                          {tour.notIncluded && (
+                            <div>
+                              <h4 className="text-sm font-medium text-charcoal mb-1 flex items-center">
+                                <FaTimes className="text-red-500 mr-1" /> What's Not Included:
+                              </h4>
+                              <p className="text-sm text-gray-600 line-clamp-2">{tour.notIncluded}</p>
+                            </div>
+                          )}
+                        </div>
                         
                         <div className="mt-auto pt-3 border-t border-gray-100">
                           <div className="flex justify-between text-sm">

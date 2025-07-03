@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaGoogle, FaFacebookF, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import api from '../../utils/api';
+import { AuthContext } from '../../context/AuthContext';
 
 const Login = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const Login = ({ onLoginSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    const { setCurrentUser } = useContext(AuthContext);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,36 +21,33 @@ const Login = ({ onLoginSuccess }) => {
         try {
             const response = await api.post('/auth/login', { email, password });
             
-            if (response.data) {
-                // Make sure user data includes the ID
+            if (response.data && response.data.token) {
                 const userData = {
-                    _id: response.data._id || response.data.id,
-                    userName: response.data.userName,
-                    email: response.data.email,
-                    role: response.data.role || 'regular',
-                    token: response.data.token
+                    ...response.data
                 };
                 
-                // Store in localStorage for AuthContext
-                localStorage.setItem('user', JSON.stringify(userData));
-                localStorage.setItem('token', userData.token);
-
-                // Optionally update AuthContext immediately if you want
-                // setCurrentUser(userData);
-
-                // Navigate based on role
+                // This will handle setting state, localStorage, and axios headers
+                setCurrentUser(userData);
+                
+                if (onLoginSuccess) {
+                    onLoginSuccess(userData);
+                }
+                
+                // Navigate after state is set
                 navigate(userData.role === 'admin' ? '/admin' : '/');
+            } else {
+                throw new Error("Login response was invalid.");
             }
         } catch (err) {
-            setError(err.response?.data?.error || 'Login failed');
+            console.error("❌ Login error:", err);
+            setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
         } finally {
             setLoading(false);
         }
     };
 
     const handleSocialLogin = (provider) => {
-        // Will be implemented with OAuth
-        console.log(`Login with ${provider}`);
+        window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/${provider}`;
     };
 
     return (
