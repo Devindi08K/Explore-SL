@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
+import { FaUpload } from 'react-icons/fa';
 
 const BusinessListingForm = () => {
-  const [hasBookingSystem, setHasBookingSystem] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     businessName: '',
     businessType: 'restaurant',
@@ -12,7 +13,7 @@ const BusinessListingForm = () => {
     priceRange: '',
     specialties: '',
     openingHours: '',
-    imageUrl: '',  // Add this field
+    imageUrl: '',
     // For businesses with booking systems
     bookingUrl: '',
     // For local businesses
@@ -22,45 +23,63 @@ const BusinessListingForm = () => {
     address: '',
     isExternal: false
   });
-
+  const [hasBookingSystem, setHasBookingSystem] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Update formData with booking system info
-      const updatedFormData = {
-        ...formData,
-        isExternal: hasBookingSystem,
-        // Transform data to match your backend model
-        category: formData.businessType,
-        name: formData.businessName,
-        // Set as regular listing (user submitted)
-        listingType: "regular",
-        // Add missing required fields
-        imageUrl: formData.imageUrl || 'https://via.placeholder.com/300x200?text=Business+Image',
-        // For external listings - set redirectUrl to bookingUrl
-        ...(hasBookingSystem && { redirectUrl: formData.bookingUrl }),
-        // Set pending status
-        status: 'pending',
-        isVerified: false,
-        submittedAt: new Date()
-      };
+      const submissionData = new FormData();
+      
+      // Append all form data with the correct keys
+      submissionData.append('businessName', formData.businessName);
+      submissionData.append('businessType', formData.businessType);
+      submissionData.append('description', formData.description);
+      submissionData.append('location', formData.location);
+      submissionData.append('priceRange', formData.priceRange);
+      submissionData.append('specialties', formData.specialties);
+      submissionData.append('openingHours', formData.openingHours);
+      submissionData.append('contactName', formData.contactName);
+      submissionData.append('email', formData.email);
+      submissionData.append('phone', formData.phone);
+      submissionData.append('address', formData.address);
+      submissionData.append('isExternal', hasBookingSystem);
+      submissionData.append('listingType', "regular");
+      submissionData.append('status', 'pending');
 
-      // Use the correct API endpoint
-      await api.post("/affiliate-links", updatedFormData);
+      if (hasBookingSystem) {
+        submissionData.append('redirectUrl', formData.bookingUrl);
+        submissionData.append('imageUrl', formData.imageUrl);
+      } else if (imageFile) {
+        submissionData.append('image', imageFile);
+      } else {
+        throw new Error("An image is required.");
+      }
+
+      await api.post("/affiliate-links", submissionData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
       alert("Business listing submitted successfully! Awaiting approval.");
-      navigate('/affiliate-links');
+      navigate('/profile?tab=submissions');
     } catch (error) {
       console.error("Error submitting business:", error);
-      // Show more specific error message
       alert("Failed to submit business listing: " + (error.response?.data?.error || error.message));
     } finally {
       setIsSubmitting(false);
@@ -70,20 +89,9 @@ const BusinessListingForm = () => {
   return (
     <div className="min-h-screen bg-cream py-10 px-4">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-3xl font-bold text-charcoal mb-6 text-center">List Your Business</h2>
-        
-        <div className="mb-6">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={hasBookingSystem}
-              onChange={(e) => setHasBookingSystem(e.target.checked)}
-              className="form-checkbox text-tan"
-            />
-            <span>I have a website for my hotel/restaurant </span>
-          </label>
-        </div>
-
+        <h2 className="text-3xl font-bold text-charcoal mb-6 text-center">
+          Submit Your Business
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Common Fields */}
           <div>
@@ -126,6 +134,31 @@ const BusinessListingForm = () => {
             />
           </div>
 
+          <div>
+            <label className="block text-charcoal mb-2">Location / City</label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              required
+              placeholder="e.g., Galle, Colombo, Kandy"
+              className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={hasBookingSystem}
+                onChange={(e) => setHasBookingSystem(e.target.checked)}
+                className="form-checkbox text-tan"
+              />
+              <span>I have an external website or booking system</span>
+            </label>
+          </div>
+
           {hasBookingSystem ? (
             // Fields for businesses with booking systems
             <>
@@ -138,6 +171,19 @@ const BusinessListingForm = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-charcoal mb-2">Business Image URL</label>
+                <input
+                  type="url"
+                  name="imageUrl"
+                  value={formData.imageUrl || ''}
+                  onChange={handleChange}
+                  placeholder="https://example.com/image.jpg"
+                  required
+                  className="w-full px-4 py-2 border border-tan rounded-lg"
                 />
               </div>
             </>
@@ -294,21 +340,19 @@ const BusinessListingForm = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-charcoal mb-2">Business Image URL</label>
-            <input
-              type="url"
-              name="imageUrl"
-              value={formData.imageUrl || ''}
-              onChange={handleChange}
-              placeholder="https://example.com/your-business-image.jpg"
-              required
-              className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Enter a URL for an image of your business
-            </p>
-          </div>
+          {!hasBookingSystem && (
+            <div>
+              <label className="block text-charcoal mb-2">Business Image</label>
+              <label className="w-full flex flex-col items-center px-4 py-6 bg-white text-tan rounded-lg shadow-sm tracking-wide uppercase border border-tan cursor-pointer hover:bg-tan hover:text-white">
+                <FaUpload className="w-8 h-8" />
+                <span className="mt-2 text-base leading-normal">
+                  {imageFile ? imageFile.name : 'Select a file'}
+                </span>
+                <input type='file' className="hidden" onChange={handleFileChange} accept="image/*" />
+              </label>
+              {preview && <img src={preview} alt="Preview" className="mt-4 rounded-lg w-full max-h-60 object-cover" />}
+            </div>
+          )}
 
           <button
             type="submit"

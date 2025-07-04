@@ -1,121 +1,38 @@
 const mongoose = require("mongoose");
 
-const affiliateSchema = new mongoose.Schema({
-  category: { 
-    type: String, 
-    enum: ["hotel", "restaurant", "cafe", "localEatery"], 
-    required: true 
-  },
-  name: { 
-    type: String, 
-    required: true 
-  },
-  description: { 
-    type: String, 
-    required: true 
-  },
-  isExternal: { 
-    type: Boolean, 
-    default: false 
-  },
+const affiliateLinkSchema = new mongoose.Schema({
+  businessName: { type: String, required: true },
+  businessType: { type: String, required: true, enum: ['restaurant', 'hotel', 'shop', 'other', 'cafe', 'localEatery'] },
+  description: { type: String, required: true },
+  location: { type: String, required: true },
+  priceRange: { type: String },
+  specialties: { type: String },
+  openingHours: { type: String },
+  imageUrl: { type: String, required: true },
+  bookingUrl: { type: String },
+  contactName: { type: String },
+  email: { type: String },
+  phone: { type: String },
+  address: { type: String },
+  isExternal: { type: Boolean, default: false },
+  redirectUrl: { type: String },
+  listingType: { type: String, enum: ['regular', 'sponsored'], default: 'regular' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  isVerified: { type: Boolean, default: false },
+  submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  submittedAt: { type: Date, default: Date.now },
+  verifiedAt: { type: Date },
+  verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   
-  // New field to distinguish between paid affiliates and free listings
-  listingType: {
-    type: String,
-    enum: ["affiliate", "free", "regular"],
-    default: "regular" // Regular user submissions are the default
-  },
-  
-  priceRange: { 
-    type: String, 
-    required: true 
-  },
-  imageUrl: { 
-    type: String, 
-    required: true 
-  },
-  
-  // Fields for businesses with booking systems
-  redirectUrl: {
-    type: String,
-    required: function() { 
-      return this.isExternal === true; 
-    }
-  },
-
-  // Fields for local businesses
-  contactName: {
-    type: String,
-    required: function() { 
-      return this.isExternal === false; 
-    }
-  },
-  email: {
-    type: String,
-    required: true
-  },
-  phone: {
-    type: String,
-    required: true
-  },
-  address: {
-    type: String,
-    required: function() { 
-      return this.isExternal === false; 
-    }
-  },
-  openingHours: {
-    type: String,
-    required: function() { 
-      return this.isExternal === false; 
-    }
-  },
-  specialties: String,
-  
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-
-  // Add verification fields
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
-  },
-  submittedAt: {
-    type: Date,
-    default: Date.now
-  },
-  verifiedAt: Date,
-  verifiedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-
-  // Add review fields
-  reviews: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Review'
-  }],
-  averageRating: {
-    type: Number,
-    default: 0
-  },
-  totalReviews: {
-    type: Number,
-    default: 0
-  },
-
-  submittedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }
+  // Premium Features
+  isPremium: { type: Boolean, default: false },
+  premiumExpiry: { type: Date },
+  featuredStatus: { type: String, enum: ['none', 'homepage', 'destination'], default: 'none' },
+  analyticsEnabled: { type: Boolean, default: false },
+  viewCount: { type: Number, default: 0 },
+  clickCount: { type: Number, default: 0 },
+  needsReview: { type: Boolean, default: false },
+  hadPremiumBefore: { type: Boolean, default: false }
 });
 
-module.exports = mongoose.model("Affiliate", affiliateSchema);
+module.exports = mongoose.model('AffiliateLink', affiliateLinkSchema);

@@ -25,10 +25,12 @@ router.get("/all", async (req, res) => {
 // Get all approved blogs for public view
 router.get("/", async (req, res) => {
   try {
-    const blogs = await Blog.find({ status: 'approved' }).sort({ submittedAt: -1 });
+    const blogs = await Blog.find({ status: 'approved' })
+      .populate('submittedBy', 'userName') // This ensures the creator's info is included
+      .sort({ submittedAt: -1 });
     res.json(blogs);
   } catch (error) {
-    console.error("Error fetching approved blogs:", error);
+    console.error("Error fetching blogs:", error);
     res.status(500).json({ error: "Error fetching blogs" });
   }
 });
@@ -117,7 +119,7 @@ router.post("/", protect, authorize(["admin"]), upload.single('image'), async (r
 // Get a single blog post by ID
 router.get("/:id", async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id);
+    const blog = await Blog.findById(req.params.id).populate('submittedBy', 'userName');
     if (!blog) return res.status(404).json({ message: "Blog not found" });
     res.json(blog);
   } catch (err) {

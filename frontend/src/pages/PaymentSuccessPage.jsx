@@ -219,52 +219,74 @@ const PaymentSuccess = () => {
               Next Step: Submit Your Tour Details
             </Link>
           )}
-          
-          <Link to="/profile?tab=payments" className="bg-tan text-white px-6 py-3 rounded-lg text-center hover:bg-gold transition font-medium">
-            View Payment History
-          </Link>
-          <Link to="/" className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg text-center hover:bg-gray-50 transition">
-            Return to Homepage
-          </Link>
-          {payment.status === 'completed' && (
-            <Link to="/partnership" className="text-tan hover:text-gold text-center">
-              Explore More Services
-            </Link>
-          )}
-        </div>
-        
-        {/* Conditional "Next Steps" for Vehicle Premium */}
-        {payment.serviceType.startsWith('vehicle_premium') && (
-          <>
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="font-semibold text-blue-800 mb-2">Next Steps:</h3>
-              <ul className="text-sm text-blue-700 space-y-1">
-                {hasVehicles ? (
-                  <>
-                    <li>• All your registered vehicles have been upgraded to premium status</li>
-                    <li>• Enjoy priority placement and enhanced analytics</li>
-                  </>
-                ) : (
-                  <>
-                    <li>• Register your vehicles to enjoy premium benefits</li>
-                    <li>• Your vehicles will automatically get premium features</li>
-                  </>
-                )}
+
+          {/* Next Step for Business Listing Premium */}
+          {payment.serviceType.startsWith('business_listing') && payment.status === 'completed' && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-2">Premium Subscription Activated!</h3>
+              <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                <li>All your existing business listings have been upgraded to premium.</li>
+                <li>Any new listings you submit will automatically receive premium features.</li>
               </ul>
-            </div>
-            
-            {!hasVehicles && payment.status === 'completed' && (
               <div className="mt-4">
                 <Link 
-                  to="/vehicle-registration" 
+                  to="/partnership/business-premium" 
                   className="block bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition font-medium text-center"
                 >
-                  Register Your First Vehicle
+                  Submit a Business Listing
                 </Link>
               </div>
+            </div>
+          )}
+
+          {/* Generic next steps */}
+          <div className="mt-8 flex flex-col items-center space-y-4">
+            <Link to="/profile?tab=payments" className="bg-gray-100 text-gray-800 px-6 py-3 rounded-lg text-center hover:bg-gray-200 transition font-medium w-full">
+              View Payment History
+            </Link>
+            <Link to="/" className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg text-center hover:bg-gray-50 transition">
+              Return to Homepage
+            </Link>
+            {payment.status === 'completed' && (
+              <Link to="/partnership" className="text-tan hover:text-gold text-center">
+                Explore More Services
+              </Link>
             )}
-          </>
-        )}
+          </div>
+        
+          {/* Conditional "Next Steps" for Vehicle Premium */}
+          {payment.serviceType.startsWith('vehicle_premium') && (
+            <>
+              <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 className="font-semibold text-blue-800 mb-2">Next Steps:</h3>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  {hasVehicles ? (
+                    <>
+                      <li>• All your registered vehicles have been upgraded to premium status</li>
+                      <li>• Enjoy priority placement and enhanced analytics</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• Register your vehicles to enjoy premium benefits</li>
+                      <li>• Your vehicles will automatically get premium features</li>
+                    </>
+                  )}
+                </ul>
+              </div>
+              
+              {!hasVehicles && payment.status === 'completed' && (
+                <div className="mt-4">
+                  <Link 
+                    to="/vehicle-registration" 
+                    className="block bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition font-medium text-center"
+                  >
+                    Register Your First Vehicle
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

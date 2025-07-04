@@ -29,6 +29,8 @@ import ReviewList from './components/client/ReviewForm';
 import TourGuidePremiumPage from './components/client/TourGuidePremiumPage';
 import VehiclePremiumPage from './components/client/VehiclePremiumPage';
 import TourGuideProfilePage from './components/client/TourGuideProfilePage';
+import BusinessPremiumPage from './components/client/BusinessPremiumPage';
+import BusinessDetailPage from './components/client/BusinessDetailPage';
 
 // Admin Components
 import AdminDashboard from './components/client/AdminDashboard';
@@ -110,12 +112,16 @@ const AppContent = () => {
           <Route path="/destination/:id" element={<DestinationDetails />} />
           <Route path="/partnership/blog-submission" element={<BlogSubmissionForm />} />
           <Route path="/partnership/business-listing" element={<BusinessListingForm />} />
+          <Route path="/partnership/business-premium" element={<BusinessPremiumPage />} />
           <Route path="/partnership/tour-operator" element={<TourOperatorForm />} />
           <Route path="/tour-guides" element={<TourGuidePage />} />
           <Route path="/tour-guide-registration" element={<TourGuideRegistrationForm />} />
           <Route path="/destinations" element={<DestinationsPage />} />
           <Route path="/vehicles" element={<VehiclesPage />} />
           <Route path="/vehicle-registration" element={<VehicleRegistrationForm />} />
+          <Route path="/business-listings/:id" element={<BusinessDetailPage />} />
+          <Route path="/vehicles/:id" element={<VehiclesPage />} />
+          <Route path="/tour-guides/:id" element={<TourGuideProfilePage />} />
           <Route path="/profile" element={
             <ProtectedRoute>
               <UserProfile />
@@ -127,8 +133,7 @@ const AppContent = () => {
           <Route path="/payment/cancel" element={<PaymentCancelPage />} />
           <Route path="/partnership/tour-guide-premium" element={<TourGuidePremiumPage />} />
           <Route path="/partnership/vehicle-premium" element={<VehiclePremiumPage />} />
-          <Route path="/vehicles/:id" element={<VehiclesPage />} />
-          <Route path="/tour-guides/:id" element={<TourGuideProfilePage />} />
+          
           <Route path="/submit-sponsored-blog" element={<SubmitSponsoredBlogPage />} />
           <Route path="/submit-tour-partnership" element={<SubmitTourPartnershipPage />} />
           

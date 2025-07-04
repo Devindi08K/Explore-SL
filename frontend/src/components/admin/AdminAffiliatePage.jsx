@@ -7,27 +7,28 @@ const AdminAffiliatePage = () => {
     const [affiliateLinks, setAffiliateLinks] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState({
-        category: "hotel",
-        name: "",
-        description: "",
-        imageUrl: "",
-        priceRange: "",
+        businessName: '',
+        businessType: 'restaurant',
+        description: '',
+        location: '',
+        priceRange: '',
+        specialties: '',
+        openingHours: '',
+        imageUrl: '',
+        bookingUrl: '',
+        contactName: '',
+        email: '',
+        phone: '',
+        address: '',
         isExternal: false,
-        listingType: "regular", // Default to regular listing
-        contactName: "",
-        email: "",
-        phone: "",
-        address: "",
-        openingHours: "",
-        specialties: "",
-        status: "pending",
-        isVerified: false
+        status: 'pending',
+        isVerified: false,
+        listingType: 'regular'
     });
 
     useEffect(() => {
         fetchAffiliateLinks();
         
-        // Get ID from query params
         const searchParams = new URLSearchParams(location.search);
         const affiliateId = searchParams.get('id');
         if (affiliateId) {
@@ -37,14 +38,10 @@ const AdminAffiliatePage = () => {
 
     const fetchAffiliateLinks = async () => {
         try {
-            setAffiliateLinks([]); // Clear existing data while loading
             const response = await api.get("/affiliate-links/all");
-            console.log("Fetched all affiliate links:", response.data);
-            
             if (Array.isArray(response.data)) {
                 setAffiliateLinks(response.data);
             } else {
-                console.error("Invalid data format received:", response.data);
                 setAffiliateLinks([]);
             }
         } catch (error) {
@@ -57,25 +54,29 @@ const AdminAffiliatePage = () => {
         try {
             const response = await api.get(`/affiliate-links/${id}`);
             const affiliate = response.data;
-            console.log('Fetched affiliate details:', affiliate);
-            setForm(affiliate);
+            setForm({ ...form, ...affiliate });
+            setEditingId(id);
         } catch (error) {
             console.error('Error fetching affiliate details:', error);
             alert('Failed to load business listing details');
         }
     };
 
+    const handleFormChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setForm(prevForm => ({
+            ...prevForm,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const formData = {
-                ...form
-            };
-            
-            if (form._id) {
-                await api.put(`/affiliate-links/${form._id}`, formData);
+            if (editingId) {
+                await api.put(`/affiliate-links/${editingId}`, form);
             } else {
-                await api.post("/affiliate-links", formData);
+                await api.post("/affiliate-links", form);
             }
             fetchAffiliateLinks();
             resetForm();
@@ -86,21 +87,10 @@ const AdminAffiliatePage = () => {
 
     const resetForm = () => {
         setForm({
-            category: "hotel",
-            name: "",
-            description: "",
-            imageUrl: "",
-            priceRange: "",
-            isExternal: false,
-            listingType: "regular", // Default to regular listing
-            contactName: "",
-            email: "",
-            phone: "",
-            address: "",
-            openingHours: "",
-            specialties: "",
-            status: "pending",
-            isVerified: false
+            businessName: '', businessType: 'restaurant', description: '', location: '',
+            priceRange: '', specialties: '', openingHours: '', imageUrl: '', bookingUrl: '',
+            contactName: '', email: '', phone: '', address: '', isExternal: false,
+            status: 'pending', isVerified: false, listingType: 'regular'
         });
         setEditingId(null);
     };
@@ -108,6 +98,7 @@ const AdminAffiliatePage = () => {
     const handleEdit = (link) => {
         setForm(link);
         setEditingId(link._id);
+        window.scrollTo(0, 0);
     };
 
     const handleDelete = async (id) => {
@@ -127,171 +118,72 @@ const AdminAffiliatePage = () => {
                 status: isVerified ? 'approved' : 'rejected',
                 isVerified
             });
-            fetchAffiliateLinks(); // Refresh the list after update
+            fetchAffiliateLinks();
         } catch (error) {
             console.error("Error updating verification status:", error);
         }
     };
 
+    const handleMarkAsReviewed = async (id) => {
+        try {
+            await api.patch(`/affiliate-links/${id}/reviewed`);
+            fetchAffiliateLinks();
+            alert('Listing marked as reviewed.');
+        } catch (error) {
+            console.error("Error marking as reviewed:", error);
+            alert('Failed to mark as reviewed.');
+        }
+    };
+
+    const handleFeatureStatusUpdate = async (id, status) => {
+        try {
+            await api.patch(`/admin/business-listings/${id}/feature`, { status });
+            fetchAffiliateLinks();
+        } catch (error) {
+            console.error("Error updating feature status:", error);
+        }
+    };
+
     return (
         <div className="container mx-auto p-6 bg-cream">
-            {/* Form section */}
-            <h2 className="text-2xl font-bold mb-6 text-charcoal">
+            <h2 className="text-3xl font-bold mb-8 text-charcoal">
                 {editingId ? "Edit Business Listing" : "Add New Business Listing"}
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Category:</label>
-                    <select
-                        value={form.category}
-                        onChange={(e) => setForm({ ...form, category: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                    >
-                        <option value="hotel">Hotel</option>
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Column 1 */}
+                <div className="space-y-4">
+                    <input type="text" name="businessName" value={form.businessName || ''} onChange={handleFormChange} placeholder="Business Name" className="w-full p-2 border rounded" required />
+                    <select name="businessType" value={form.businessType || 'restaurant'} onChange={handleFormChange} className="w-full p-2 border rounded">
                         <option value="restaurant">Restaurant</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="shop">Shop</option>
                         <option value="cafe">Café</option>
                         <option value="localEatery">Local Eatery</option>
+                        <option value="other">Other</option>
                     </select>
+                    <textarea name="description" value={form.description || ''} onChange={handleFormChange} placeholder="Description" className="w-full p-2 border rounded" rows="4"></textarea>
+                    <input type="text" name="location" value={form.location || ''} onChange={handleFormChange} placeholder="Location / City" className="w-full p-2 border rounded" />
+                    <input type="text" name="address" value={form.address || ''} onChange={handleFormChange} placeholder="Full Address" className="w-full p-2 border rounded" />
+                    <input type="text" name="imageUrl" value={form.imageUrl || ''} onChange={handleFormChange} placeholder="Image URL" className="w-full p-2 border rounded" />
+                    {form.imageUrl && <img src={form.imageUrl} alt="Preview" className="mt-2 rounded-lg w-full max-h-48 object-cover" />}
                 </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Business Name:</label>
-                    <input
-                        type="text"
-                        value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                    />
+                {/* Column 2 */}
+                <div className="space-y-4">
+                    <input type="text" name="contactName" value={form.contactName || ''} onChange={handleFormChange} placeholder="Contact Name" className="w-full p-2 border rounded" />
+                    <input type="email" name="email" value={form.email || ''} onChange={handleFormChange} placeholder="Contact Email" className="w-full p-2 border rounded" />
+                    <input type="tel" name="phone" value={form.phone || ''} onChange={handleFormChange} placeholder="Contact Phone" className="w-full p-2 border rounded" />
+                    <input type="text" name="priceRange" value={form.priceRange || ''} onChange={handleFormChange} placeholder="Price Range (e.g., 1000-5000)" className="w-full p-2 border rounded" />
+                    <textarea name="openingHours" value={form.openingHours || ''} onChange={handleFormChange} placeholder="Opening Hours" className="w-full p-2 border rounded" rows="2"></textarea>
+                    <textarea name="specialties" value={form.specialties || ''} onChange={handleFormChange} placeholder="Specialties" className="w-full p-2 border rounded" rows="2"></textarea>
+                    <input type="url" name="bookingUrl" value={form.bookingUrl || ''} onChange={handleFormChange} placeholder="External Booking URL (if any)" className="w-full p-2 border rounded" />
                 </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Description:</label>
-                    <textarea
-                        value={form.description}
-                        onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                        rows="4"
-                    />
+                <div className="md:col-span-2">
+                    <button type="submit" className="w-full bg-tan text-cream py-2 rounded-lg hover:bg-gold transition">
+                        {editingId ? "Update Business" : "Add Business"}
+                    </button>
                 </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Image URL:</label>
-                    <input
-                        type="text"
-                        value={form.imageUrl}
-                        onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Price Range:</label>
-                    <input
-                        type="text"
-                        value={form.priceRange}
-                        onChange={(e) => setForm({ ...form, priceRange: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                        placeholder="e.g., $$$ or Rs.1000-3000"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Contact Person:</label>
-                    <input
-                        type="text"
-                        value={form.contactName}
-                        onChange={(e) => setForm({ ...form, contactName: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Email:</label>
-                        <input
-                            type="email"
-                            value={form.email}
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Phone:</label>
-                        <input
-                            type="tel"
-                            value={form.phone}
-                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Address:</label>
-                    <textarea
-                        value={form.address}
-                        onChange={(e) => setForm({ ...form, address: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Opening Hours:</label>
-                    <input
-                        type="text"
-                        value={form.openingHours}
-                        onChange={(e) => setForm({ ...form, openingHours: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        placeholder="e.g., Mon-Sat: 9AM-9PM, Sun: Closed"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Specialties:</label>
-                    <textarea
-                        value={form.specialties}
-                        onChange={(e) => setForm({ ...form, specialties: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        placeholder="List special dishes or services"
-                    />
-                </div>
-
-                {/* Add new field for listing type */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Listing Type:</label>
-                    <select
-                        value={form.listingType}
-                        onChange={(e) => setForm({ ...form, listingType: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                    >
-                        <option value="regular">Regular Listing</option>
-                        <option value="affiliate">Paid Affiliate</option>
-                        <option value="free">Free Featured Listing</option>
-                    </select>
-                    <p className="mt-1 text-xs text-gray-500">
-                        Regular: User submitted | Affiliate: Paid partner | Free: Complimentary featured listing
-                    </p>
-                </div>
-
-                <button 
-                    type="submit" 
-                    className="w-full bg-tan text-cream py-2 rounded-lg hover:bg-gold transition duration-200"
-                >
-                    {editingId ? "Update" : "Add"} Business
-                </button>
             </form>
 
-            {/* Business Listings List */}
             <div className="mt-12">
                 <h2 className="text-2xl font-bold mb-6 text-charcoal">Business Listings</h2>
                 <div className="space-y-6">
@@ -300,49 +192,18 @@ const AdminAffiliatePage = () => {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h3 className="text-xl font-semibold text-charcoal flex items-center">
-                                        {listing.name}
-                                        {listing.isVerified && (
-                                            <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
-                                                Verified
-                                            </span>
-                                        )}
-                                        {listing.listingType === 'affiliate' && (
-                                            <span className="ml-2 text-sm bg-gold text-cream px-2 py-1 rounded">
-                                                Affiliate
-                                            </span>
-                                        )}
-                                        {listing.listingType === 'free' && (
-                                            <span className="ml-2 text-sm bg-green-500 text-white px-2 py-1 rounded">
-                                                Free Featured
-                                            </span>
-                                        )}
+                                        {listing.businessName}
+                                        {listing.isVerified && <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Verified</span>}
+                                        {listing.isPremium && <span className="ml-2 text-sm bg-gold text-cream px-2 py-1 rounded">Premium</span>}
                                     </h3>
-                                    <p className="text-gray-600 mt-1">Category: {listing.category}</p>
+                                    <p className="text-gray-600 mt-1 capitalize">Type: {listing.businessType}</p>
                                     <p className="text-gray-600 mt-1">Contact: {listing.email}</p>
                                 </div>
                                 <div className="flex space-x-2">
-                                    <button
-                                        onClick={() => handleVerification(listing._id, !listing.isVerified)}
-                                        className={`px-4 py-2 rounded-md ${
-                                            listing.isVerified 
-                                                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                : 'bg-green-600 text-white hover:bg-green-700'
-                                        }`}
-                                    >
-                                        {listing.isVerified ? 'Unverify' : 'Verify'}
-                                    </button>
-                                    <button
-                                        onClick={() => handleEdit(listing)}
-                                        className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(listing._id)}
-                                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                                    >
-                                        Delete
-                                    </button>
+                                    <button onClick={() => handleVerification(listing._id, !listing.isVerified)} className={`px-4 py-2 rounded-md ${listing.isVerified ? 'bg-gray-200' : 'bg-green-600 text-white'}`}>{listing.isVerified ? 'Unverify' : 'Verify'}</button>
+                                    <button onClick={() => handleEdit(listing)} className="px-4 py-2 bg-tan text-cream rounded-md hover:bg-gold">Edit</button>
+                                    <button onClick={() => handleDelete(listing._id)} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Delete</button>
+
                                 </div>
                             </div>
                             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
@@ -352,11 +213,30 @@ const AdminAffiliatePage = () => {
                                 </div>
                                 <div>
                                     <strong>Status:</strong>
-                                    <p className={`text-${listing.status === 'approved' ? 'green' : 'red'}-600`}>
+                                    <p className={`font-semibold ${listing.status === 'approved' ? 'text-green-600' : 'text-red-600'}`}>
                                         {listing.status?.charAt(0).toUpperCase() + listing.status?.slice(1)}
+                                        {listing.needsReview && <span className="ml-2 text-xs bg-yellow-200 text-yellow-800 p-1 rounded">Needs Review</span>}
                                     </p>
                                 </div>
                             </div>
+                            {listing.needsReview && (
+                                <div className="mt-3">
+                                    <button onClick={() => handleMarkAsReviewed(listing._id)} className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Mark as Reviewed</button>
+                                </div>
+                            )}
+                            {listing.isPremium && (
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <h4 className="font-bold text-sm text-gold mb-2">Premium Management</h4>
+                                    <div className="flex items-center space-x-2">
+                                        <select value={listing.featuredStatus || 'none'} onChange={(e) => handleFeatureStatusUpdate(listing._id, e.target.value)} className="text-sm border-gray-300 rounded">
+                                            <option value="none">Not Featured</option>
+                                            <option value="homepage">Homepage</option>
+                                            <option value="destination">Destination</option>
+                                        </select>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Expires: {new Date(listing.premiumExpiry).toLocaleDateString()}</p>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

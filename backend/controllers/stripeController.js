@@ -295,6 +295,50 @@ const processSuccessfulPayment = async (payment) => {
         break;
       }
       
+      case 'business_listing_monthly':
+      case 'business_listing_yearly': {
+        console.log(`🔧 Processing ${serviceType} for user ${userId}`);
+        
+        const listings = await AffiliateLink.find({ submittedBy: userId });
+        
+        const startDate = new Date();
+        const endDate = new Date();
+        if (serviceType === 'business_listing_yearly') {
+          endDate.setFullYear(endDate.getFullYear() + 1);
+        } else {
+          endDate.setMonth(endDate.getMonth() + 1);
+        }
+
+        payment.subscriptionDetails = {
+          startDate,
+          endDate,
+          isActive: true,
+          plan: serviceType === 'business_listing_yearly' ? 'yearly' : 'monthly',
+          awaitingSubmission: listings.length === 0 // Only set if no listings exist to upgrade
+        };
+
+        if (listings.length > 0) {
+          console.log(`✅ Upgrading ${listings.length} existing business listings to premium`);
+          for (const listing of listings) {
+            listing.isPremium = true;
+            listing.premiumExpiry = endDate;
+            listing.analyticsEnabled = true;
+            listing.featuredStatus = 'destination';
+            if (listing.status === 'pending') {
+              listing.status = 'approved';
+              listing.isVerified = true;
+              listing.verifiedAt = new Date();
+              listing.needsReview = true;
+            }
+            await listing.save();
+          }
+        }
+
+        await payment.save();
+        console.log('✅ Payment for business listing recorded and processed.');
+        break;
+      }
+      
       default:
         console.log(`❓ No specific handling for service type: ${serviceType}`);
     }

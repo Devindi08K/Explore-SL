@@ -1,13 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const Affiliate = require("../models/affiliateLink");
-const { protect, authorize } = require("../middleware/authMiddleware"); // Add this import
+const AffiliateLink = require('../models/affiliateLink');
+const Payment = require('../models/Payment'); // Add this missing import
+const { protect, authorize } = require("../middleware/authMiddleware");
+const upload = require('../middleware/uploadMiddleware');
 
 // Route order matters - place more specific routes first
 // Get all listings (admin route)
 router.get("/all", protect, authorize(["admin"]), async (req, res) => {
   try {
-    const affiliates = await Affiliate.find()
+    const affiliates = await AffiliateLink.find()
       .sort({ createdAt: -1 })
       .select('-__v'); // Exclude version key
     
@@ -25,17 +27,71 @@ router.get("/all", protect, authorize(["admin"]), async (req, res) => {
 // Get affiliate links by category
 router.get("/category/:category", async (req, res) => {
   try {
-    const affiliates = await Affiliate.find({ category: req.params.category });
+    const affiliates = await AffiliateLink.find({ businessType: req.params.category });
     res.json(affiliates);
   } catch (error) {
     res.status(500).json({ error: "Error fetching affiliate links" });
   }
 });
 
-// Get a single affiliate link by ID
-router.get("/:id", protect, authorize(["admin"]), async (req, res) => {
+// Get affiliate links submitted by the current user
+router.get("/user", protect, async (req, res) => {
   try {
-    const affiliate = await Affiliate.findById(req.params.id);
+    const userAffiliates = await AffiliateLink.find({ 
+      submittedBy: req.user._id 
+    }).sort({ submittedAt: -1 });
+    res.json(userAffiliates);
+  } catch (error) {
+    console.error("Error fetching user's affiliate links:", error);
+    res.status(500).json({ error: "Error fetching user's submissions" });
+  }
+});
+
+// GET my premium status for business listings
+router.get('/my-premium-status', protect, async (req, res) => {
+  try {
+    // The redundant 'const Payment = require(...)' has been removed.
+    // The handler will now use the 'Payment' model required at the top of the file.
+    const activePremiumPayment = await Payment.findOne({
+      userId: req.user._id,
+      serviceType: { $in: ['business_listing_monthly', 'business_listing_yearly'] },
+      status: 'completed'
+    }).sort({ createdAt: -1 });
+
+    let activePlanType = null;
+    if (activePremiumPayment) {
+      if (activePremiumPayment.serviceType === 'business_listing_yearly') {
+        activePlanType = 'yearly';
+      } else if (activePremiumPayment.serviceType === 'business_listing_monthly') {
+        activePlanType = 'monthly';
+      }
+    }
+
+    res.json({
+      hasActivePremiumSubscription: !!activePremiumPayment,
+      activePlanType, // 'monthly', 'yearly', or null
+      premiumExpiry: activePremiumPayment?.subscriptionDetails?.endDate || null
+    });
+  } catch (error) {
+    // Fail gracefully by returning a default status, preventing frontend errors.
+    console.error("Error fetching business premium status:", error);
+    res.json({
+      hasActivePremiumSubscription: false,
+      activePlanType: null,
+      premiumExpiry: null
+    });
+  }
+});
+
+// Get a single affiliate link by ID and track a view
+router.get("/:id", async (req, res) => {
+  try {
+    const affiliate = await AffiliateLink.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { viewCount: 1 } }, // Increment view count
+      { new: true }
+    );
+
     if (!affiliate) {
       return res.status(404).json({ error: "Business listing not found" });
     }
@@ -46,13 +102,14 @@ router.get("/:id", protect, authorize(["admin"]), async (req, res) => {
   }
 });
 
-// Get all affiliate links (only verified and approved for public)
+// Get all approved affiliate links (only verified and approved for public)
 router.get("/", async (req, res) => {
   try {
-    const affiliates = await Affiliate.find({ 
+    const affiliates = await AffiliateLink.find({ 
       isVerified: true,
       status: 'approved'
-    });
+    })
+    .sort({ isPremium: -1, submittedAt: -1 }); // Premium first
     res.json(affiliates);
   } catch (error) {
     res.status(500).json({ error: "Error fetching affiliate links" });
@@ -60,23 +117,79 @@ router.get("/", async (req, res) => {
 });
 
 // Create a new affiliate link
-router.post("/", async (req, res) => {
+router.post("/", protect, upload.single('image'), async (req, res) => {
   try {
-    const newAffiliate = new Affiliate(req.body);
-    await newAffiliate.save();
-    res.status(201).json(newAffiliate);
+    // Use the correct field names from the form: businessName and businessType
+    const { businessName, businessType, description, isExternal, redirectUrl, imageUrl, ...otherFields } = req.body;
+    let finalImageUrl = imageUrl;
+
+    if (req.file) {
+      // Use the path of the uploaded file, ensuring it's a web-accessible path
+      finalImageUrl = `/uploads/business-images/${req.file.filename}`;
+    }
+
+    if (!finalImageUrl) {
+      return res.status(400).json({ error: 'An image URL or uploaded image is required.' });
+    }
+
+    let listingData = {
+      businessName,
+      businessType,
+      description,
+      location,
+      priceRange,
+      specialties,
+      openingHours,
+      imageUrl: finalImageUrl,
+      isExternal: isExternal === 'true',
+      redirectUrl: isExternal === 'true' ? redirectUrl : '',
+      submittedBy: req.user._id,
+      status: 'pending',
+      listingType: 'regular',
+      ...otherFields
+    };
+
+    // Check for an active, unused premium payment OR an active subscription
+    const activePremiumPayment = await Payment.findOne({
+      userId: req.user._id,
+      serviceType: { $in: ['business_listing_monthly', 'business_listing_yearly'] },
+      status: 'completed',
+      'subscriptionDetails.isActive': true
+    }).sort({ createdAt: -1 });
+
+    if (activePremiumPayment) {
+      const expiryDate = new Date(activePremiumPayment.subscriptionDetails.endDate);
+      listingData = {
+        ...listingData,
+        isPremium: true,
+        premiumExpiry: expiryDate,
+        analyticsEnabled: true,
+        featuredStatus: 'destination',
+        status: 'approved',
+        isVerified: true,
+        needsReview: true,
+        verifiedAt: new Date()
+      };
+      // If this was a pending submission, mark it as used
+      if (activePremiumPayment.subscriptionDetails.awaitingSubmission) {
+        activePremiumPayment.subscriptionDetails.awaitingSubmission = false;
+        await activePremiumPayment.save();
+      }
+    }
+
+    const newLink = new AffiliateLink(listingData);
+    await newLink.save();
+    res.status(201).json(newLink);
   } catch (error) {
-    res.status(400).json({ 
-      error: "Error creating affiliate link",
-      details: error.message 
-    });
+    console.error("Error creating affiliate link:", error);
+    res.status(500).json({ error: "Error creating business listing" });
   }
 });
 
 // Update an existing affiliate link
 router.put("/:id", async (req, res) => {
   try {
-    const updatedAffiliate = await Affiliate.findByIdAndUpdate(
+    const updatedAffiliate = await AffiliateLink.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
@@ -98,7 +211,7 @@ router.put("/:id", async (req, res) => {
 // Delete an affiliate link
 router.delete("/:id", async (req, res) => {
   try {
-    const deletedAffiliate = await Affiliate.findByIdAndDelete(req.params.id);
+    const deletedAffiliate = await AffiliateLink.findByIdAndDelete(req.params.id);
 
     if (!deletedAffiliate) {
       return res.status(404).json({ error: "Affiliate link not found" });
@@ -116,12 +229,12 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
     const { id } = req.params;
     const { status, isVerified } = req.body;
     
-    const affiliate = await Affiliate.findById(id);
+    const affiliate = await AffiliateLink.findById(id);
     if (!affiliate) {
       return res.status(404).json({ error: "Business listing not found" });
     }
 
-    const updatedAffiliate = await Affiliate.findByIdAndUpdate(
+    const updatedAffiliate = await AffiliateLink.findByIdAndUpdate(
       id,
       {
         status,
@@ -138,16 +251,56 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
   }
 });
 
-// Get affiliate links submitted by the current user
-router.get("/user", protect, async (req, res) => {
+// Mark a listing as reviewed by an admin
+router.patch('/:id/reviewed', protect, authorize(['admin']), async (req, res) => {
   try {
-    const userAffiliates = await Affiliate.find({ 
-      submittedBy: req.user._id 
-    }).sort({ submittedAt: -1 });
-    res.json(userAffiliates);
+    const listing = await AffiliateLink.findByIdAndUpdate(
+      req.params.id,
+      { needsReview: false, reviewedBy: req.user._id, reviewedAt: new Date() },
+      { new: true }
+    );
+    if (!listing) {
+      return res.status(404).json({ error: 'Business listing not found' });
+    }
+    res.json(listing);
   } catch (error) {
-    console.error("Error fetching user's affiliate links:", error);
-    res.status(500).json({ error: "Error fetching user's submissions" });
+    res.status(500).json({ error: 'Error marking listing as reviewed' });
+  }
+});
+
+// Refresh premium status for an existing listing
+router.post('/refresh-premium/:listingId', protect, async (req, res) => {
+  try {
+    const listing = await AffiliateLink.findOne({ _id: req.params.listingId, submittedBy: req.user._id });
+    if (!listing) {
+      return res.status(404).json({ error: 'Business listing not found' });
+    }
+
+    const activePremiumPayment = await Payment.findOne({
+      userId: req.user._id,
+      serviceType: { $in: ['business_listing_monthly', 'business_listing_yearly'] },
+      status: 'completed',
+      'subscriptionDetails.isActive': true
+    });
+
+    if (activePremiumPayment) {
+      listing.isPremium = true;
+      listing.premiumExpiry = activePremiumPayment.subscriptionDetails.endDate;
+      listing.analyticsEnabled = true;
+      listing.featuredStatus = 'destination';
+      if (listing.status === 'pending') {
+        listing.status = 'approved';
+        listing.isVerified = true;
+        listing.verifiedAt = new Date();
+        listing.needsReview = true;
+      }
+      await listing.save();
+      res.json({ message: 'Premium features refreshed', listing });
+    } else {
+      res.status(400).json({ error: 'No active premium subscription found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error refreshing premium features' });
   }
 });
 

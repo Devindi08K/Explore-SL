@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from '../../utils/api';
-import { FaStar, FaLink, FaPlus } from 'react-icons/fa'; // Import FaLink
+import { FaStar, FaLink, FaPlus } from 'react-icons/fa';
+import { useAuth } from "../../context/AuthContext"; // Import the new hook
 
-const BlogList = (props) => {
+const BlogList = () => { // Remove the 'user' prop
+    const { user } = useAuth(); // Use the hook to get the logged-in user
     const [blogs, setBlogs] = useState([]);
     const [selectedBlog, setSelectedBlog] = useState(null);
     const [reviewData, setReviewData] = useState({
@@ -57,8 +59,14 @@ const BlogList = (props) => {
     const handleSubmitReview = async (e) => {
         e.preventDefault();
 
-        if (!props.user) {
+        if (!user) {
             alert("Please login to leave a review");
+            return;
+        }
+
+        if (user.id === selectedBlog.submittedBy) {
+            alert("You cannot review your own blog post.");
+            setSelectedBlog(null); // Close the modal
             return;
         }
 
@@ -176,12 +184,15 @@ const BlogList = (props) => {
                                 <p className="text-sm text-gray-500 mt-1">
                                     {blog.totalReviews || 0} {blog.totalReviews === 1 ? 'review' : 'reviews'}
                                 </p>
-                                <button 
-                                    onClick={() => setSelectedBlog(blog)}
-                                    className="text-sm text-tan hover:text-gold mt-1"
-                                >
-                                    Add Review
-                                </button>
+                                {/* This logic will now work correctly */}
+                                {user && user.id !== blog.submittedBy && (
+                                    <button 
+                                        onClick={() => setSelectedBlog(blog)}
+                                        className="text-sm text-tan hover:text-gold mt-1"
+                                    >
+                                        Add Review
+                                    </button>
+                                )}
                             </div>
                             
                             <div className="mt-auto pt-2">

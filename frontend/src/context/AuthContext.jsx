@@ -1,10 +1,15 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect, useCallback, useContext } from "react";
 import api from '../utils/api';
 
 export const AuthContext = createContext();
 
+// Add this export - it makes the context easily usable
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(undefined);
+  const [currentUser, setCurrentUser] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   const updateUserState = useCallback((user) => {
@@ -47,9 +52,10 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
-    setCurrentUser: updateUserState,
     isAuthReady,
     logout,
+    user: currentUser,
+    setCurrentUser: updateUserState
   };
 
   return (

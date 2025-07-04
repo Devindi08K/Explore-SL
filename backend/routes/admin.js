@@ -119,8 +119,8 @@ router.get("/pending/:type", protect, authorize(["admin"]), async (req, res) => 
         pendingItems = await AffiliateLink.find({ 
           $or: [
             { status: 'pending' }, 
-            { status: { $exists: false } },
-            { isVerified: false }
+            { isVerified: false },
+            { needsReview: true } // Add this condition to catch auto-approved premium listings
           ] 
         }).select('businessName businessType location contactEmail status _id');
         break;
@@ -533,5 +533,59 @@ router.delete("/tour-guides/:id/premium", protect, authorize(["admin"]), async (
     res.status(500).json({ error: 'Error cancelling premium subscription' });
   }
 });
+
+// === Business Listing Management ===
+
+// Get all premium business listings
+router.get("/business-listings/premium", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const premiumListings = await AffiliateLink.find({
+      isPremium: true,
+      premiumExpiry: { $gt: new Date() }
+    }).sort({ premiumExpiry: 1 });
+    res.json(premiumListings);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching premium business listings' });
+  }
+});
+
+// Update business listing featured status
+router.patch("/business-listings/:id/feature", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const { status } = req.body;
+    const listing = await AffiliateLink.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: 'Business listing not found' });
+    if (!listing.isPremium) return res.status(400).json({ error: 'Only premium listings can be featured' });
+    
+    listing.featuredStatus = status;
+    await listing.save();
+    res.json(listing);
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating feature status' });
+  }
+});
+
+// Restore business listing premium status
+router.patch("/business-listings/:id/restore-premium", protect, authorize(["admin"]), async (req, res) => {
+  try {
+    const { durationDays = 30 } = req.body;
+    const listing = await AffiliateLink.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: 'Business listing not found' });
+
+    const premiumExpiry = new Date();
+    premiumExpiry.setDate(premiumExpiry.getDate() + durationDays);
+    
+    listing.isPremium = true;
+    listing.premiumExpiry = premiumExpiry;
+    listing.analyticsEnabled = true;
+    listing.featuredStatus = 'destination';
+    
+    await listing.save();
+    res.json({ message: `Premium restored for ${durationDays} days`, listing });
+  } catch (error) {
+    res.status(500).json({ error: 'Error restoring premium status' });
+  }
+});
+
 
 module.exports = router;

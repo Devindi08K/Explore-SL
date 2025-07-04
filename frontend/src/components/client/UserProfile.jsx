@@ -23,7 +23,9 @@ import {
   FaStar,
   FaClock,
   FaBolt,
-  FaMapMarkedAlt
+  FaMapMarkedAlt,
+  FaBuilding,
+  FaSyncAlt
 } from 'react-icons/fa';
 
 const UserProfile = () => {
@@ -90,7 +92,7 @@ const UserProfile = () => {
           console.warn('Blogs API failed:', err.response?.status);
           return { data: [] };
         }),
-        api.get('/affiliate-links/my-submissions').catch(err => {
+        api.get('/affiliate-links/user').catch(err => { // Corrected endpoint
           console.warn('Affiliate links API failed:', err.response?.status);
           return { data: [] };
         }),
@@ -212,7 +214,8 @@ const UserProfile = () => {
       'guide_premium_yearly': 'Tour Guide Premium (Yearly)',
       'vehicle_premium_monthly': 'Vehicle Premium (Monthly)',
       'vehicle_premium_yearly': 'Vehicle Premium (Yearly)',
-      'business_listing': 'Business Listing Premium',
+      'business_listing_monthly': 'Business Listing Premium (Monthly)',
+      'business_listing_yearly': 'Business Listing Premium (Yearly)',
       'sponsored_blog_post': 'Sponsored Blog Post',
       'tour_partnership': 'Tour Partnership'
     };
@@ -301,41 +304,11 @@ const UserProfile = () => {
               Performance Analytics
             </h4>
             
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <div className="bg-white p-2 rounded text-center">
                 <FaEye className="text-blue-500 mx-auto mb-1" />
                 <div className="text-lg font-bold text-blue-600">{vehicle.viewCount || 0}</div>
                 <div className="text-xs text-gray-600">Total Views</div>
-              </div>
-              
-              <div className="bg-white p-2 rounded text-center">
-                <FaCrown className="text-gold mx-auto mb-1" />
-                <div className="text-lg font-bold text-gold">Premium</div>
-                <div className="text-xs text-gray-600">Status</div>
-              </div>
-            </div>
-            
-            {/* Analytics Insights */}
-            <div className="mt-3 p-2 bg-white rounded">
-              <h5 className="text-xs font-semibold text-gray-700 mb-1">Insights</h5>
-              <div className="text-xs text-gray-600 space-y-1">
-                {vehicle.viewCount > 50 && (
-                  <div className="flex items-center text-green-600">
-                    <FaCheck className="mr-1" />
-                    <span>High visibility - Great exposure!</span>
-                  </div>
-                )}
-                {vehicle.featuredStatus === 'homepage' && (
-                  <div className="flex items-center text-blue-600">
-                    <FaCrown className="mr-1" />
-                    <span>Featured on homepage</span>
-                  </div>
-                )}
-                {vehicle.viewCount < 10 && (
-                  <div className="flex items-center text-orange-600">
-                    <span>💡 Tip: Update photos to increase views</span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -478,6 +451,75 @@ const UserProfile = () => {
             {waitingDays > 2 && " If your submission has been pending for more than 48 hours, please contact our support team."}
           </div>
         </div>
+      </div>
+    );
+  };
+
+  const BusinessListingPremiumDetails = ({ listing }) => {
+    if (!listing.isPremium) return null;
+    
+    return (
+      <div className="mt-3 space-y-3">
+        <div className="p-3 bg-gradient-to-r from-gold/10 to-tan/10 border border-gold/20 rounded-lg">
+          <div className="flex items-center mb-2">
+            <FaCrown className="text-gold mr-2 text-sm" />
+            <span className="text-sm font-semibold text-charcoal">Premium Listing Active</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center text-green-600"><FaCheck className="mr-1" /><span>Priority Placement</span></div>
+            <div className="flex items-center text-green-600"><FaCheck className="mr-1" /><span>Analytics Enabled</span></div>
+            <div className="flex items-center text-green-600"><FaCheck className="mr-1" /><span>Premium Badge</span></div>
+            <div className="flex items-center text-green-600"><FaCheck className="mr-1" /><span>Enhanced Visibility</span></div>
+          </div>
+          {listing.premiumExpiry && (
+            <div className="mt-2 pt-2 border-t border-gold/20 text-xs text-gray-600">
+              Premium expires: {new Date(listing.premiumExpiry).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+        {listing.analyticsEnabled && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center"><FaChartLine className="mr-2" />Performance Analytics</h4>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="bg-white p-2 rounded text-center">
+                <FaEye className="text-blue-500 mx-auto mb-1" />
+                <div className="text-lg font-bold text-blue-600">{listing.viewCount || 0}</div>
+                <div className="text-xs text-gray-600">Total Views</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const BusinessListingUpgradePrompt = ({ listing }) => {
+    if (listing.isPremium) return null;
+    return (
+      <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+        <h4 className="text-sm font-semibold text-gray-700 mb-2">Basic Listing</h4>
+        <p className="text-xs text-gray-600 mb-3">Upgrade to premium to get priority placement, a verified badge, and access to analytics.</p>
+        <div className="flex flex-col space-y-2">
+          <Link to="/partnership/business-premium" className="w-full bg-gradient-to-r from-tan to-gold text-white text-xs px-3 py-2 rounded hover:from-gold hover:to-tan transition flex items-center justify-center">
+            <FaCrown className="mr-1" /> Upgrade to Premium
+          </Link>
+          <button
+            onClick={() => refreshBusinessListingPremium(listing._id)}
+            className="w-full bg-gray-200 text-gray-700 text-xs px-3 py-2 rounded hover:bg-gray-300 transition flex items-center justify-center"
+          >
+            <FaSyncAlt className="mr-2" /> Refresh Status
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const PendingBusinessListingMessage = ({ listing }) => {
+    if (listing.status !== 'pending') return null;
+    return (
+      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h4 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center"><FaClock className="mr-2" />Under Review</h4>
+        <p className="text-xs text-yellow-700">Your business listing is being reviewed and will be published within 48 hours.</p>
       </div>
     );
   };
@@ -708,6 +750,17 @@ const UserProfile = () => {
     } catch (error) {
       console.error('Error refreshing premium status:', error);
       alert('Failed to activate premium features. Please try again or contact support.');
+    }
+  };
+
+  const refreshBusinessListingPremium = async (listingId) => {
+    try {
+      await api.post(`/affiliate-links/refresh-premium/${listingId}`);
+      alert('Premium status for your business listing has been successfully refreshed!');
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Error refreshing business listing premium status:', error);
+      alert('Failed to refresh premium status. This can happen if no active subscription is found for your account.');
     }
   };
 
@@ -1113,7 +1166,63 @@ const UserProfile = () => {
                             <span className={getStatusBadge(tour.status)}>
                               {tour.status}
                             </span>
-                            <Link to={`/tours/${tour._id}`} className="text-tan text-sm hover:underline">
+                            {tour.status === 'approved' ? (
+                              <Link to="/tours" className="text-tan text-sm hover:underline">
+                                View on Tours Page
+                              </Link>
+                            ) : (
+                              <span className="text-gray-400 text-sm">Not yet live</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Business Listing Submissions */}
+                {affiliateSubmissions.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4 flex items-center">
+                      <FaBuilding className="mr-2 text-purple-500" />
+                      Business Listings
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {affiliateSubmissions.map((listing) => (
+                        <div key={listing._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-lg">{listing.businessName}</h4>
+                            {listing.isPremium && <FaCrown className="text-yellow-500" />}
+                          </div>
+                          {listing.imageUrl && (
+                            <div className="mb-2">
+                              <img 
+                                src={listing.imageUrl.startsWith('http') ? listing.imageUrl : `${import.meta.env.VITE_BACKEND_URL}${listing.imageUrl}`}
+                                alt={listing.businessName}
+                                className="w-full h-32 object-cover rounded-md"
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400?text=Business"; }}
+                              />
+                            </div>
+                          )}
+                          <p className="text-sm text-gray-600 mb-2 capitalize">{listing.businessType}</p>
+                          <p className="text-sm text-gray-600 mb-3 truncate">{listing.description}</p>
+                          
+                          {listing.isPremium ? (
+                            <BusinessListingPremiumDetails listing={listing} />
+                          ) : (
+                            <>
+                              <BusinessListingUpgradePrompt listing={listing} />
+                              {/* The refresh button has been removed as the process is now automatic */}
+                            </>
+                          )}
+                          
+                          {!listing.isPremium && <PendingBusinessListingMessage listing={listing} />}
+                          
+                          <div className="flex justify-between items-center mt-3">
+                            <span className={getStatusBadge(listing.status)}>
+                              {listing.status}
+                            </span>
+                            <Link to={`/business-listings/${listing._id}`} className="text-tan text-sm hover:underline">
                               View Details
                             </Link>
                           </div>

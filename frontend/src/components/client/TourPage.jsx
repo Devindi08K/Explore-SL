@@ -6,6 +6,7 @@ const TourPage = () => {
   const [tours, setTours] = useState([]);
   const [selectedType, setSelectedType] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(""); // Add search term state
 
   useEffect(() => {
     const fetchTours = async () => {
@@ -23,9 +24,15 @@ const TourPage = () => {
     fetchTours();
   }, []);
 
-  const filteredTours = selectedType === "all" 
-    ? tours 
-    : tours.filter(tour => tour.isExternal === (selectedType === "external"));
+  // Update filteredTours to include search functionality
+  const filteredTours = tours.filter(tour => {
+    const matchesType = selectedType === "all" || tour.isExternal === (selectedType === "external");
+    const matchesSearch = searchTerm.trim() === "" ||
+      tour.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tour.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tour.highlights && tour.highlights.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesType && matchesSearch;
+  });
 
   const getTourTypeTag = (isExternal) => {
     return isExternal 
@@ -43,6 +50,17 @@ const TourPage = () => {
           Discover the beauty of Sri Lanka with our carefully curated tours led by experienced guides
         </p>
         
+        {/* Search Bar */}
+        <div className="mb-8 max-w-2xl mx-auto">
+          <input
+            type="text"
+            placeholder="Search tours by name, description, or highlight..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-3 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-white shadow-sm"
+          />
+        </div>
+
         {/* Enhanced Tour Type Filter */}
         <div className="max-w-xl mx-auto mb-8">
           <div className="bg-white rounded-lg shadow-md p-4">
