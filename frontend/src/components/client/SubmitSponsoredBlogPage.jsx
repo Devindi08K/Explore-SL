@@ -12,6 +12,7 @@ const SubmitSponsoredBlogPage = () => {
     image: null,
     authorName: '',
     blogUrl: '',
+    imageUrl: '', // <-- Add this
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -68,6 +69,7 @@ const SubmitSponsoredBlogPage = () => {
       data.append('title', formData.title);
       data.append('author', formData.authorName);
       data.append('blogUrl', formData.blogUrl);
+      data.append('imageUrl', formData.imageUrl); // <-- Add this
     } else {
       data.append('title', formData.title);
       data.append('content', formData.content);
@@ -147,6 +149,10 @@ const SubmitSponsoredBlogPage = () => {
               <div>
                 <label className="block text-charcoal mb-2">Blog URL</label>
                 <input type="url" name="blogUrl" value={formData.blogUrl} onChange={handleChange} required className="w-full px-4 py-2 border border-tan rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-charcoal mb-2">Image URL</label>
+                <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleChange} required className="w-full px-4 py-2 border border-tan rounded-lg"/>
               </div>
             </>
           ) : (

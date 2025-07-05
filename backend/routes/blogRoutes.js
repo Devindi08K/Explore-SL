@@ -25,10 +25,22 @@ router.get("/all", async (req, res) => {
 // Get all approved blogs for public view
 router.get("/", async (req, res) => {
   try {
+    // Use .lean() to get plain JavaScript objects that can be modified
     const blogs = await Blog.find({ status: 'approved' })
-      .populate('submittedBy', 'userName') // This ensures the creator's info is included
-      .sort({ submittedAt: -1 });
-    res.json(blogs);
+      .populate('submittedBy', 'userName')
+      .sort({ submittedAt: -1 })
+      .lean();
+
+    // Process the blogs to create a simple author ID for checks and a name for display
+    const processedBlogs = blogs.map(blog => {
+      if (blog.submittedBy) {
+        blog.authorName = blog.submittedBy.userName; // Add authorName for display
+        blog.submittedBy = blog.submittedBy._id.toString(); // Keep submittedBy as a simple ID
+      }
+      return blog;
+    });
+
+    res.json(processedBlogs);
   } catch (error) {
     console.error("Error fetching blogs:", error);
     res.status(500).json({ error: "Error fetching blogs" });
@@ -51,7 +63,7 @@ router.get('/my-submissions', protect, async (req, res) => {
 // Submit a sponsored blog post
 router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
   try {
-    const { paymentId, isExternal, title, content, author, blogUrl } = req.body;
+    const { paymentId, isExternal, title, content, author, blogUrl, imageUrl } = req.body;
     const user = await User.findById(req.user._id);
 
     const payment = await Payment.findById(paymentId);
@@ -72,6 +84,7 @@ router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
       blogData.title = title;
       blogData.author = author;
       blogData.blogUrl = blogUrl;
+      blogData.image = imageUrl; // <-- Save imageUrl as image
     } else {
       blogData.title = title;
       blogData.content = content;
@@ -119,8 +132,18 @@ router.post("/", protect, authorize(["admin"]), upload.single('image'), async (r
 // Get a single blog post by ID
 router.get("/:id", async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id).populate('submittedBy', 'userName');
+    const blog = await Blog.findById(req.params.id)
+      .populate('submittedBy', 'userName')
+      .lean(); // Use .lean() here as well
+
     if (!blog) return res.status(404).json({ message: "Blog not found" });
+
+    // Apply the same processing for the single blog view
+    if (blog.submittedBy) {
+      blog.authorName = blog.submittedBy.userName;
+      blog.submittedBy = blog.submittedBy._id.toString();
+    }
+
     res.json(blog);
   } catch (err) {
     res.status(500).json({ error: err.message });

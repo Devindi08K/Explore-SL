@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { Link } from 'react-router-dom'; // Add this import
 import api from '../../utils/api';
-import { FaRegClock, FaUsers, FaMapMarkerAlt, FaTag, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaRegClock, FaUsers, FaMapMarkerAlt, FaTag, FaCheck, FaTimes, FaPlusCircle } from 'react-icons/fa'; // Add FaPlusCircle
 
 const TourPage = () => {
   const [tours, setTours] = useState([]);
   const [selectedType, setSelectedType] = useState("all");
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(""); // Add search term state
+  const [showScrollButton, setShowScrollButton] = useState(false); // Add scroll button state
 
   useEffect(() => {
     const fetchTours = async () => {
@@ -40,15 +42,44 @@ const TourPage = () => {
       : { label: "Contact Required", color: "bg-blue-100 text-blue-800" };
   };
 
+  // Scroll detection effect
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollButton(true);
+      } else {
+        setShowScrollButton(false);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-cream px-4 py-12">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-charcoal text-center mb-2">
-          Explore Our Tours
-        </h1>
-        <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
-          Discover the beauty of Sri Lanka with our carefully curated tours led by experienced guides
-        </p>
+        {/* Title section with button positioned in top-left */}
+        <div className="mb-8">
+          <div className="flex flex-col mb-6">
+            <h1 className="text-4xl font-bold text-charcoal text-center mb-2">
+              Explore Our Tours
+            </h1>
+            <p className="text-center text-gray-600 max-w-2xl mx-auto">
+              Discover the beauty of Sri Lanka with our carefully curated tours led by experienced guides
+            </p>
+          </div>
+          
+          <div className="flex justify-start">
+            <Link 
+              to="/partnership#tour-partnership" 
+              className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-300 shadow-md flex items-center"
+            >
+              <FaPlusCircle className="mr-2" />
+              Register Your Tour
+            </Link>
+          </div>
+        </div>
         
         {/* Search Bar */}
         <div className="mb-8 max-w-2xl mx-auto">
@@ -66,10 +97,10 @@ const TourPage = () => {
           <div className="bg-white rounded-lg shadow-md p-4">
             <h3 className="text-base font-medium text-charcoal mb-3 text-center">Filter Tours</h3>
             
-            <div className="flex justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
               <button 
                 onClick={() => setSelectedType("all")}
-                className={`px-4 py-2 rounded-lg font-medium ${
+                className={`px-4 py-2 rounded-lg text-sm sm:text-base font-medium ${
                   selectedType === "all" 
                     ? "bg-tan text-cream" 
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
@@ -78,7 +109,7 @@ const TourPage = () => {
               </button>
               <button 
                 onClick={() => setSelectedType("external")}
-                className={`px-4 py-2 rounded-lg font-medium ${
+                className={`px-4 py-2 rounded-lg text-sm sm:text-base font-medium ${
                   selectedType === "external" 
                     ? "bg-tan text-cream" 
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
@@ -87,7 +118,7 @@ const TourPage = () => {
               </button>
               <button 
                 onClick={() => setSelectedType("local")}
-                className={`px-4 py-2 rounded-lg font-medium ${
+                className={`px-4 py-2 rounded-lg text-sm sm:text-base font-medium ${
                   selectedType === "local" 
                     ? "bg-tan text-cream" 
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
@@ -151,27 +182,27 @@ const TourPage = () => {
                     </div>
                     
                     {/* Tour Details */}
-                    <div className="flex flex-wrap gap-3 mb-4">
+                    <div className="flex flex-wrap gap-2 sm:gap-3 mb-4">
                       {tour.duration && (
-                        <div className="flex items-center text-sm text-gray-700">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-full">
                           <FaRegClock className="mr-1 text-tan" />
                           <span>{tour.duration}</span>
                         </div>
                       )}
                       {tour.groupSize && (
-                        <div className="flex items-center text-sm text-gray-700">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-full">
                           <FaUsers className="mr-1 text-tan" />
                           <span>{tour.groupSize}</span>
                         </div>
                       )}
                       {tour.priceRange && (
-                        <div className="flex items-center text-sm text-gray-700">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-full">
                           <FaTag className="mr-1 text-tan" />
                           <span>{tour.priceRange}</span>
                         </div>
                       )}
                       {tour.startingPoint && (
-                        <div className="flex items-center text-sm text-gray-700">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-full">
                           <FaMapMarkerAlt className="mr-1 text-tan" />
                           <span>{tour.startingPoint}</span>
                         </div>
@@ -225,14 +256,14 @@ const TourPage = () => {
                         </div>
                         
                         <div className="mt-auto pt-3 border-t border-gray-100">
-                          <div className="flex justify-between text-sm">
+                          <div className="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-2">
                             <div>
                               <p className="font-medium text-charcoal mb-1">Contact:</p>
                               <p className="text-gray-600">{tour.contactPhone}</p>
                             </div>
-                            <div className="text-right">
+                            <div className="sm:text-right">
                               <p className="font-medium text-charcoal mb-1">Email:</p>
-                              <p className="text-gray-600">{tour.contactEmail}</p>
+                              <p className="text-gray-600 break-all">{tour.contactEmail}</p>
                             </div>
                           </div>
                         </div>
@@ -248,6 +279,19 @@ const TourPage = () => {
             <h3 className="text-xl font-medium text-charcoal mb-2">No tours found</h3>
             <p className="text-gray-600">Try selecting a different tour type</p>
           </div>
+        )}
+
+        {/* Scroll to Top Button - Added */}
+        {showScrollButton && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-8 right-8 bg-tan text-cream p-3 rounded-full shadow-lg hover:bg-gold transition-colors z-10"
+            aria-label="Scroll to top"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+          </button>
         )}
       </div>
     </div>

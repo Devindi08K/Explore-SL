@@ -8,7 +8,8 @@ import {
   FaArrowLeft, 
   FaCar, 
   FaCrown,
-  FaSearchLocation // Add this import
+  FaSearchLocation,
+  FaCloudSun // Import the weather icon
 } from "react-icons/fa";
 
 const DestinationDetails = () => {
@@ -115,29 +116,35 @@ const DestinationDetails = () => {
                   <img
                     src={images[activeImage]}
                     alt={destination.name}
-                    className="w-full h-80 sm:h-96 object-cover"
+                    className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-t-lg"
                   />
                   
-                  {/* Image navigation if multiple images */}
+                  {/* Enhanced Image navigation with previews */}
                   {images.length > 1 && (
                     <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                      <div className="flex space-x-2 bg-black/30 rounded-full px-3 py-1">
-                        {images.map((_, index) => (
+                      <div className="flex space-x-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-2">
+                        {images.map((img, index) => (
                           <button
                             key={index}
                             onClick={() => setActiveImage(index)}
-                            className={`w-2.5 h-2.5 rounded-full ${
-                              activeImage === index ? "bg-white" : "bg-white/50"
+                            className={`w-8 h-8 rounded-full overflow-hidden border-2 ${
+                              activeImage === index ? "border-white" : "border-transparent"
                             }`}
                             aria-label={`View image ${index + 1}`}
-                          />
+                          >
+                            <img 
+                              src={img} 
+                              alt={`Thumbnail ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
                         ))}
                       </div>
                     </div>
                   )}
                 </>
               ) : (
-                <div className="w-full h-80 sm:h-96 bg-gray-200 flex items-center justify-center">
+                <div className="w-full h-64 sm:h-80 md:h-96 bg-gray-200 flex items-center justify-center">
                   <span className="text-gray-500">No image available</span>
                 </div>
               )}
@@ -226,23 +233,6 @@ const DestinationDetails = () => {
                     )}
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* Map section - if coordinates are available */}
-          {destination.coordinates && (
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <h3 className="text-xl font-semibold text-charcoal p-6 border-b border-gray-100">Location</h3>
-              <div className="h-[400px]">
-                <iframe
-                  src={`https://maps.google.com/maps?q=${destination.coordinates.lat},${destination.coordinates.lng}&z=12&output=embed`}
-                  width="100%"
-                  height="100%"
-                  allowFullScreen=""
-                  loading="lazy"
-                  title={`Map of ${destination.name}`}
-                />
               </div>
             </div>
           )}

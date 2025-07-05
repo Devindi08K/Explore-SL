@@ -116,7 +116,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center space-x-3 text-cream/80">
                 <FaEnvelope className="text-gold" />
-                <span>info@exploresrilanka.com</span>
+                <span>info@slexplora.com</span>
               </li>
             </ul>
           </div>
@@ -128,7 +128,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-cream/80">
-              &copy; {new Date().getFullYear()} Explore Sri Lanka. All rights reserved.
+              &copy; {new Date().getFullYear()} SLExplora. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm text-cream/80">
               <Link to="/privacy-policy" className="hover:text-gold transition">

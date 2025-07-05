@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPencilAlt, FaBuilding, FaRoute, FaArrowRight, FaCheck, FaStar, FaHandshake, FaRocket } from 'react-icons/fa';
 import PaymentModal from './PaymentModal';
@@ -16,6 +16,21 @@ const PartnershipPage = () => {
     setSelectedService({ type, amount, description, itemId });
     setPaymentModalOpen(true);
   };
+
+  useEffect(() => {
+    // Check if there's a hash in the URL
+    if (window.location.hash) {
+      // Get the element by the hash without the #
+      const element = document.getElementById(window.location.hash.substring(1));
+      
+      // If the element exists, scroll to it with a slight delay to ensure page is fully loaded
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-cream px-4 py-16">
@@ -102,7 +117,7 @@ const PartnershipPage = () => {
         {/* Partnership Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {/* Sponsored Blog Posts */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:transform hover:scale-[1.02]">
+          <div id="blog-section" className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:transform hover:scale-[1.02]">
             <div className="bg-tan h-2"></div>
             <div className="p-6">
               <div className="mb-4 flex justify-center">
@@ -231,7 +246,7 @@ const PartnershipPage = () => {
           </div>
 
           {/* Tour Operators */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:transform hover:scale-[1.02]">
+          <div id="tour-partnership" className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:transform hover:scale-[1.02]">
             <div className="bg-tan h-2"></div>
             <div className="p-6">
               <div className="mb-4 flex justify-center">

@@ -63,7 +63,7 @@ const BusinessDetailPage = () => {
                             {business.location && <InfoItem icon={<FaMapMarkerAlt />} label="Location" value={business.location} />}
                             {business.address && <InfoItem icon={<FaMapMarkerAlt />} label="Address" value={business.address} />}
                             {business.phone && <InfoItem icon={<FaPhone />} label="Phone" value={business.phone} />}
-                            {business.email && <InfoItem icon={<FaEnvelope />} label="Email" value={business.email} isLink={`mailto:${business.email}`} />}
+                            {business.email && <InfoItem icon={<FaEnvelope />} label="Email" value={business.email} />}
                             {business.openingHours && <InfoItem icon={<FaClock />} label="Hours" value={business.openingHours} />}
                         </div>
                         <div className="space-y-4 flex flex-col justify-between">

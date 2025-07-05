@@ -29,7 +29,7 @@ const BusinessPremiumPage = () => {
   return (
     <div className="min-h-screen bg-cream px-4 py-16">
       <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-charcoal">
             Premium Business <span className="text-tan">Listings</span>
           </h1>
@@ -38,35 +38,14 @@ const BusinessPremiumPage = () => {
           </p>
         </div>
 
+        {/* Pricing Section - MOVED TO TOP */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-          <h2 className="text-2xl font-bold mb-6 text-center">Premium Benefits</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaArrowUp className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Top Placement</h3>
-              <p className="text-gray-600 text-sm mt-2">Your business appears at the top of relevant search results and pages.</p>
-            </div>
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaMedal className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Premium Badge</h3>
-              <p className="text-gray-600 text-sm mt-2">Stand out with an exclusive badge that builds customer trust.</p>
-            </div>
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaChartLine className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Analytics Access</h3>
-              <p className="text-gray-600 text-sm mt-2">Track your listing views and clicks to understand your audience.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Pricing Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold mb-2 text-center">Premium Plans</h2>
           <p className="text-center text-gray-600 mb-8">Choose the plan that best fits your business needs</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Free Plan */}
-            <div className="border border-gray-200 rounded-lg p-6 flex flex-col bg-gray-50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+            {/* Free Plan - Spans 2 columns on small screens */}
+            <div className="border border-gray-200 rounded-lg p-4 sm:p-6 flex flex-col bg-gray-50 sm:col-span-2 lg:col-span-1">
               <h3 className="font-bold text-charcoal text-xl mb-2">Basic Listing</h3>
               <div className="text-3xl font-bold text-charcoal mb-2">Free <span className="text-sm font-normal text-gray-500">forever</span></div>
               <ul className="mb-6 flex-grow space-y-2 text-sm text-gray-600">
@@ -80,14 +59,14 @@ const BusinessPremiumPage = () => {
             </div>
 
             {/* Monthly Premium Plan */}
-            <div className="border-2 border-tan rounded-lg p-6 flex flex-col relative">
+            <div className="border-2 border-tan rounded-lg p-4 sm:p-6 flex flex-col relative">
               <div className="absolute top-0 right-0 bg-tan text-cream text-xs py-1 px-3 rounded-bl-lg rounded-tr-lg font-medium">POPULAR</div>
-              <h3 className="font-bold text-charcoal text-xl mb-2">Monthly Premium</h3>
-              <div className="text-3xl font-bold text-charcoal mb-2">LKR 1,500 <span className="text-sm font-normal text-gray-500">/month</span></div>
-              <ul className="mb-6 flex-grow space-y-2 text-sm text-gray-600">
-                <li className="flex items-center"><FaMedal className="text-tan mr-2" /> Premium Badge</li>
-                <li className="flex items-center"><FaArrowUp className="text-tan mr-2" /> Priority Placement</li>
-                <li className="flex items-center"><FaChartLine className="text-tan mr-2" /> Performance Analytics</li>
+              <h3 className="font-bold text-charcoal text-lg sm:text-xl mb-1 sm:mb-2">Monthly Premium</h3>
+              <div className="text-2xl sm:text-3xl font-bold text-charcoal mb-1 sm:mb-2">LKR 1,500 <span className="text-xs sm:text-sm font-normal text-gray-500">/month</span></div>
+              <ul className="mb-4 sm:mb-6 flex-grow space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-600">
+                <li className="flex items-center"><FaMedal className="text-tan mr-2 flex-shrink-0" /> Premium Badge</li>
+                <li className="flex items-center"><FaArrowUp className="text-tan mr-2 flex-shrink-0" /> Priority Placement</li>
+                <li className="flex items-center"><FaChartLine className="text-tan mr-2 flex-shrink-0" /> Performance Analytics</li>
               </ul>
               <button
                 onClick={() => handlePremiumPurchase('business_listing_monthly', 1500, 'Premium Business Listing (Monthly)')}
@@ -109,14 +88,14 @@ const BusinessPremiumPage = () => {
             </div>
 
             {/* Annual Plan */}
-            <div className="border border-gray-200 rounded-lg p-6 flex flex-col">
-              <h3 className="font-bold text-charcoal text-xl mb-2">Annual Premium</h3>
-              <div className="text-3xl font-bold text-charcoal mb-2">LKR 15,000 <span className="text-sm font-normal text-gray-500">/year</span></div>
-              <p className="text-gray-600 text-sm">Save 2 months!</p>
-              <ul className="mb-6 flex-grow space-y-2 text-sm text-gray-600">
-                <li className="flex items-center"><FaMedal className="text-tan mr-2" /> Premium Badge</li>
-                <li className="flex items-center"><FaArrowUp className="text-tan mr-2" /> Priority Placement</li>
-                <li className="flex items-center"><FaChartLine className="text-tan mr-2" /> Performance Analytics</li>
+            <div className="border border-gray-200 rounded-lg p-4 sm:p-6 flex flex-col">
+              <h3 className="font-bold text-charcoal text-lg sm:text-xl mb-1 sm:mb-2">Annual Premium</h3>
+              <div className="text-2xl sm:text-3xl font-bold text-charcoal mb-1 sm:mb-2">LKR 15,000 <span className="text-xs sm:text-sm font-normal text-gray-500">/year</span></div>
+              <p className="text-xs sm:text-sm text-gray-600">Save 2 months!</p>
+              <ul className="mb-4 sm:mb-6 flex-grow space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-600">
+                <li className="flex items-center"><FaMedal className="text-tan mr-2 flex-shrink-0" /> Premium Badge</li>
+                <li className="flex items-center"><FaArrowUp className="text-tan mr-2 flex-shrink-0" /> Priority Placement</li>
+                <li className="flex items-center"><FaChartLine className="text-tan mr-2 flex-shrink-0" /> Performance Analytics</li>
               </ul>
               <button
                 onClick={() => handlePremiumPurchase('business_listing_yearly', 15000, 'Premium Business Listing (Yearly)')}
@@ -135,6 +114,35 @@ const BusinessPremiumPage = () => {
                     ? 'Upgrade to Annual' 
                     : 'Subscribe Annually'}
               </button>
+            </div>
+          </div>
+          
+          {/* Add a special promotion notice */}
+          <div className="mt-8 bg-gold/10 rounded-lg p-4 border border-gold/20">
+            <p className="text-center font-medium text-sm">
+              <span className="text-gold">🎉 Special Launch Offer:</span> First month free with any premium plan subscription!
+            </p>
+          </div>
+        </div>
+
+        {/* Benefits Section - MOVED AFTER PRICING */}
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold mb-6 text-center">Premium Benefits</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaArrowUp className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Top Placement</h3>
+              <p className="text-gray-600 text-sm mt-2">Your business appears at the top of relevant search results and pages.</p>
+            </div>
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaMedal className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Premium Badge</h3>
+              <p className="text-gray-600 text-sm mt-2">Stand out with an exclusive badge that builds customer trust.</p>
+            </div>
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaChartLine className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Analytics Access</h3>
+              <p className="text-gray-600 text-sm mt-2">Track your listing views and clicks to understand your audience.</p>
             </div>
           </div>
         </div>

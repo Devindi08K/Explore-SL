@@ -127,18 +127,13 @@ const TourGuidePage = () => {
           <h1 className="text-3xl font-bold text-charcoal mb-4 md:mb-0">
             Professional Tour Guides
           </h1>
-          <div className="flex items-center space-x-4">
-            <Link 
-              to="/tour-guide-registration" 
-              className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200 flex items-center gap-2"
-            >
-              Become a Tour Guide
-            </Link>
+          <div className="flex items-center">
             <Link 
               to="/partnership/tour-guide-premium" 
-              className="bg-gold/10 text-gold px-6 py-3 rounded-lg hover:bg-gold/20 transition duration-200 flex items-center gap-2 border border-gold/30"
+              className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200 flex items-center gap-2"
+              onClick={() => window.scrollTo(0, 0)}
             >
-              Premium Guide Benefits
+              Become a Tour Guide
             </Link>
           </div>
         </div>
@@ -150,7 +145,7 @@ const TourGuidePage = () => {
             placeholder="Search guides by name or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full max-w-2xl mx-auto block px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-white"
+            className="w-full max-w-2xl mx-auto block px-4 py-3 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-white shadow-sm"
           />
         </div>
         
@@ -158,7 +153,7 @@ const TourGuidePage = () => {
         <div className="md:hidden mb-4">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center justify-center w-full bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition duration-200"
+            className="flex items-center justify-center w-full bg-tan text-cream px-4 py-3 rounded-lg hover:bg-gold transition duration-300 shadow-md"
           >
             {showFilters ? (
               <>
@@ -166,7 +161,8 @@ const TourGuidePage = () => {
               </>
             ) : (
               <>
-                <FaFilter className="mr-2" /> Show Filters ({selectedSpecializations.length + selectedLanguages.length})
+                <FaFilter className="mr-2" /> Show Filters {selectedSpecializations.length + selectedLanguages.length > 0 && 
+                  `(${selectedSpecializations.length + selectedLanguages.length})`}
               </>
             )}
           </button>

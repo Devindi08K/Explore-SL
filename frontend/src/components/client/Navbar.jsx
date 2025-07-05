@@ -38,7 +38,7 @@ const Navbar = ({ onLogout }) => {
         <nav className="bg-charcoal text-cream py-4 sticky top-0 z-50 shadow-md">
             <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <Link className="text-2xl font-bold text-cream" to="/">
-                    Explore Sri Lanka
+                    SLExplora
                 </Link>
 
                 <ul className="hidden md:flex flex-wrap items-center gap-5 text-cream font-medium">

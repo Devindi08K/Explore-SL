@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { FaMapMarkedAlt, FaUserTie, FaHotel, FaArrowDown, FaRegCheckSquare, FaCompass, FaCrown } from 'react-icons/fa';
+import { FaMapMarkedAlt, FaUserTie, FaHotel, FaArrowDown, FaRegCheckSquare, FaCompass, FaCrown, FaCar } from 'react-icons/fa';
 import { MdTour, MdBusinessCenter } from 'react-icons/md';
 import { BiSolidBadgeCheck } from 'react-icons/bi';
 import { RiQuillPenFill } from 'react-icons/ri';
@@ -121,6 +121,22 @@ const HomePage = () => {
     fetchFeaturedGuides();
   }, []);
 
+  // Scroll to section if hash is present in URL
+  useEffect(() => {
+    // Check if there's a hash in the URL
+    if (window.location.hash) {
+      // Get the element by the hash without the #
+      const element = document.getElementById(window.location.hash.substring(1));
+      
+      // If the element exists, scroll to it with a slight delay to ensure page is fully loaded
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-cream">
       {/* Hero Section with Rotating Images */}
@@ -143,10 +159,10 @@ const HomePage = () => {
         ))}
         <div className="relative z-20 text-center text-white px-4 sm:px-6 max-w-4xl">
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 drop-shadow-lg">
-            Welcome to Sri Lanka
+            Explore Sri Lanka with SLExplora
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto drop-shadow-md font-light">
-            Discover the pearl of the Indian Ocean
+            Your trusted guide to the pearl of the Indian Ocean
           </p>
           <Link 
             to="/destinations"
@@ -280,119 +296,94 @@ const HomePage = () => {
             />
             <ServiceCard 
               icon={FaHotel}
-              title="Accommodations"
-              description="Find the perfect place to stay"
-              link="/affiliate-links"
+              title="Premium Stays"
+              description="Find verified accommodation options"
+              link="/affiliate-links?category=accommodation"
               delay={200}
             />
           </div>
         </div>
       </section>
 
-      {/* Tour Guide Registration Section with background pattern */}
-      <section className="py-20 px-6 bg-cream relative" id="become-guide">
-        <div className="absolute inset-0 opacity-5 pattern-dots"></div>
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl font-bold text-charcoal mb-6" data-aos="fade-up">
-            Become a Tour Guide
-          </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
-            Share your knowledge and passion for Sri Lanka. Join our network of professional tour guides.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-            <div className="bg-white p-6 rounded-lg shadow-md" data-aos="fade-up" data-aos-delay="200">
-              <BiSolidBadgeCheck className="text-4xl text-tan mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Get Verified</h3>
-              <p className="text-gray-600">Earn a verified badge and build trust</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md" data-aos="fade-up" data-aos-delay="300">
-              <FaMapMarkedAlt className="text-4xl text-tan mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Choose Your Areas</h3>
-              <p className="text-gray-600">Specify your preferred tour locations</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md" data-aos="fade-up" data-aos-delay="400">
-              <MdBusinessCenter className="text-4xl text-tan mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Grow Your Business</h3>
-              <p className="text-gray-600">Connect with tourists worldwide</p>
-            </div>
-          </div>
-          <Link 
-            to="/tour-guide-registration"
-            className="inline-block bg-tan text-cream px-8 py-4 rounded-lg hover:bg-gold transition duration-300"
-            data-aos="fade-up"
-            data-aos-delay="500"
-          >
-            Register as Tour Guide
-          </Link>
-        </div>
-      </section>
-
-      {/* Vehicle Registration Section with subtle background */}
-      <section className="py-20 px-6 bg-gradient-to-b from-white to-gray-50" id="register-vehicle">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-charcoal mb-6" data-aos="fade-up">
-            Register Your Vehicle
-          </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
-            Join our network of trusted transport providers. Reach more customers and grow your business.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-            <div className="bg-white p-6 rounded-lg shadow-md" data-aos="fade-up" data-aos-delay="200">
-              <FaRegCheckSquare className="text-4xl text-tan mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Verified Provider</h3>
-              <p className="text-gray-600">Get verified status and build trust with customers</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md" data-aos="fade-up" data-aos-delay="300">
-              <FaMapMarkedAlt className="text-4xl text-tan mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Choose Your Area</h3>
-              <p className="text-gray-600">Specify your service areas and travel preferences</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md" data-aos="fade-up" data-aos-delay="400">
-              <MdBusinessCenter className="text-4xl text-tan mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Manage Bookings</h3>
-              <p className="text-gray-600">Receive direct inquiries from tourists</p>
-            </div>
-          </div>
-          <div className="flex flex-col items-center space-y-4" data-aos="fade-up" data-aos-delay="500">
-            <Link 
-              to="/vehicle-registration"
-              className="inline-block bg-tan text-cream px-8 py-4 rounded-lg hover:bg-gold transition duration-300"
-            >
-              Register Your Vehicle
-            </Link>
-            <p className="text-sm text-gray-500">
-              <span className="text-tan">🔒</span> Secure verification process | Professional support | Trusted by travelers
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Partnership Section */}
-      <section className="py-20 px-6 bg-white" id="partnership">
+      {/* Premium Services Section - NEW */}
+      <section className="py-20 px-6 bg-white" id="premium-services">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-charcoal text-center mb-12" data-aos="fade-up">
-            Partner With Us
+          <h2 className="text-4xl font-bold text-charcoal text-center mb-4" data-aos="fade-up">
+            Premium Services
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+            Enhance your experience with our premium offerings for both travelers and partners
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white p-8 rounded-lg shadow-md border-t-4 border-gold" data-aos="fade-up" data-aos-delay="200">
+              <FaUserTie className="text-4xl text-gold mb-4" />
+              <h3 className="text-xl font-bold mb-3">Premium Tour Guides</h3>
+              <p className="text-gray-600 mb-4">Connect with our verified premium guides for exceptional tour experiences</p>
+              <Link 
+                to="/partnership/tour-guide-premium" 
+                className="text-tan hover:text-gold font-medium flex items-center"
+                onClick={() => window.scrollTo(0, 0)}
+              >
+                Learn more <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
+            <div className="bg-white p-8 rounded-lg shadow-md border-t-4 border-gold" data-aos="fade-up" data-aos-delay="300">
+              <FaCar className="text-4xl text-gold mb-4" />
+              <h3 className="text-xl font-bold mb-3">Premium Vehicles</h3>
+              <p className="text-gray-600 mb-4">Book premium transportation with verified drivers and quality vehicles</p>
+              <Link 
+                to="/partnership/vehicle-premium" 
+                className="text-tan hover:text-gold font-medium flex items-center"
+                onClick={() => window.scrollTo(0, 0)}
+              >
+                Learn more <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
+            <div className="bg-white p-8 rounded-lg shadow-md border-t-4 border-gold" data-aos="fade-up" data-aos-delay="400">
+              <MdBusinessCenter className="text-4xl text-gold mb-4" />
+              <h3 className="text-xl font-bold mb-3">Business Listings</h3>
+              <p className="text-gray-600 mb-4">Promote your tourism business with premium visibility and features</p>
+              <Link 
+                to="/partnership/business-premium" 
+                className="text-tan hover:text-gold font-medium flex items-center"
+                onClick={() => window.scrollTo(0, 0)}
+              >
+                Learn more <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Partner Section - UPDATED */}
+      <section className="py-20 px-6 bg-cream/70" id="partnership">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-charcoal text-center mb-4" data-aos="fade-up">
+            Partner With SLExplora
+          </h2>
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+            Join our network of trusted partners and grow your business with access to travelers from around the world
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <PartnerCard 
               icon={MdTour}
               title="Tour Operators"
-              description="Join our network of trusted tour operators"
-              link="/partnership/tour-operator"
+              description="List your tours and reach more travelers"
+              link="/partnership"
               delay={0}
             />
             <PartnerCard 
-              icon={MdBusinessCenter}
-              title="Business Listings"
-              description="List your hotel, restaurant or local business"
-              link="/partnership/business-listing"
+              icon={FaHotel}
+              title="Hotels & Restaurants"
+              description="Showcase your hospitality business"
+              link="/partnership/business-premium"
               delay={100}
             />
             <PartnerCard 
-              icon={RiQuillPenFill}
-              title="Travel Bloggers"
-              description="Share your Sri Lankan travel experiences"
-              link="/partnership/blog-submission"
+              icon={FaCar}
+              title="Vehicle Owners"
+              description="Register your vehicle and get bookings"
+              link="/partnership/vehicle-premium"
               delay={200}
             />
           </div>
@@ -400,24 +391,24 @@ const HomePage = () => {
       </section>
 
       {/* Interactive Map Section */}
-      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-cream relative overflow-hidden" id="map">
+      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-white relative overflow-hidden" id="map">
         {/* Background decoration */}
         <div className="absolute -right-24 -bottom-24 w-64 h-64 bg-tan/5 rounded-full"></div>
-        <div className="absolute -left-24 -top-24 w-48 h-48 bg-tan/5 rounded-full"></div>
+        <div className="absolute -left-24 -top-24 w-64 h-64 bg-tan/5 rounded-full"></div>
         
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-charcoal text-center mb-10 sm:mb-14" data-aos="fade-up">
-            Explore Sri Lanka
+        <div className="max-w-6xl mx-auto relative z-10 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-charcoal mb-6" data-aos="fade-up">
+            Interactive Sri Lanka Map
           </h2>
-          <Link 
-            to="/map" 
-            className="inline-flex flex-col items-center group"
-            data-aos="zoom-in"
-          >
-            <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center bg-tan rounded-full mb-5 group-hover:bg-gold transition-colors duration-300 shadow-lg relative">
-              <FaCompass className="w-10 h-10 sm:w-12 sm:h-12 text-cream" />
-              
-              {/* Animated ring effect */}
+          <p className="text-gray-600 mb-12 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+            Plan your perfect journey with our interactive map featuring attractions, accommodations, and travel routes
+          </p>
+          
+          <Link to="/map" className="inline-flex flex-col items-center group" data-aos="fade-up" data-aos-delay="200">
+            <div className="relative mb-6">
+              <div className="w-24 h-24 rounded-full bg-tan/10 flex items-center justify-center mb-4 group-hover:bg-tan/20 transition-colors duration-300">
+                <FaMapMarkedAlt className="text-tan text-4xl group-hover:text-gold transition-colors duration-300" />
+              </div>
               <div className="absolute inset-0 border-4 border-tan/30 rounded-full animate-ping opacity-75 group-hover:border-gold/30"></div>
             </div>
             <span className="text-xl font-semibold text-charcoal group-hover:text-gold transition-colors duration-300">
@@ -430,7 +421,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Featured Tour Guides Section */}
+      {/* Keep the Featured Tour Guides Section as is */}
       {featuredGuides.length > 0 && (
         <section className="py-16 px-6 bg-cream">
           <div className="max-w-6xl mx-auto">
@@ -481,47 +472,90 @@ const HomePage = () => {
           </div>
         </section>
       )}
+
+      {/* Call-to-Action Section - NEW */}
+      <section className="py-16 px-6 bg-gradient-to-r from-tan to-gold text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-6">Ready to Explore Sri Lanka?</h2>
+          <p className="text-lg mb-8 opacity-90">
+            Start planning your perfect Sri Lankan adventure with SLExplora today.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/destinations" className="px-8 py-3 bg-white text-tan rounded-lg hover:bg-cream transition duration-300 shadow-lg font-medium">
+              Browse Destinations
+            </Link>
+            <Link to="/partnership" className="px-8 py-3 bg-charcoal/80 text-white rounded-lg hover:bg-charcoal transition duration-300 shadow-lg font-medium">
+              Partner With Us
+            </Link>
+          </div>
+        </div>
+      </section>
+ 
     </div>
   );
 };
 
-const ServiceCard = ({ icon: Icon, title, description, link, delay }) => (
-  <Link 
-    to={link}
-    className="bg-white rounded-lg p-8 text-center hover:shadow-xl transition duration-300 transform hover:-translate-y-2 group border border-transparent hover:border-tan/10"
-    data-aos="fade-up"
-    data-aos-delay={delay}
-  >
-    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-tan/10 mb-6 mx-auto group-hover:bg-tan/20 transition-all">
-      <Icon className="text-3xl text-tan" />
-    </div>
-    <h3 className="text-xl font-semibold text-tan mb-3 group-hover:text-gold transition-colors">{title}</h3>
-    <p className="text-charcoal mb-4">{description}</p>
-    <span className="inline-block text-sm font-medium text-tan group-hover:text-gold transition-colors">
-      Learn more →
-    </span>
-  </Link>
-);
+const ServiceCard = ({ icon: Icon, title, description, link, delay }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = (e) => {
+    e.preventDefault();
+    // Navigate to the desired page and then scroll to top
+    navigate(link);
+    window.scrollTo(0, 0);
+  };
 
-const PartnerCard = ({ icon: Icon, title, description, link, delay }) => (
-  <Link 
-    to={link}
-    className="group bg-cream rounded-lg p-8 text-center hover:shadow-xl transition duration-300 relative overflow-hidden"
-    data-aos="fade-up"
-    data-aos-delay={delay}
-  >
-    {/* Background accent */}
-    <div className="absolute top-0 left-0 w-full h-1 bg-tan transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
-    
-    <Icon className="text-4xl mb-5 mx-auto text-tan" />
-    <h3 className="text-xl font-semibold text-tan mb-3 group-hover:text-gold transition-colors">
-      {title}
-    </h3>
-    <p className="text-charcoal mb-4">{description}</p>
-    <span className="inline-block mt-2 text-tan group-hover:text-gold transition-colors font-medium">
-      Learn More <span className="group-hover:ml-1 transition-all duration-300">→</span>
-    </span>
-  </Link>
-);
+  return (
+    <a 
+      href={link}
+      onClick={handleClick}
+      className="bg-white rounded-lg p-8 text-center hover:shadow-xl transition duration-300 transform hover:-translate-y-2 group border border-transparent hover:border-tan/10"
+      data-aos="fade-up"
+      data-aos-delay={delay}
+    >
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-tan/10 mb-6 mx-auto group-hover:bg-tan/20 transition-all">
+        <Icon className="text-3xl text-tan" />
+      </div>
+      <h3 className="text-xl font-semibold text-tan mb-3 group-hover:text-gold transition-colors">{title}</h3>
+      <p className="text-charcoal mb-4">{description}</p>
+      <span className="inline-block text-sm font-medium text-tan group-hover:text-gold transition-colors">
+        Learn more →
+      </span>
+    </a>
+  );
+};
+
+const PartnerCard = ({ icon: Icon, title, description, link, delay }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = (e) => {
+    e.preventDefault();
+    // Navigate to the desired page and then scroll to top
+    navigate(link);
+    window.scrollTo(0, 0);
+  };
+
+  return (
+    <a 
+      href={link}
+      onClick={handleClick}
+      className="group bg-cream rounded-lg p-8 text-center hover:shadow-xl transition duration-300 relative overflow-hidden"
+      data-aos="fade-up"
+      data-aos-delay={delay}
+    >
+      {/* Background accent */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-tan transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+      
+      <Icon className="text-4xl mb-5 mx-auto text-tan" />
+      <h3 className="text-xl font-semibold text-tan mb-3 group-hover:text-gold transition-colors">
+        {title}
+      </h3>
+      <p className="text-charcoal mb-4">{description}</p>
+      <span className="inline-block mt-2 text-tan group-hover:text-gold transition-colors font-medium">
+        Learn More <span className="group-hover:ml-1 transition-all duration-300">→</span>
+      </span>
+    </a>
+  );
+};
 
 export default HomePage;

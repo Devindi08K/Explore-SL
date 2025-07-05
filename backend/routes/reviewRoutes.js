@@ -10,62 +10,67 @@ const { protect } = require('../middleware/authMiddleware');
 // Create a new review
 router.post('/', protect, async (req, res) => {
   try {
-    const { itemId, itemType, rating, comment } = req.body;
-    console.log("Review submission:", { itemId, itemType, rating, comment, userId: req.user?._id });
-    
-    // Create new review
-    const review = new Review({
-      userId: req.user._id,
-      itemId,
-      itemType,
-      rating,
-      comment,
-      createdAt: new Date()
-    });
-    
-    // Save review
-    const savedReview = await review.save();
-    
-    // Update the corresponding item with review reference and recalculate average
+    const { itemType } = req.body;
+    if (itemType === 'blog') {
+      return res.status(400).json({ error: 'Blog reviews are disabled.' });
+    }
+
+    const { itemId, rating, comment } = req.body;
+    const userId = req.user._id;
+
+    console.log(`Creating review: ${itemType} ${itemId} by user ${userId} with rating ${rating}`);
+
+    // 1. Find the correct Model and item based on itemType
     let Model;
     switch (itemType) {
-      case 'blog':
-        Model = Blog;
-        break;
-      case 'tourGuide':
-        Model = TourGuide;
-        break;
-      case 'vehicle':
-        Model = Vehicle;
-        break;
-      case 'tour':
-        Model = Tour;
-        break;
-      default:
-        return res.status(400).json({ error: 'Invalid item type' });
+      case 'blog': Model = Blog; break;
+      case 'tourGuide': Model = TourGuide; break;
+      case 'vehicle': Model = Vehicle; break;
+      case 'tour': Model = Tour; break;
+      default: return res.status(400).json({ error: 'Invalid item type' });
     }
-    
-    // Get the item
+
     const item = await Model.findById(itemId);
     if (!item) {
-      return res.status(404).json({ error: 'Item not found' });
+      return res.status(404).json({ error: 'Item not found.' });
     }
+
+    // 2. Backend check to prevent self-review
+    if (item.submittedBy && item.submittedBy.toString() === userId.toString()) {
+      return res.status(403).json({ error: 'You cannot review your own content.' });
+    }
+
+    // 3. Check if user has already reviewed this item
+    const existingReview = await Review.findOne({ userId, itemId, itemType });
+    if (existingReview) {
+        return res.status(400).json({ error: 'You have already submitted a review for this item.' });
+    }
+
+    // 4. Create and save the new review
+    const review = new Review({
+      userId, 
+      itemId, 
+      itemType, 
+      rating,
+      comment
+    });
     
-    // Add review to item
-    item.reviews.push(savedReview._id);
-    
-    // Calculate new average
-    const totalRating = (item.averageRating * item.totalReviews) + rating;
-    item.totalReviews += 1;
-    item.averageRating = totalRating / item.totalReviews;
-    
-    // Save item
-    await item.save();
-    
-    res.status(201).json(savedReview);
+    const savedReview = await review.save();
+    console.log(`Review saved: ${savedReview._id}`);
+
+    // 5. Fetch the updated item to return correct averageRating and totalReviews
+    const updatedItem = await Model.findById(itemId);
+
+    res.status(201).json({ 
+      success: true, 
+      review: savedReview,
+      averageRating: updatedItem.averageRating,
+      totalReviews: updatedItem.totalReviews 
+    });
+
   } catch (error) {
-    console.error('Error adding review - DETAILS:', error); // More detailed error logging
-    res.status(500).json({ error: 'Error adding review' });
+    console.error('Error creating review:', error);
+    res.status(500).json({ error: 'Server error while creating review.' });
   }
 });
 

@@ -5,6 +5,7 @@ const MapComponent = () => {
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [searchType, setSearchType] = useState('all');
   const [mapUrl, setMapUrl] = useState('https://www.openstreetmap.org/export/embed.html?bbox=79.5,5.8,82.0,9.9&layer=mapnik');
+  const [mapLoading, setMapLoading] = useState(true); // Add a new state for map loading
 
   // Complete Sri Lankan districts data
   const districtsData = {
@@ -195,14 +196,25 @@ const MapComponent = () => {
               <select
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="w-full p-3 bg-cream border border-tan rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-tan text-charcoal"
+                className="w-full p-3 bg-cream border border-tan rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-tan text-charcoal transition-shadow"
               >
-                <option value="all">All Districts</option>
-                {Object.keys(districtsData).map((key) => (
-                  <option key={key} value={key}>
-                    {districtsData[key].name}
-                  </option>
-                ))}
+                <option value="all">All Districts of Sri Lanka</option>
+                <optgroup label="Popular Districts">
+                  <option value="colombo">Colombo</option>
+                  <option value="kandy">Kandy</option>
+                  <option value="galle">Galle</option>
+                  <option value="nuwara_eliya">Nuwara Eliya</option>
+                </optgroup>
+                <optgroup label="All Districts">
+                  {Object.keys(districtsData)
+                    .filter(key => !['colombo', 'kandy', 'galle', 'nuwara_eliya'].includes(key))
+                    .sort((a, b) => districtsData[a].name.localeCompare(districtsData[b].name))
+                    .map((key) => (
+                      <option key={key} value={key}>
+                        {districtsData[key].name}
+                      </option>
+                    ))}
+                </optgroup>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-tan">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -236,6 +248,11 @@ const MapComponent = () => {
           <div className="lg:col-span-2">
             <div className="bg-white p-4 rounded-lg shadow-lg">
               <div className="relative w-full h-[350px] sm:h-[400px] lg:h-[600px] rounded-lg overflow-hidden">
+                {mapLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-cream/50">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-tan border-t-transparent"></div>
+                  </div>
+                )}
                 <iframe
                   src={mapUrl}
                   width="100%"
@@ -245,20 +262,8 @@ const MapComponent = () => {
                   loading="lazy"
                   title="Sri Lanka Map"
                   className="w-full h-full"
+                  onLoad={() => setMapLoading(false)}
                 ></iframe>
-                
-                {/* Map Controls - Make them more touch-friendly */}
-                <div className="absolute top-4 right-4 flex flex-col space-y-3 z-10">
-                  <button 
-                    onClick={() => setSelectedDistrict('all')}
-                    className="bg-white p-3 rounded-md shadow-md hover:bg-tan hover:text-white transition-colors"
-                    title="Show all of Sri Lanka"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 3a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V3zm2-1a1 1 0 00-1 1v14a1 1 0 001 1h10a1 1 0 001-1V3a1 1 0 00-1-1H5z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
               </div>
               
               {/* Map Legend */}
@@ -308,9 +313,11 @@ const MapComponent = () => {
                   </h4>
                   <ul className="space-y-2">
                     {districtsData[selectedDistrict].attractions.map((attraction, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-tan mt-1.5 mr-2"></span>
-                        <span className="text-gray-600">{attraction}</span>
+                      <li key={index} className="flex items-start group">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-tan mt-1.5 mr-2 group-hover:bg-gold transition-colors"></span>
+                        <Link to={`/destinations?search=${encodeURIComponent(attraction)}`} className="text-gray-600 hover:text-tan transition-colors">
+                          {attraction}
+                        </Link>
                       </li>
                     ))}
                   </ul>

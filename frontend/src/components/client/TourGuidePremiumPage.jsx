@@ -48,7 +48,7 @@ const TourGuidePremiumPage = () => {
     <div className="min-h-screen bg-cream px-4 py-16">
       <div className="max-w-5xl mx-auto">
         {/* Header Section */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-charcoal">
             Tour Guide <span className="text-tan">Premium</span>
           </h1>
@@ -57,38 +57,14 @@ const TourGuidePremiumPage = () => {
           </p>
         </div>
         
-        {/* Benefits Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-          <h2 className="text-2xl font-bold mb-6 text-center">Why Upgrade to Premium?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaArrowUp className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Top Placement</h3>
-              <p className="text-gray-600 text-sm mt-2">Your profile appears at the top of search results and guide listings</p>
-            </div>
-            
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaMedal className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Premium Badge</h3>
-              <p className="text-gray-600 text-sm mt-2">Stand out with an exclusive badge that builds trust with travelers</p>
-            </div>
-            
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaChartLine className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Analytics Access</h3>
-              <p className="text-gray-600 text-sm mt-2">Track your profile views, inquiries, and booking requests</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Pricing Section */}
+        {/* Pricing Section - MOVED TO TOP */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
           <h2 className="text-2xl font-bold mb-2 text-center">Premium Plans</h2>
           <p className="text-center text-gray-600 mb-8">Choose the plan that best fits your needs</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Free Plan */}
-            <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 flex flex-col">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Free Plan - Full width on mobile */}
+            <div className="border border-gray-200 rounded-lg p-4 sm:p-6 bg-gray-50 flex flex-col sm:col-span-2 lg:col-span-1">
               <div className="mb-4">
                 <h3 className="font-bold text-charcoal text-xl mb-2">Basic</h3>
                 <div className="text-3xl font-bold text-charcoal mb-2">Free <span className="text-sm font-normal text-gray-500">forever</span></div>
@@ -121,38 +97,38 @@ const TourGuidePremiumPage = () => {
               </Link>
             </div>
             
-            {/* Plus Plan - Highlighted as Best Value */}
-            <div className="border-2 border-tan rounded-lg p-6 bg-white flex flex-col relative">
+            {/* Monthly Premium Plan */}
+            <div className="border-2 border-tan rounded-lg p-4 sm:p-6 bg-white flex flex-col relative">
               <div className="absolute top-0 right-0 bg-tan text-cream text-xs py-1 px-3 rounded-bl-lg rounded-tr-lg font-medium">
                 POPULAR
               </div>
-              <div className="mb-4">
-                <h3 className="font-bold text-charcoal text-xl mb-2">Premium</h3>
-                <div className="text-3xl font-bold text-charcoal mb-2">LKR 500 <span className="text-sm font-normal text-gray-500">/month</span></div>
-                <p className="text-gray-600 text-sm">First 2 months free!</p>
+              <div className="mb-3">
+                <h3 className="font-bold text-charcoal text-lg sm:text-xl mb-1">Premium</h3>
+                <div className="text-2xl sm:text-3xl font-bold text-charcoal mb-1 sm:mb-2">LKR 500 <span className="text-xs sm:text-sm font-normal text-gray-500">/month</span></div>
+                <p className="text-gray-600 text-xs sm:text-sm">First 2 months free!</p>
               </div>
               
-              <ul className="mb-6 flex-grow space-y-2">
-                <li className="flex items-start text-sm">
-                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <ul className="mb-4 sm:mb-6 flex-grow space-y-1 sm:space-y-2">
+                <li className="flex items-start text-xs sm:text-sm">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-tan mr-1 sm:mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   <span>Priority ranking in search</span>
                 </li>
-                <li className="flex items-start text-sm">
-                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <li className="flex items-start text-xs sm:text-sm">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-tan mr-1 sm:mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   <span>Premium badge on profile</span>
                 </li>
-                <li className="flex items-start text-sm">
-                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <li className="flex items-start text-xs sm:text-sm">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-tan mr-1 sm:mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   <span>Analytics dashboard</span>
                 </li>
-                <li className="flex items-start text-sm">
-                  <svg className="h-5 w-5 text-tan mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <li className="flex items-start text-xs sm:text-sm">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-tan mr-1 sm:mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   <span>Featured on home page</span>
@@ -178,8 +154,8 @@ const TourGuidePremiumPage = () => {
               </button>
             </div>
             
-            {/* Pro Plan */}
-            <div className="border border-gray-200 rounded-lg p-6 bg-white flex flex-col">
+            {/* Annual Premium Plan */}
+            <div className="border border-gray-200 rounded-lg p-4 sm:p-6 bg-white flex flex-col">
               <div className="mb-4">
                 <h3 className="font-bold text-charcoal text-xl mb-2">Annual Premium</h3>
                 <div className="text-3xl font-bold text-charcoal mb-2">LKR 4,800 <span className="text-sm font-normal text-gray-500">/year</span></div>
@@ -231,6 +207,30 @@ const TourGuidePremiumPage = () => {
             <p className="text-center font-medium text-sm">
               <span className="text-gold">🎉 Special Launch Offer:</span> First 2 months free with any premium plan subscription!
             </p>
+          </div>
+        </div>
+        
+        {/* Benefits Section - MOVED AFTER PRICING */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-center">Why Upgrade to Premium?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaArrowUp className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Top Placement</h3>
+              <p className="text-gray-600 text-sm mt-2">Your profile appears at the top of search results and guide listings</p>
+            </div>
+            
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaMedal className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Premium Badge</h3>
+              <p className="text-gray-600 text-sm mt-2">Stand out with an exclusive badge that builds trust with travelers</p>
+            </div>
+            
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaChartLine className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Analytics Access</h3>
+              <p className="text-gray-600 text-sm mt-2">Track your profile views, inquiries, and booking requests</p>
+            </div>
           </div>
         </div>
 

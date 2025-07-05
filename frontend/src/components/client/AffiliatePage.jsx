@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
-import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaStar, FaHandshake, FaUser, FaTag, FaMapMarkedAlt, FaPlus, FaCrown } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaStar, FaHandshake, FaUser, FaTag, FaMapMarkedAlt, FaPlus, FaCrown, FaArrowUp, FaBuilding, FaUtensils, FaCoffee, FaStore } from 'react-icons/fa';
 
 const AffiliatePage = () => {
     const [affiliateLinks, setAffiliateLinks] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("hotel");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
 
     useEffect(() => {
         const fetchAffiliateLinks = async () => {
@@ -24,6 +25,19 @@ const AffiliatePage = () => {
             }
         };
         fetchAffiliateLinks();
+    }, []);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 300) {
+                setShowScrollButton(true);
+            } else {
+                setShowScrollButton(false);
+            }
+        };
+        
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     // Filter links by category
@@ -51,6 +65,23 @@ const AffiliatePage = () => {
         }
     };
 
+    // Add this function to your component
+    const getCategoryIcon = (category) => {
+        switch(category) {
+            case 'hotel':
+                return <FaBuilding />;
+            case 'restaurant':
+                return <FaUtensils />;
+            case 'cafe':
+                return <FaCoffee />;
+            case 'localEatery':
+                return <FaStore />;
+            default:
+                return <FaStore />;
+        }
+    };
+
+    // Replace your BusinessCard component with this enhanced version
     const BusinessCard = ({ business }) => {
         return (
             <Link to={`/business-listings/${business._id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full flex flex-col group">
@@ -58,7 +89,7 @@ const AffiliatePage = () => {
                     <img
                         src={business.imageUrl.startsWith('http') ? business.imageUrl : `${import.meta.env.VITE_BACKEND_URL}${business.imageUrl}`}
                         alt={business.businessName}
-                        className="w-full h-48 object-cover"
+                        className="w-full h-40 sm:h-48 object-cover"
                         onError={(e) => {
                             e.target.onerror = null;
                             e.target.src = "https://placehold.co/600x400?text=Business+Image";
@@ -74,6 +105,10 @@ const AffiliatePage = () => {
                 <div className="p-4 flex flex-col flex-grow">
                     <h4 className="text-lg font-semibold text-charcoal group-hover:text-tan transition-colors">{business.businessName}</h4>
                     <p className="text-sm text-gray-500 capitalize mb-2">{business.businessType}</p>
+                    <div className="flex items-start mb-2">
+                        <FaMapMarkerAlt className="text-tan mt-1 flex-shrink-0" />
+                        <p className="text-sm text-gray-600 ml-2">{business.location}</p>
+                    </div>
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2 flex-grow">{business.description}</p>
                     
                     <div className="mt-auto pt-3 border-t border-gray-100 text-center text-sm font-medium text-tan">
@@ -102,29 +137,33 @@ const AffiliatePage = () => {
                 </div>
 
                 {/* Category Selection */}
-                <div className="flex justify-center mb-8">
-                    <div className="inline-flex bg-white rounded-lg shadow p-1">
-                        {["hotel", "restaurant", "cafe", "localEatery"].map((category) => (
-                            <button
-                                key={category}
-                                onClick={() => setSelectedCategory(category)}
-                                className={`px-4 py-2 rounded-md ${
-                                    selectedCategory === category 
-                                    ? 'bg-tan text-cream' 
-                                    : 'text-charcoal hover:bg-cream'
-                                } transition duration-200`}
-                            >
-                                {category === "localEatery" 
-                                    ? "Local Eateries"
-                                    : category.charAt(0).toUpperCase() + category.slice(1) + (category === "cafe" ? "s" : "s")}
-                            </button>
-                        ))}
+                <div className="mb-8 overflow-x-auto">
+                    <div className="flex justify-center min-w-max mx-auto">
+                        <div className="inline-flex bg-white rounded-lg shadow p-1">
+                            {["hotel", "restaurant", "cafe", "localEatery"].map((category) => (
+                                <button
+                                    key={category}
+                                    onClick={() => setSelectedCategory(category)}
+                                    className={`px-4 py-2 rounded-md flex items-center ${
+                                        selectedCategory === category 
+                                        ? 'bg-tan text-cream' 
+                                        : 'text-charcoal hover:bg-cream'
+                                    } transition duration-200`}
+                                >
+                                    <span className="mr-2">{getCategoryIcon(category)}</span>
+                                    {category === "localEatery" 
+                                        ? "Local Eateries"
+                                        : category.charAt(0).toUpperCase() + category.slice(1) + (category === "cafe" ? "s" : "s")}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {loading && (
-                    <div className="flex justify-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-tan border-t-gold"></div>
+                    <div className="flex flex-col items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-tan border-t-gold mb-4"></div>
+                        <p className="text-gray-600">Loading business listings...</p>
                     </div>
                 )}
                 
@@ -140,7 +179,8 @@ const AffiliatePage = () => {
                             {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1).replace(/([A-Z])/g, ' $1')}
                             {(selectedCategory === "cafe" ? "s" : "s")}
                         </h3>
-                        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                        {/* Replace the grid layout with this responsive version */}
+                        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                             {filterBusinesses(selectedCategory).length > 0 ? (
                                 filterBusinesses(selectedCategory).map((business) => (
                                     <BusinessCard key={business._id} business={business} />
@@ -159,6 +199,16 @@ const AffiliatePage = () => {
                             )}
                         </div>
                     </div>
+                )}
+                
+                {showScrollButton && (
+                    <button
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="fixed bottom-8 right-8 bg-tan text-cream p-3 rounded-full shadow-lg hover:bg-gold transition-colors z-10"
+                        aria-label="Scroll to top"
+                    >
+                        <FaArrowUp className="w-5 h-5" />
+                    </button>
                 )}
             </div>
         </div>
