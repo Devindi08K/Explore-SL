@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom'; // Add this import
 import api from '../../utils/api';
-import { FaRegClock, FaUsers, FaMapMarkerAlt, FaTag, FaCheck, FaTimes, FaPlusCircle } from 'react-icons/fa'; // Add FaPlusCircle
+import { FaRegClock, FaUsers, FaMapMarkerAlt, FaTag, FaCheck, FaTimes, FaPlusCircle, FaMap } from 'react-icons/fa'; // Add FaPlusCircle
 
 const TourPage = () => {
   const [tours, setTours] = useState([]);
@@ -147,20 +147,20 @@ const TourPage = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-tan border-t-gold"></div>
           </div>
         ) : filteredTours.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="space-y-6">
             {filteredTours.map((tour) => {
               const tourType = getTourTypeTag(tour.isExternal);
               
               return (
-                <div key={tour._id} className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow duration-300">
-                  {/* Image Section with Tag */}
-                  <div className="relative">
+                <div key={tour._id} className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col md:flex-row h-full hover:shadow-xl transition-shadow duration-300">
+                  {/* Image Section with Tag - Smaller on desktop */}
+                  <div className="relative md:w-1/3 flex-shrink-0">
                     <img
                       src={tour.image && tour.image.startsWith('http') 
                         ? tour.image 
                         : `${import.meta.env.VITE_BACKEND_URL}/${tour.image?.replace(/\\/g, '/')}`}
                       alt={tour.name}
-                      className="w-full h-56 object-cover"
+                      className="w-full h-56 md:h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = "https://placehold.co/600x400?text=Tour+Image";
@@ -173,16 +173,22 @@ const TourPage = () => {
                     </div>
                   </div>
                   
-                  {/* Content Section */}
-                  <div className="p-6 flex flex-col flex-grow">
+                  {/* Content Section - More space on desktop */}
+                  <div className="p-6 flex flex-col flex-grow md:w-2/3">
                     {/* Tour Title and Basic Info */}
                     <div className="mb-4">
                       <h3 className="text-xl font-semibold text-charcoal mb-2">{tour.name}</h3>
-                      <p className="text-gray-600 mb-4 text-sm line-clamp-2">{tour.description}</p>
+                      <p className="text-gray-600 mb-4 text-sm">{tour.description}</p>
                     </div>
                     
                     {/* Tour Details */}
                     <div className="flex flex-wrap gap-2 sm:gap-3 mb-4">
+                      {tour.type && (
+                        <div className="flex items-center text-xs sm:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-full">
+                          <FaMap className="mr-1 text-tan" />
+                          <span>{tour.type}</span>
+                        </div>
+                      )}
                       {tour.duration && (
                         <div className="flex items-center text-xs sm:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-full">
                           <FaRegClock className="mr-1 text-tan" />
@@ -201,7 +207,13 @@ const TourPage = () => {
                           <span>{tour.priceRange}</span>
                         </div>
                       )}
-                      {tour.startingPoint && (
+                      {tour.location && (
+                        <div className="flex items-center text-xs sm:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-full">
+                          <FaMapMarkerAlt className="mr-1 text-gold" />
+                          <span>{tour.location}</span>
+                        </div>
+                      )}
+                      {tour.startingPoint && tour.startingPoint !== tour.location && (
                         <div className="flex items-center text-xs sm:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-full">
                           <FaMapMarkerAlt className="mr-1 text-tan" />
                           <span>{tour.startingPoint}</span>
@@ -210,65 +222,65 @@ const TourPage = () => {
                     </div>
                     
                     {/* Tour Content Based on Type */}
-                    {tour.isExternal ? (
-                      // External Tour - Book Now Button
-                      <div className="mt-auto">
-                        <a 
-                          href={tour.bookingUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="block w-full mt-4"
-                        >
-                          <button className="w-full bg-tan text-cream py-3 rounded-lg hover:bg-gold transition duration-200">
-                            Book Now
-                          </button>
-                        </a>
-                      </div>
-                    ) : (
-                      // Local Tour - Highlights, Included/Not Included, and Contact
-                      <div className="space-y-3 flex-grow">
-                        {tour.highlights && (
-                          <div className="mb-3">
-                            <h4 className="text-sm font-medium text-charcoal mb-1">Highlights:</h4>
-                            <p className="text-sm text-gray-600 line-clamp-2">{tour.highlights}</p>
-                          </div>
-                        )}
-
-                        {/* Added: Display included/not included if available */}
-                        <div className="grid grid-cols-1 gap-3">
-                          {tour.included && (
-                            <div>
-                              <h4 className="text-sm font-medium text-charcoal mb-1 flex items-center">
-                                <FaCheck className="text-green-500 mr-1" /> What's Included:
-                              </h4>
-                              <p className="text-sm text-gray-600 line-clamp-2">{tour.included}</p>
-                            </div>
-                          )}
-                          
-                          {tour.notIncluded && (
-                            <div>
-                              <h4 className="text-sm font-medium text-charcoal mb-1 flex items-center">
-                                <FaTimes className="text-red-500 mr-1" /> What's Not Included:
-                              </h4>
-                              <p className="text-sm text-gray-600 line-clamp-2">{tour.notIncluded}</p>
-                            </div>
-                          )}
+                    <div className="flex-grow">
+                      {tour.isExternal ? (
+                        // External Tour - Book Now Button
+                        <div className="mt-auto">
+                          <a 
+                            href={tour.bookingUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="block md:w-auto md:inline-block mt-4"
+                          >
+                            <button className="w-full md:w-auto px-8 bg-tan text-cream py-3 rounded-lg hover:bg-gold transition duration-200">
+                              Book Now
+                            </button>
+                          </a>
                         </div>
-                        
-                        <div className="mt-auto pt-3 border-t border-gray-100">
-                          <div className="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm gap-2">
+                      ) : (
+                        // Local Tour - Highlights, Included/Not Included, and Contact
+                        <div className="space-y-3 flex-grow">
+                          <div className="grid md:grid-cols-2 gap-4">
                             <div>
-                              <p className="font-medium text-charcoal mb-1">Contact:</p>
-                              <p className="text-gray-600">{tour.contactPhone}</p>
+                              {tour.highlights && (
+                                <div className="mb-3">
+                                  <h4 className="text-sm font-medium text-charcoal mb-1">Highlights:</h4>
+                                  <p className="text-sm text-gray-600 line-clamp-2">{tour.highlights}</p>
+                                </div>
+                              )}
+                              
+                              {tour.included && (
+                                <div>
+                                  <h4 className="text-sm font-medium text-charcoal mb-1 flex items-center">
+                                    <FaCheck className="text-green-500 mr-1" /> What's Included:
+                                  </h4>
+                                  <p className="text-sm text-gray-600 line-clamp-2">{tour.included}</p>
+                                </div>
+                              )}
                             </div>
-                            <div className="sm:text-right">
-                              <p className="font-medium text-charcoal mb-1">Email:</p>
-                              <p className="text-gray-600 break-all">{tour.contactEmail}</p>
+                            
+                            <div>
+                              {tour.notIncluded && (
+                                <div className="mb-3">
+                                  <h4 className="text-sm font-medium text-charcoal mb-1 flex items-center">
+                                    <FaTimes className="text-red-500 mr-1" /> What's Not Included:
+                                  </h4>
+                                  <p className="text-sm text-gray-600 line-clamp-2">{tour.notIncluded}</p>
+                                </div>
+                              )}
+                              
+                              <div className="mt-2">
+                                <h4 className="text-sm font-medium text-charcoal mb-1">Contact:</h4>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  <p className="text-gray-600">📞 {tour.contactPhone}</p>
+                                  <p className="text-gray-600">✉️ {tour.contactEmail}</p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               );

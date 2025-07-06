@@ -193,4 +193,52 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
   }
 });
 
+// Allow users to update their own blog posts
+router.put("/user/:id", protect, upload.single('image'), async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    
+    // Check if blog exists
+    if (!blog) {
+      return res.status(404).json({ error: "Blog not found" });
+    }
+    
+    // Check if user owns this blog
+    if (blog.submittedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "You can only edit your own blog posts" });
+    }
+    
+    // Prepare update data
+    const updateData = { ...req.body };
+    
+    // Handle image upload if present
+    if (req.file) {
+      updateData.image = req.file.path;
+    }
+    
+    // Don't allow changing isExternal status
+    updateData.isExternal = blog.isExternal;
+    
+    // CHANGE: Preserve current approval status instead of resetting to pending
+    // Keep the original status and verification if it was already approved
+    updateData.status = blog.status;
+    updateData.isVerified = blog.isVerified;
+    
+    // Add a flag to indicate the content was updated
+    updateData.lastUpdated = new Date();
+    updateData.needsReview = true;  // Optional: Add this if you want admins to know it was edited
+    
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+    
+    res.json(updatedBlog);
+  } catch (error) {
+    console.error('Error updating blog:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

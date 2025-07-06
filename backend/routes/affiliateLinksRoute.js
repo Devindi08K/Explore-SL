@@ -187,23 +187,48 @@ router.post("/", protect, upload.single('image'), async (req, res) => {
 });
 
 // Update an existing affiliate link
-router.put("/:id", async (req, res) => {
+router.put("/:id", protect, upload.single('image'), async (req, res) => {
   try {
-    const updatedAffiliate = await AffiliateLink.findByIdAndUpdate(
+    const listing = await AffiliateLink.findOne({
+      _id: req.params.id,
+      submittedBy: req.user._id
+    });
+    
+    if (!listing) {
+      return res.status(404).json({ error: "Business listing not found or you don't have permission to update it" });
+    }
+
+    // Create update data from req.body
+    const updateData = { ...req.body };
+    
+    // Handle image upload for local businesses
+    if (req.file) {
+      updateData.image = req.file.path;
+      // Remove imageUrl if switching to local upload
+      updateData.imageUrl = undefined;
+    }
+    
+    // Handle isExternal conversion from string to boolean
+    updateData.isExternal = updateData.isExternal === 'true' || updateData.isExternal === true;
+    
+    // Preserve premium status and verification status
+    updateData.isPremium = listing.isPremium;
+    updateData.premiumExpiry = listing.premiumExpiry;
+    updateData.isVerified = listing.isVerified;
+    updateData.status = listing.status;
+    
+    const updatedListing = await AffiliateLink.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 
-    if (!updatedAffiliate) {
-      return res.status(404).json({ error: "Affiliate link not found" });
-    }
-
-    res.json(updatedAffiliate);
+    res.json(updatedListing);
   } catch (error) {
+    console.error("Error updating business listing:", error);
     res.status(400).json({ 
-      error: "Error updating affiliate link",
-      details: error.message 
+      error: "Error updating business listing",
+      details: error.message
     });
   }
 });

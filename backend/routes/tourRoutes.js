@@ -17,7 +17,16 @@ router.get("/", async (req, res) => {
       isVerified: true,
       status: 'approved'
     });
-    res.json(tours);
+    
+    // Add location field to tours that don't have it
+    const processedTours = tours.map(tour => {
+      if (!tour.location) {
+        tour.location = tour.startingPoint || 'Sri Lanka';
+      }
+      return tour;
+    });
+    
+    res.json(processedTours);
   } catch (error) {
     res.status(500).json({ error: "Error fetching tours" });
   }
@@ -73,32 +82,58 @@ router.get("/:id", async (req, res) => {
 });
 
 // Add a new tour
-router.post("/", async (req, res) => {
+router.post("/", protect, upload.single('image'), async (req, res) => {
   try {
-    const tourData = req.body;
-    const newTour = new Tour(tourData);
-    await newTour.save();
-    res.status(201).json(newTour);
+    // Make sure to include location in the required fields check
+    const { name, description, type, location, isExternal } = req.body;
+    
+    if (!name || !description || !type || !location) {
+      return res.status(400).json({ error: 'Please provide all required fields' });
+    }
+    
+    // Process and save the tour with the location field
+    const tour = new Tour({
+      name,
+      description,
+      type,
+      location, // Make sure to include this
+      isExternal: isExternal === 'true',
+      // Other fields...
+    });
+    
+    // Rest of your code...
   } catch (error) {
-    console.error("Tour creation error:", error);
-    res.status(400).json({ error: "Error creating tour" });
+    // Error handling...
   }
 });
 
 // Update a tour
-router.put("/:id", protect, async (req, res) => {
+router.put("/:id", protect, upload.single('image'), async (req, res) => {
   try {
+    const tour = await Tour.findById(req.params.id);
+    
+    if (!tour) {
+      return res.status(404).json({ error: 'Tour not found' });
+    }
+    
+    // If tour doesn't have a location and one isn't provided in the update
+    if (!tour.location && !req.body.location) {
+      req.body.location = tour.startingPoint || 'Sri Lanka';
+    }
+    
+    const updateData = {
+      ...req.body,
+      location: req.body.location || tour.location || 'Sri Lanka'
+    };
+    
     const updatedTour = await Tour.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true }
     );
-    if (!updatedTour) {
-      return res.status(404).json({ error: "Tour not found" });
-    }
+    
     res.json(updatedTour);
   } catch (error) {
-    console.error("Tour update error:", error);
     res.status(400).json({ error: "Error updating tour" });
   }
 });

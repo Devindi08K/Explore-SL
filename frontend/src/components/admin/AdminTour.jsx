@@ -12,6 +12,7 @@ const AdminTour = () => {
         description: "",
         image: "",
         type: "safari",
+        location: "", // Add this line
         isExternal: false,
         bookingUrl: "",
         priceRange: "Rs ", // Initialize with currency
@@ -119,6 +120,7 @@ const AdminTour = () => {
                 description: "",
                 image: "",
                 type: "safari",
+                location: "", // Reset location
                 isExternal: false,
                 bookingUrl: "",
                 priceRange: "Rs ", // Initialize with currency

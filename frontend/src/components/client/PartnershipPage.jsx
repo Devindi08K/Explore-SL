@@ -45,76 +45,7 @@ const PartnershipPage = () => {
           </p>
         </div>
         
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold mb-4 text-center">Why Partner With Us?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              <div className="text-center">
-                <div className="bg-tan/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-tan" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-charcoal">Increased Visibility</h3>
-                <p className="text-gray-600 text-sm mt-2">Reach thousands of travelers planning their Sri Lankan adventure</p>
-              </div>
-              
-              <div className="text-center">
-                <div className="bg-tan/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-tan" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-charcoal">Targeted Audience</h3>
-                <p className="text-gray-600 text-sm mt-2">Connect with travelers specifically interested in Sri Lankan experiences</p>
-              </div>
-              
-              <div className="text-center">
-                <div className="bg-tan/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-tan" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-charcoal">Growth Opportunities</h3>
-                <p className="text-gray-600 text-sm mt-2">Expand your business with our growing platform of tourism services</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* How It Works Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-          <h2 className="text-2xl font-bold mb-8 text-center text-charcoal">Getting Started is Easy</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            {/* Step 1 */}
-            <div className="flex flex-col items-center">
-              <div className="bg-tan/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaHandshake className="h-10 w-10 text-tan" />
-              </div>
-              <h3 className="font-semibold text-charcoal text-lg mb-2">1. Choose Your Plan</h3>
-              <p className="text-gray-600 text-sm">Select the partnership type that fits your business, from free listings to premium features.</p>
-            </div>
-            {/* Step 2 */}
-            <div className="flex flex-col items-center">
-              <div className="bg-tan/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaPencilAlt className="h-9 w-9 text-tan" />
-              </div>
-              <h3 className="font-semibold text-charcoal text-lg mb-2">2. Submit Your Details</h3>
-              <p className="text-gray-600 text-sm">Fill out our simple submission form with your business information and photos.</p>
-            </div>
-            {/* Step 3 */}
-            <div className="flex flex-col items-center">
-              <div className="bg-tan/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaRocket className="h-9 w-9 text-tan" />
-              </div>
-              <h3 className="font-semibold text-charcoal text-lg mb-2">3. Reach New Customers</h3>
-              <p className="text-gray-600 text-sm">Once approved, your listing goes live, connecting you with thousands of travelers.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Partnership Cards */}
+        {/* Partnership Cards - Now directly after the header */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {/* Sponsored Blog Posts */}
           <div id="blog-section" className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:transform hover:scale-[1.02]">
@@ -308,6 +239,76 @@ const PartnershipPage = () => {
                   Submit Tour
                 </Link>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Why Partner With Us section - Now after partnership cards */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4 text-center">Why Partner With Us?</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              <div className="text-center">
+                <div className="bg-tan/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-tan" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-charcoal">Increased Visibility</h3>
+                <p className="text-gray-600 text-sm mt-2">Reach thousands of travelers planning their Sri Lankan adventure</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="bg-tan/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-tan" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-charcoal">Targeted Audience</h3>
+                <p className="text-gray-600 text-sm mt-2">Connect with travelers specifically interested in Sri Lankan experiences</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="bg-tan/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-tan" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-charcoal">Growth Opportunities</h3>
+                <p className="text-gray-600 text-sm mt-2">Expand your business with our growing platform of tourism services</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* How It Works Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+          <h2 className="text-2xl font-bold mb-8 text-center text-charcoal">Getting Started is Easy</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            {/* Step 1 */}
+            <div className="flex flex-col items-center">
+              <div className="bg-tan/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaHandshake className="h-10 w-10 text-tan" />
+              </div>
+              <h3 className="font-semibold text-charcoal text-lg mb-2">1. Choose Your Plan</h3>
+              <p className="text-gray-600 text-sm">Select the partnership type that fits your business, from free listings to premium features.</p>
+            </div>
+            {/* Step 2 */}
+            <div className="flex flex-col items-center">
+              <div className="bg-tan/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaPencilAlt className="h-9 w-9 text-tan" />
+              </div>
+              <h3 className="font-semibold text-charcoal text-lg mb-2">2. Submit Your Details</h3>
+              <p className="text-gray-600 text-sm">Fill out our simple submission form with your business information and photos.</p>
+            </div>
+            {/* Step 3 */}
+            <div className="flex flex-col items-center">
+              <div className="bg-tan/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaRocket className="h-9 w-9 text-tan" />
+              </div>
+              <h3 className="font-semibold text-charcoal text-lg mb-2">3. Reach New Customers</h3>
+              <p className="text-gray-600 text-sm">Once approved, your listing goes live, connecting you with thousands of travelers.</p>
             </div>
           </div>
         </div>

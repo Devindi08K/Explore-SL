@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../../utils/api';
-import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaExternalLinkAlt, FaStar } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaExternalLinkAlt, FaStar, FaTag } from 'react-icons/fa';
 
 const BusinessDetailPage = () => {
     const { id } = useParams();
@@ -64,13 +64,28 @@ const BusinessDetailPage = () => {
                             {business.address && <InfoItem icon={<FaMapMarkerAlt />} label="Address" value={business.address} />}
                             {business.phone && <InfoItem icon={<FaPhone />} label="Phone" value={business.phone} />}
                             {business.email && <InfoItem icon={<FaEnvelope />} label="Email" value={business.email} />}
-                            {business.openingHours && <InfoItem icon={<FaClock />} label="Hours" value={business.openingHours} />}
+                            {business.openingHours && <InfoItem icon={<FaClock />} label="Opening Hours" value={business.openingHours} />}
+                            {business.priceRange && (
+                                <div className="flex items-start">
+                                    <div className="text-tan mr-4 mt-1"><FaTag /></div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Price Range</p>
+                                        <p className="font-semibold text-charcoal">{business.priceRange}</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-4 flex flex-col justify-between">
                             {business.specialties && (
                                 <div>
                                     <h3 className="font-semibold text-charcoal mb-2">Specialties</h3>
                                     <p className="text-gray-600">{business.specialties}</p>
+                                </div>
+                            )}
+                            {business.contactName && (
+                                <div>
+                                    <h3 className="font-semibold text-charcoal mb-2">Contact Person</h3>
+                                    <p className="text-gray-600">{business.contactName}</p>
                                 </div>
                             )}
                             {business.isExternal && business.redirectUrl && (
@@ -86,18 +101,23 @@ const BusinessDetailPage = () => {
     );
 };
 
-const InfoItem = ({ icon, label, value, isLink = null }) => (
-    <div className="flex items-start">
-        <div className="text-tan mr-4 mt-1">{icon}</div>
-        <div>
-            <p className="text-sm text-gray-500">{label}</p>
-            {isLink ? (
-                <a href={isLink} className="font-semibold text-charcoal hover:text-tan break-all">{value}</a>
-            ) : (
-                <p className="font-semibold text-charcoal break-words">{value}</p>
-            )}
+// Update the InfoItem component to handle potential empty values
+const InfoItem = ({ icon, label, value, isLink = null }) => {
+    if (!value || value === '') return null;
+    
+    return (
+        <div className="flex items-start">
+            <div className="text-tan mr-4 mt-1">{icon}</div>
+            <div>
+                <p className="text-sm text-gray-500">{label}</p>
+                {isLink ? (
+                    <a href={isLink} className="font-semibold text-charcoal hover:text-tan break-all">{value}</a>
+                ) : (
+                    <p className="font-semibold text-charcoal break-words">{value}</p>
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 export default BusinessDetailPage;

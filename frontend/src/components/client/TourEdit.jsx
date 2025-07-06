@@ -1,56 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../utils/api';
-import { FaCheckCircle, FaTimesCircle, FaSpinner, FaUpload } from 'react-icons/fa';
+import { FaSpinner, FaUpload } from 'react-icons/fa';
 
-const SubmitTourPartnershipPage = () => {
+const TourEdit = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     type: 'Cultural',
-    location: '', // Make sure this is here
+    location: '', // Ensure this is here
     priceRange: 'Rs ',
     duration: '',
     groupSize: '',
     highlights: '',
     included: '',
     notIncluded: '',
-    startingPoint: 'To be determined',
-    endingPoint: 'To be determined',
+    startingPoint: '',
+    endingPoint: '',
     contactEmail: '',
     contactPhone: '',
     message: '',
-    bookingUrl: '',
-    image: null,
-    imageUrl: ''
+    bookingUrl: '', // For external tours
+    image: null, // For file upload
+    imageUrl: '' // For external image URL
   });
   const [isExternalTour, setIsExternalTour] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState({
-    loading: true,
-    hasPaid: false,
-    paymentId: null,
-  });
+  const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState(null);
 
   useEffect(() => {
-    const verifyPayment = async () => {
+    const fetchTourData = async () => {
       try {
-        const { data } = await api.get('/payments/check-voucher/tour_partnership');
-        if (data.hasVoucher) {
-          setPaymentStatus({ loading: false, hasPaid: true, paymentId: data.paymentId });
-        } else {
-          setPaymentStatus({ loading: false, hasPaid: false, paymentId: null });
+        setLoading(true);
+        const response = await api.get(`/tours/${id}`);
+        const tour = response.data;
+
+        setIsExternalTour(tour.isExternal);
+        
+        // Set form data with values from the fetched tour
+        setFormData({
+          name: tour.name || '',
+          description: tour.description || '',
+          type: tour.type || 'Cultural',
+          location: tour.location || '', // Add this line
+          priceRange: tour.priceRange || 'Rs ',
+          duration: tour.duration || '',
+          groupSize: tour.groupSize || '',
+          highlights: tour.highlights || '',
+          included: tour.included || '',
+          notIncluded: tour.notIncluded || '',
+          startingPoint: tour.startingPoint || '',
+          endingPoint: tour.endingPoint || '',
+          contactEmail: tour.contactEmail || '',
+          contactPhone: tour.contactPhone || '',
+          message: tour.message || '',
+          bookingUrl: tour.bookingUrl || '',
+          imageUrl: tour.image || ''
+        });
+
+        // Set preview image if available
+        if (tour.image) {
+          if (tour.image.startsWith('http')) {
+            setPreview(tour.image);
+          } else {
+            setPreview(`${import.meta.env.VITE_BACKEND_URL}/${tour.image.replace(/\\/g, '/')}`);
+          }
         }
+
       } catch (err) {
-        console.error("Payment verification failed:", err);
-        setPaymentStatus({ loading: false, hasPaid: false, paymentId: null });
+        console.error('Error fetching tour data:', err);
+        setError('Failed to load tour data. Please try again.');
+      } finally {
+        setLoading(false);
       }
     };
-    verifyPayment();
-  }, []);
+
+    fetchTourData();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,78 +95,85 @@ const SubmitTourPartnershipPage = () => {
     }
   };
 
+  // Make sure location is included in the data being sent
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!paymentStatus.paymentId) {
-      setError("No valid payment voucher found.");
-      return;
-    }
     setIsSubmitting(true);
     setError(null);
 
-    let data;
-    if (isExternalTour) {
-      data = {
-        name: formData.name,
-        description: formData.description,
-        location: formData.location, // Ensure this is included
-        type: formData.type,
-        isExternal: true,
-        bookingUrl: formData.bookingUrl,
-        imageUrl: formData.imageUrl,
-        priceRange: formData.priceRange,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone
-      };
-    } else {
-      const submitData = new FormData();
+    try {
+      let data;
       
-      // Make sure to include location in non-external tour data
-      Object.keys(formData).forEach(key => {
-        if (key === 'image' && formData[key]) {
-          submitData.append('image', formData[key]);
-        } else if (key !== 'image' && key !== 'imageUrl') {
-          submitData.append(key, formData[key]);
+      if (isExternalTour) {
+        // For external tour, ensure location is included
+        data = {
+          name: formData.name,
+          description: formData.description,
+          location: formData.location, // Make sure this is included
+          type: formData.type,
+          isExternal: true,
+          bookingUrl: formData.bookingUrl,
+          imageUrl: formData.imageUrl,
+          priceRange: formData.priceRange,
+          contactEmail: formData.contactEmail,
+          contactPhone: formData.contactPhone,
+          // Other fields...
+        };
+      } else {
+        // For non-external tour, ensure location is included in the FormData
+        const submitData = new FormData();
+        
+        // Add all form fields
+        Object.keys(formData).forEach(key => {
+          if (key === 'image' && formData[key]) {
+            submitData.append('image', formData[key]);
+          } else if (key !== 'image' && key !== 'imageUrl') {
+            submitData.append(key, formData[key]);
+          }
+        });
+        
+        submitData.append('isExternal', false);
+        data = submitData;
+      }
+
+      // Use PUT endpoint for updating
+      await api.put(`/tours/${id}`, data, {
+        headers: {
+          'Content-Type': isExternalTour ? 'application/json' : 'multipart/form-data'
         }
       });
       
-      submitData.append('isExternal', false);
-      data = submitData;
-    }
-
-    try {
-      await api.post('/tours/partnership', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      alert('Tour partnership submitted successfully! It will be reviewed by our team.');
+      // Success message and navigation
+      alert('Tour updated successfully!');
       navigate('/profile?tab=submissions');
     } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred during submission.');
+      setError(err.response?.data?.error || 'An error occurred while updating the tour.');
       console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (paymentStatus.loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <FaSpinner className="animate-spin text-tan text-4xl mr-2" />
-        <p className="ml-2">Verifying payment...</p>
+        <p className="ml-2">Loading tour data...</p>
       </div>
     );
   }
 
-  if (!paymentStatus.hasPaid) {
+  if (error && !formData.name) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center text-center">
         <div className="bg-white p-8 rounded-lg shadow-lg">
-          <FaTimesCircle className="text-red-500 text-5xl mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-charcoal mb-4">No Active Payment Found</h2>
-          <p className="text-gray-600 mb-6">You must complete a payment before submitting a tour partnership.</p>
-          <Link to="/partnership" className="bg-tan text-white px-6 py-2 rounded-lg hover:bg-gold transition">
-            View Partnership Options
-          </Link>
+          <p className="text-red-500 text-xl mb-4">{error}</p>
+          <button 
+            onClick={() => navigate('/profile?tab=submissions')}
+            className="bg-tan text-cream px-6 py-2 rounded-lg hover:bg-gold transition"
+          >
+            Back to Profile
+          </button>
         </div>
       </div>
     );
@@ -146,9 +183,8 @@ const SubmitTourPartnershipPage = () => {
     <div className="min-h-screen bg-cream py-10 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-6">
-          <FaCheckCircle className="text-green-500 text-4xl mx-auto mb-3" />
-          <h2 className="text-3xl font-bold text-charcoal">Submit Your Tour Partnership</h2>
-          <p className="text-gray-500 mt-2">Your payment is confirmed. Please provide your tour details.</p>
+          <h2 className="text-3xl font-bold text-charcoal">Edit Tour</h2>
+          <p className="text-gray-500 mt-2">Update your tour information below</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -160,8 +196,10 @@ const SubmitTourPartnershipPage = () => {
                 checked={isExternalTour}
                 onChange={(e) => setIsExternalTour(e.target.checked)}
                 className="form-checkbox text-tan"
+                disabled // Can't change tour type after creation
               />
               <span>I have a website for managing tour bookings</span>
+              {isExternalTour && <span className="text-gray-500 text-sm">(Can't be changed after creation)</span>}
             </label>
           </div>
 
@@ -193,7 +231,7 @@ const SubmitTourPartnershipPage = () => {
                   placeholder="e.g., Colombo, Kandy, Galle"
                 />
               </div>
-
+              
               <div className="mb-4">
                 <label className="block text-charcoal mb-2 font-medium">Booking Website URL</label>
                 <input
@@ -218,12 +256,9 @@ const SubmitTourPartnershipPage = () => {
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
-              {/* Add the description field for external tours */}
+              
               <div>
-                <label className="block text-charcoal mb-2 font-medium">
-                  Description
-                  <span className="text-xs text-gray-500 ml-2">(Max 300 characters)</span>
-                </label>
+                <label className="block text-charcoal mb-2 font-medium">Description</label>
                 <textarea 
                   name="description" 
                   value={formData.description} 
@@ -245,7 +280,6 @@ const SubmitTourPartnershipPage = () => {
             </>
           ) : (
             <>
-              {/* Regular tour fields continue below */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-charcoal mb-2 font-medium">Tour Name</label>
@@ -374,17 +408,11 @@ const SubmitTourPartnershipPage = () => {
 
               <div>
                 <label className="block text-charcoal mb-2 font-medium">Highlights</label>
-                <span className="text-xs text-gray-500 ml-2">(Max 200 characters)</span>
                 <textarea 
                   name="highlights" 
                   value={formData.highlights} 
-                  onChange={(e) => {
-                    if (e.target.value.length <= 200) {
-                      handleChange(e);
-                    }
-                  }} 
+                  onChange={handleChange} 
                   rows="3" 
-                  maxLength="200"
                   className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
                 ></textarea>
                 <div className="text-xs text-gray-500 text-right">
@@ -394,17 +422,11 @@ const SubmitTourPartnershipPage = () => {
               
               <div>
                 <label className="block text-charcoal mb-2 font-medium">What's Included</label>
-                <span className="text-xs text-gray-500 ml-2">(Max 200 characters)</span>
                 <textarea 
                   name="included" 
                   value={formData.included} 
-                  onChange={(e) => {
-                    if (e.target.value.length <= 200) {
-                      handleChange(e);
-                    }
-                  }} 
+                  onChange={handleChange} 
                   rows="3" 
-                  maxLength="200"
                   className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
                 ></textarea>
                 <div className="text-xs text-gray-500 text-right">
@@ -414,17 +436,11 @@ const SubmitTourPartnershipPage = () => {
               
               <div>
                 <label className="block text-charcoal mb-2 font-medium">What's Not Included</label>
-                <span className="text-xs text-gray-500 ml-2">(Max 200 characters)</span>
                 <textarea 
                   name="notIncluded" 
                   value={formData.notIncluded} 
-                  onChange={(e) => {
-                    if (e.target.value.length <= 200) {
-                      handleChange(e);
-                    }
-                  }} 
+                  onChange={handleChange} 
                   rows="3" 
-                  maxLength="200"
                   className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
                 ></textarea>
                 <div className="text-xs text-gray-500 text-right">
@@ -485,33 +501,49 @@ const SubmitTourPartnershipPage = () => {
           {!isExternalTour && (
             <div>
               <label className="block text-charcoal mb-2 font-medium">Featured Image</label>
-              <div className="mt-2 flex items-center justify-center w-full">
-                <label className="flex flex-col w-full h-32 border-2 border-tan border-dashed hover:bg-gray-50 rounded-lg cursor-pointer">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <FaUpload className="w-10 h-10 text-gray-400" />
-                    <p className="text-sm text-gray-500">Click to upload an image for your tour</p>
+              <div className="flex items-center space-x-4">
+                {preview && (
+                  <div className="relative">
+                    <img src={preview} alt="Preview" className="w-40 h-24 object-cover rounded-lg" />
+                    <p className="text-xs text-gray-500 mt-1">Current image</p>
                   </div>
-                  <input type="file" onChange={handleFileChange} className="hidden" accept="image/*" />
-                </label>
+                )}
+                <div className="flex-1">
+                  <label className="flex flex-col w-full h-24 border-2 border-tan border-dashed hover:bg-gray-50 rounded-lg cursor-pointer">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <FaUpload className="w-6 h-6 text-gray-400" />
+                      <p className="text-sm text-gray-500">Upload new image (optional)</p>
+                    </div>
+                    <input type="file" onChange={handleFileChange} className="hidden" accept="image/*" />
+                  </label>
+                </div>
               </div>
-              {preview && <img src={preview} alt="Preview" className="mt-4 rounded-lg w-full max-h-60 object-cover" />}
             </div>
           )}
 
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-tan text-cream py-3 rounded-lg hover:bg-gold transition duration-200 flex items-center justify-center"
-          >
-            {isSubmitting && <FaSpinner className="animate-spin mr-2" />}
-            {isSubmitting ? 'Submitting...' : 'Submit Tour'}
-          </button>
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={() => navigate('/profile?tab=submissions')}
+              className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200 flex items-center justify-center"
+            >
+              {isSubmitting && <FaSpinner className="animate-spin mr-2" />}
+              {isSubmitting ? 'Updating...' : 'Update Tour'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 };
 
-export default SubmitTourPartnershipPage;
+export default TourEdit;

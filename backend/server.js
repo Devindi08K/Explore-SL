@@ -41,7 +41,7 @@ const destinationRoutes = require("./routes/destinationRoutes");
 const affiliateLinksRoute = require("./routes/affiliateLinksRoute");
 const reviewRoutes = require('./routes/review');
 const paymentRoutes = require('./routes/paymentRoutes');
-
+const userRequestsRoutes = require('./routes/userRequestsRoutes');
 // Mount routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tour-guides", tourGuideRoutes);
@@ -53,6 +53,7 @@ app.use("/api/destinations", destinationRoutes);
 app.use("/api/affiliate-links", affiliateLinksRoute);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/user-requests', userRequestsRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

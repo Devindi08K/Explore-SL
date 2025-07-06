@@ -2,9 +2,10 @@ const mongoose = require("mongoose");
 
 const tourSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String, required: true, maxlength: 300 },
   image: { type: String, required: true },
   type: { type: String, required: true },
+  location: { type: String, required: true },
   isExternal: { type: Boolean, default: false },
   
   // External tour fields
@@ -14,9 +15,9 @@ const tourSchema = new mongoose.Schema({
   // Local tour fields
   duration: String,
   groupSize: String,
-  highlights: String,
-  included: String,
-  notIncluded: String,
+  highlights: { type: String, maxlength: 200 },
+  included: { type: String, maxlength: 200 },
+  notIncluded: { type: String, maxlength: 200 },
   startingPoint: String,
   endingPoint: String,
   itinerary: [{
@@ -25,6 +26,7 @@ const tourSchema = new mongoose.Schema({
   }],
   contactEmail: String,
   contactPhone: String,
+  message: { type: String, maxlength: 200 },
 
   // Verification fields
   isVerified: {

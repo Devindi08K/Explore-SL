@@ -16,9 +16,9 @@ import TourPage from './components/client/TourPage';
 import AffiliatePage from './components/client/AffiliatePage';
 import PartnershipPage from './components/client/PartnershipPage';
 import DestinationDetails from './components/client/DestinationDetails';
-import BlogSubmissionForm from './components/client/BlogSubmissionForm';
+
 import BusinessListingForm from './components/client/BusinessListingForm';
-import TourOperatorForm from './components/client/TourOperatorForm';
+
 import TourGuidePage from './components/client/TourGuidePage';
 import TourGuideRegistrationForm from './components/client/TourGuideRegistrationForm';
 import DestinationsPage from './components/client/DestinationsPage';
@@ -31,6 +31,11 @@ import VehiclePremiumPage from './components/client/VehiclePremiumPage';
 import TourGuideProfilePage from './components/client/TourGuideProfilePage';
 import BusinessPremiumPage from './components/client/BusinessPremiumPage';
 import BusinessDetailPage from './components/client/BusinessDetailPage';
+import TourEdit from './components/client/TourEdit';
+import BlogEdit from './components/client/BlogEdit';
+import BusinessEdit from './components/client/BusinessEdit';
+import TourGuideEdit from './components/client/TourGuideEdit';
+import VehicleEdit from './components/client/VehicleEdit';
 
 // Admin Components
 import AdminDashboard from './components/client/AdminDashboard';
@@ -110,10 +115,10 @@ const AppContent = () => {
           <Route path="/affiliate-links" element={<AffiliatePage />} />
           <Route path="/partnership" element={<PartnershipPage />} />
           <Route path="/destination/:id" element={<DestinationDetails />} />
-          <Route path="/partnership/blog-submission" element={<BlogSubmissionForm />} />
+          
           <Route path="/partnership/business-listing" element={<BusinessListingForm />} />
           <Route path="/partnership/business-premium" element={<BusinessPremiumPage />} />
-          <Route path="/partnership/tour-operator" element={<TourOperatorForm />} />
+          
           <Route path="/tour-guides" element={<TourGuidePage />} />
           <Route path="/tour-guide-registration" element={<TourGuideRegistrationForm />} />
           <Route path="/destinations" element={<DestinationsPage />} />
@@ -173,6 +178,11 @@ const AppContent = () => {
               <AdminVehiclesPage />
             </ProtectedRoute>
           } />
+          <Route path="/vehicle-edit/:id" element={<VehicleEdit />} />
+          <Route path="/tour-guide-edit/:id" element={<TourGuideEdit />} />
+          <Route path="/blog-edit/:id" element={<BlogEdit />} />
+          <Route path="/business-edit/:id" element={<BusinessEdit />} />
+          <Route path="/tour-edit/:id" element={<TourEdit />} />
         </Routes>
       </main>
       <Footer />

@@ -22,4 +22,10 @@ app.use(passport.initialize());
 // API Routes
 app.use('/api', require('./routes'));
 
+// Add this line with the other routes
+const userRequestsRoutes = require('./routes/userRequestsRoutes');
+
+// Add this line with the other app.use statements
+app.use('/api/user-requests', userRequestsRoutes);
+
 module.exports = app;

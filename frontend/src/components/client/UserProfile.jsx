@@ -25,7 +25,8 @@ import {
   FaBolt,
   FaMapMarkedAlt,
   FaBuilding,
-  FaSyncAlt
+  FaSyncAlt,
+  FaTrash
 } from 'react-icons/fa';
 
 const UserProfile = () => {
@@ -56,10 +57,10 @@ const UserProfile = () => {
     }
   }, [activeTab]);
 
-  // Also add this useEffect to fetch submissions on component mount
+  // Update the second useEffect
   useEffect(() => {
-    fetchSubmissions(); // Always fetch submissions on mount
-    fetchPaymentHistory(); // Fetch payment history on mount for stats
+    fetchSubmissions();
+    fetchPaymentHistory();
   }, []);
 
   const fetchProfile = async () => {
@@ -739,29 +740,96 @@ const UserProfile = () => {
     );
   };
 
-  const refreshPremiumStatus = async (guideId) => {
-    try {
-      const response = await api.post(`/tour-guides/refresh-premium/${guideId}`);
-      console.log('Premium status refreshed:', response.data);
-      fetchSubmissions(); // Refresh the submissions to show the updated status
-      
-      // Show more detailed success message
-      alert('Premium features activated successfully! Your guide now has premium badge and is featured in destination pages.');
-    } catch (error) {
-      console.error('Error refreshing premium status:', error);
-      alert('Failed to activate premium features. Please try again or contact support.');
+  const handleEditItem = (itemType, itemId) => {
+    // Navigate to appropriate edit form based on item type
+    switch(itemType) {
+      case 'tourGuide':
+        // Redirect to tour guide edit page with ID parameter
+        window.location.href = `/tour-guide-edit/${itemId}`;
+        break;
+        
+      case 'vehicle':
+        // Redirect to vehicle edit page with ID parameter
+        window.location.href = `/vehicle-edit/${itemId}`;
+        break;
+        
+      case 'blog':
+        // Redirect to blog edit page with ID parameter
+        window.location.href = `/blog-edit/${itemId}`;
+        break;
+        
+      case 'business':
+        // Redirect to business listing edit page with ID parameter
+        window.location.href = `/business-edit/${itemId}`;
+        break;
+        
+      case 'tour':
+        // Redirect to tour edit page with ID parameter
+        window.location.href = `/tour-edit/${itemId}`;
+        break;
+        
+      default:
+        console.error(`Unknown item type: ${itemType}`);
     }
   };
 
-  const refreshBusinessListingPremium = async (listingId) => {
+  const handleDeleteItem = async (itemType, itemId) => {
+    // Ask for confirmation before deleting
+    if (!window.confirm(`Are you sure you want to delete this ${itemType}? This action cannot be undone.`)) {
+      return;
+    }
+
     try {
-      await api.post(`/affiliate-links/refresh-premium/${listingId}`);
-      alert('Premium status for your business listing has been successfully refreshed!');
+      let endpoint;
+      
+      // Determine the correct API endpoint based on item type
+      switch(itemType) {
+        case 'tourGuide':
+          endpoint = `/tour-guides/${itemId}`;
+          break;
+        case 'vehicle':
+          endpoint = `/vehicles/${itemId}`;
+          break;
+        case 'blog':
+          endpoint = `/blogs/${itemId}`;
+          break;
+        case 'business':
+          endpoint = `/affiliate-links/${itemId}`;
+          break;
+        case 'tour':
+          endpoint = `/tours/${itemId}`;
+          break;
+        default:
+          console.error(`Unknown item type: ${itemType}`);
+          return;
+      }
+      
+      // Make the delete API call
+      await api.delete(endpoint);
+      
+      // Show success message
+      alert(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} has been deleted successfully.`);
+      
+      // Refresh the submissions data
       fetchSubmissions();
     } catch (error) {
-      console.error('Error refreshing business listing premium status:', error);
-      alert('Failed to refresh premium status. This can happen if no active subscription is found for your account.');
+      console.error(`Error deleting ${itemType}:`, error);
+      alert(`Failed to delete ${itemType}. Please try again.`);
     }
+  };
+
+  const StatusBadge = ({ status }) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      approved: 'bg-green-100 text-green-800',
+      rejected: 'bg-red-100 text-red-800'
+    };
+
+    return (
+      <span className={`px-2 py-1 rounded-full text-sm ${colors[status] || 'bg-gray-100 text-gray-800'}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
   };
 
   if (loading) {
@@ -1004,7 +1072,28 @@ const UserProfile = () => {
                             <span className={getStatusBadge(guide.status)}>
                               {guide.status}
                             </span>
-                            {/* The div containing the links has been removed */}
+                            <div className="flex space-x-2 mt-2">
+                              <Link
+                                to={`/tour-guides/${guide._id}`}
+                                className="text-green-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEye className="mr-1" /> View
+                              </Link>
+                              
+                              <button
+                                onClick={() => handleEditItem('tourGuide', guide._id)}
+                                className="text-blue-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEdit className="mr-1" /> Edit
+                              </button>
+                              
+                              <button
+                                onClick={() => handleDeleteItem('tourGuide', guide._id)}
+                                className="text-red-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaTrash className="mr-1" /> Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1070,15 +1159,27 @@ const UserProfile = () => {
                             <span className={getStatusBadge(vehicle.status)}>
                               {vehicle.status}
                             </span>
-                            <div className="space-x-2">
-                              <Link to={`/vehicles/${vehicle._id}`} className="text-tan text-sm hover:underline">
-                                View Details
+                            <div className="flex space-x-2">
+                              <Link
+                                to={`/vehicles/${vehicle._id}`}
+                                className="text-green-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEye className="mr-1" /> View
                               </Link>
-                              {vehicle.isPremium && vehicle.analyticsEnabled && (
-                                <Link to={`/vehicle-analytics/${vehicle._id}`} className="text-gold text-sm hover:underline">
-                                  Analytics
-                                </Link>
-                              )}
+                              
+                              <button
+                                onClick={() => handleEditItem('vehicle', vehicle._id)}
+                                className="text-blue-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEdit className="mr-1" /> Edit
+                              </button>
+                              
+                              <button
+                                onClick={() => handleDeleteItem('vehicle', vehicle._id)}
+                                className="text-red-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaTrash className="mr-1" /> Delete
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -1112,9 +1213,28 @@ const UserProfile = () => {
                             <span className={getStatusBadge(blog.status)}>
                               {blog.status}
                             </span>
-                            <Link to={`/blogs/${blog._id}`} className="text-tan text-sm hover:underline">
-                              View Details
-                            </Link>
+                            <div className="flex space-x-2">
+                              <Link
+                                to={`/blogs/${blog._id}`}
+                                className="text-green-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEye className="mr-1" /> View
+                              </Link>
+                              
+                              <button
+                                onClick={() => handleEditItem('blog', blog._id)}
+                                className="text-blue-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEdit className="mr-1" /> Edit
+                              </button>
+                              
+                              <button
+                                onClick={() => handleDeleteItem('blog', blog._id)}
+                                className="text-red-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaTrash className="mr-1" /> Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1166,13 +1286,28 @@ const UserProfile = () => {
                             <span className={getStatusBadge(tour.status)}>
                               {tour.status}
                             </span>
-                            {tour.status === 'approved' ? (
-                              <Link to="/tours" className="text-tan text-sm hover:underline">
-                                View on Tours Page
+                            <div className="flex space-x-2">
+                              <Link
+                                to={`/tours`}
+                                className="text-green-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEye className="mr-1" /> View
                               </Link>
-                            ) : (
-                              <span className="text-gray-400 text-sm">Not yet live</span>
-                            )}
+                              
+                              <button
+                                onClick={() => handleEditItem('tour', tour._id)}
+                                className="text-blue-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEdit className="mr-1" /> Edit
+                              </button>
+                              
+                              <button
+                                onClick={() => handleDeleteItem('tour', tour._id)}
+                                className="text-red-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaTrash className="mr-1" /> Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1199,32 +1334,42 @@ const UserProfile = () => {
                               <img 
                                 src={listing.imageUrl.startsWith('http') ? listing.imageUrl : `${import.meta.env.VITE_BACKEND_URL}${listing.imageUrl}`}
                                 alt={listing.businessName}
-                                className="w-full h-32 object-cover rounded-md"
-                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400?text=Business"; }}
+                                className="w-full h-32 object-cover rounded-lg"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://placehold.co/600x400?text=Business+Image';
+                                }}
                               />
                             </div>
                           )}
-                          <p className="text-sm text-gray-600 mb-2 capitalize">{listing.businessType}</p>
-                          <p className="text-sm text-gray-600 mb-3 truncate">{listing.description}</p>
-                          
-                          {listing.isPremium ? (
-                            <BusinessListingPremiumDetails listing={listing} />
-                          ) : (
-                            <>
-                              <BusinessListingUpgradePrompt listing={listing} />
-                              {/* The refresh button has been removed as the process is now automatic */}
-                            </>
-                          )}
-                          
-                          {!listing.isPremium && <PendingBusinessListingMessage listing={listing} />}
-                          
-                          <div className="flex justify-between items-center mt-3">
-                            <span className={getStatusBadge(listing.status)}>
-                              {listing.status}
-                            </span>
-                            <Link to={`/business-listings/${listing._id}`} className="text-tan text-sm hover:underline">
-                              View Details
-                            </Link>
+                          <div className="text-sm text-gray-600 mb-3 capitalize">
+                            <p>{listing.businessType} • {listing.location}</p>
+                            <p className="mt-1">{listing.status === 'approved' ? 'Approved' : 'Pending Approval'}</p>
+                          </div>
+                          <div className="flex justify-between items-center mt-2">
+                            <StatusBadge status={listing.status} />
+                            <div className="flex space-x-2">
+                              <Link
+                                to={`/business-listings/${listing._id}`}
+                                className="text-green-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEye className="mr-1" /> View
+                              </Link>
+                              
+                              <button
+                                onClick={() => handleEditItem('business', listing._id)}
+                                className="text-blue-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaEdit className="mr-1" /> Edit
+                              </button>
+                              
+                              <button
+                                onClick={() => handleDeleteItem('business', listing._id)}
+                                className="text-red-600 text-xs hover:underline flex items-center"
+                              >
+                                <FaTrash className="mr-1" /> Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { 
   FaUsers, FaMapMarkedAlt, FaCar, FaUserTie, FaBlog, 
   FaLink, FaRoute, FaBuilding, FaCheck, FaTimes,
-  FaCreditCard, FaClock, FaChartLine
+  FaCreditCard, FaClock, FaChartLine, FaEdit
 } from 'react-icons/fa';
 import api from '../../utils/api';
 

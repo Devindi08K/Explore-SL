@@ -696,6 +696,88 @@ router.put('/:id', protect, authorize(['admin']), async (req, res) => {
   }
 });
 
+// Update vehicle by owner
+router.put('/owner/:id', protect, async (req, res) => {
+  try {
+    console.log('🔄 Owner updating vehicle with ID:', req.params.id);
+    
+    // Find the vehicle and make sure it belongs to the current user
+    const vehicle = await Vehicle.findOne({
+      _id: req.params.id,
+      submittedBy: req.user._id
+    });
+    
+    if (!vehicle) {
+      return res.status(404).json({ 
+        error: 'Vehicle not found or you do not have permission to update it'
+      });
+    }
+    
+    // Filter out empty image URLs
+    const filteredImages = req.body.vehicleImages ? 
+      req.body.vehicleImages.filter(img => img && img.trim() !== '') : [];
+      
+    const maxAllowedImages = vehicle.isPremium ? 3 : 1;
+    if (filteredImages.length > maxAllowedImages) {
+      return res.status(400).json({
+        error: `Maximum ${maxAllowedImages} images allowed for ${vehicle.isPremium ? 'premium' : 'free'} accounts.`
+      });
+    }
+    
+    if (filteredImages.length === 0) {
+      return res.status(400).json({
+        error: 'At least one vehicle image is required'
+      });
+    }
+
+    // Don't allow changing the plate number
+    if (req.body.plateNumber && req.body.plateNumber !== vehicle.plateNumber) {
+      return res.status(400).json({
+        error: 'Vehicle plate number cannot be changed'
+      });
+    }
+    
+    // Create update data
+    const updateData = {
+      ...req.body,
+      vehicleType: vehicle.vehicleType, // Don't allow changing vehicle type
+      plateNumber: vehicle.plateNumber, // Don't allow changing plate number
+      vehicleImages: filteredImages,
+      isPremium: vehicle.isPremium, // Preserve premium status
+      premiumExpiry: vehicle.premiumExpiry,
+      maxPhotos: vehicle.maxPhotos,
+      isVerified: vehicle.isVerified, // Preserve verification status
+      status: vehicle.status, // Preserve approval status
+      submittedBy: req.user._id,
+      needsReview: true // Flag that this vehicle needs review again
+    };
+    
+    // Update the vehicle
+    const updatedVehicle = await Vehicle.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+    
+    console.log('✅ Vehicle updated successfully by owner');
+    res.json(updatedVehicle);
+  } catch (error) {
+    console.error('❌ Error updating vehicle:', error);
+    
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: Object.values(error.errors).map(err => err.message).join(', ')
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Error updating vehicle',
+      details: error.message 
+    });
+  }
+});
+
 // Get vehicles that need review (auto-approved premium vehicles)
 router.get('/needs-review', protect, authorize(['admin']), async (req, res) => {
   try {
