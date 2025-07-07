@@ -57,8 +57,8 @@ const TourGuideProfilePage = () => {
         <div className="bg-tan/10 p-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
             <div className="relative">
-              <img 
-                src={guide.image || 'https://via.placeholder.com/300x300?text=Guide'} 
+              <img
+                src="https://st2.depositphotos.com/2935785/10774/v/450/depositphotos_107746606-stock-illustration-tour-guide-with-group-of.jpg" // Always use the placeholder image
                 alt={guide.name}
                 className="w-40 h-40 rounded-full object-cover border-4 border-white shadow-lg"
               />

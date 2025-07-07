@@ -8,7 +8,6 @@ const AdminTourGuidePage = () => {
   const [editingGuide, setEditingGuide] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
-    image: "",
     languages: [],
     specialization: [],
     yearsOfExperience: "",
@@ -41,7 +40,6 @@ const AdminTourGuidePage = () => {
       setEditingGuide(guide);
       setFormData({
         name: guide.name || '',
-        image: guide.image || '',
         languages: guide.languages || [],
         specialization: guide.specialization || [],
         yearsOfExperience: guide.yearsOfExperience || '',
@@ -163,7 +161,6 @@ const AdminTourGuidePage = () => {
     setEditingGuide(null);
     setFormData({
       name: "",
-      image: "",
       languages: [],
       specialization: [],
       yearsOfExperience: "",
@@ -224,17 +221,6 @@ const AdminTourGuidePage = () => {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full p-2 border border-tan rounded-md"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Image URL</label>
-            <input
-              type="url"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
               className="w-full p-2 border border-tan rounded-md"
               required
             />

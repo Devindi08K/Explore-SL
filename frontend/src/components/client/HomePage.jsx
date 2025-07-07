@@ -438,8 +438,8 @@ const HomePage = () => {
                   <div className="p-4 flex items-center">
                     <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-tan">
                       <img
-                        src={guide.image || 'https://via.placeholder.com/300x300?text=Guide'}
-                        alt={guide.name}
+                        src="https://st2.depositphotos.com/2935785/10774/v/450/depositphotos_107746606-stock-illustration-tour-guide-with-group-of.jpg" // Always use the placeholder image
+                        alt="Tour Guide"
                         className="w-full h-full object-cover"
                       />
                     </div>

@@ -191,13 +191,22 @@ router.post('/:id/view', async (req, res) => {
     }
     const fourHoursAgo = new Date();
     fourHoursAgo.setHours(fourHoursAgo.getHours() - 4);
-    const recentView = await TourGuideView.findOne({ guideId: id, $or: [{ userId: userId || null }, { sessionId: sessionId || null }], viewedAt: { $gt: fourHoursAgo } });
+    const recentView = await TourGuideView.findOne({ 
+      guideId: id, 
+      $or: [{ userId: userId || null }, { sessionId: sessionId || null }], 
+      viewedAt: { $gt: fourHoursAgo } 
+    });
     if (!recentView) {
       await TourGuide.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
       await new TourGuideView({ guideId: id, userId: userId || null, sessionId: sessionId || null, viewedAt: new Date() }).save();
     }
     res.status(200).send();
   } catch (error) {
+    if (error.code === 'ECONNRESET') {
+      // Optionally log as a warning, not an error
+      console.warn('Connection reset by peer during view tracking');
+      return;
+    }
     console.error('Error tracking view:', error);
     res.status(500).send();
   }

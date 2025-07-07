@@ -7,7 +7,6 @@ const TourGuideEdit = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
-    image: '',
     bio: '',
     languages: [],
     specialization: [],
@@ -57,7 +56,6 @@ const TourGuideEdit = () => {
         // Set form data with values from the fetched guide
         setFormData({
           name: guideData.name || '',
-          image: guideData.image || '',
           bio: guideData.bio || '',
           languages: guideData.languages || [],
           specialization: guideData.specialization || [],
@@ -90,7 +88,6 @@ const TourGuideEdit = () => {
     // Validate required fields
     const requiredFields = {
       name: formData.name,
-      image: formData.image,
       bio: formData.bio,
       yearsOfExperience: formData.yearsOfExperience,
       contactEmail: formData.contactEmail,
@@ -204,17 +201,6 @@ const TourGuideEdit = () => {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-2">Profile Image URL</label>
-              <input
-                type="url"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
                 required
               />

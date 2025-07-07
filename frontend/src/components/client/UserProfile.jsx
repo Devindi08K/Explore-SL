@@ -848,15 +848,15 @@ const UserProfile = () => {
       <div className="max-w-6xl mx-auto px-4">
         {/* Enhanced Profile Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-r from-tan to-gold text-cream w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
+              <div className="bg-gradient-to-r from-tan to-gold text-cream w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold shadow-lg mx-auto sm:mx-0">
                 {profile?.userName?.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-charcoal">{profile?.userName}</h1>
-                <p className="text-gray-600 text-lg">{profile?.email}</p>
-                <div className="flex items-center space-x-2 mt-2">
+              <div className="text-center sm:text-left flex-1">
+                <h1 className="text-3xl font-bold text-charcoal break-all">{profile?.userName}</h1>
+                <p className="text-gray-600 text-lg break-all">{profile?.email}</p>
+                <div className="flex flex-col sm:flex-row items-center sm:items-baseline justify-center sm:justify-start gap-1 sm:gap-2 mt-2">
                   <span className="text-sm text-gray-500">Member since</span>
                   <span className="text-sm font-medium text-charcoal">
                     {new Date(profile?.createdAt || Date.now()).toLocaleDateString()}
@@ -864,10 +864,9 @@ const UserProfile = () => {
                 </div>
               </div>
             </div>
-            
             <button
               onClick={() => editing ? handleSave() : setEditing(true)}
-              className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition flex items-center shadow-md"
+              className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition flex items-center justify-center shadow-md w-full sm:w-auto"
             >
               {editing ? <FaSave className="mr-2" /> : <FaEdit className="mr-2" />}
               {editing ? 'Save Changes' : 'Edit Profile'}
@@ -922,12 +921,12 @@ const UserProfile = () => {
 
         {/* Enhanced Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="flex border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row border-b border-gray-200">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`px-6 py-4 flex items-center font-medium transition-colors ${
+              className={`w-full sm:w-auto px-6 py-4 flex items-center font-medium transition-colors ${
                 activeTab === 'profile' 
-                  ? 'border-b-2 border-tan text-tan bg-tan/5' 
+                  ? 'border-b-2 sm:border-b-0 sm:border-r-2 border-tan text-tan bg-tan/5' 
                   : 'text-gray-600 hover:text-tan hover:bg-gray-50'
               }`}
             >
@@ -936,9 +935,9 @@ const UserProfile = () => {
             </button>
             <button
               onClick={() => setActiveTab('submissions')}
-              className={`px-6 py-4 flex items-center font-medium transition-colors ${
+              className={`w-full sm:w-auto px-6 py-4 flex items-center font-medium transition-colors ${
                 activeTab === 'submissions' 
-                  ? 'border-b-2 border-tan text-tan bg-tan/5' 
+                  ? 'border-b-2 sm:border-b-0 sm:border-r-2 border-tan text-tan bg-tan/5' 
                   : 'text-gray-600 hover:text-tan hover:bg-gray-50'
               }`}
             >
@@ -952,9 +951,9 @@ const UserProfile = () => {
             </button>
             <button
               onClick={() => setActiveTab('payments')}
-              className={`px-6 py-4 flex items-center font-medium transition-colors ${
+              className={`w-full sm:w-auto px-6 py-4 flex items-center font-medium transition-colors ${
                 activeTab === 'payments' 
-                  ? 'border-b-2 border-tan text-tan bg-tan/5' 
+                  ? 'border-b-2 sm:border-b-0 border-tan text-tan bg-tan/5' 
                   : 'text-gray-600 hover:text-tan hover:bg-gray-50'
               }`}
             >
@@ -981,10 +980,6 @@ const UserProfile = () => {
                     <div>
                       <label className="text-sm font-medium text-gray-600">Email</label>
                       <p className="text-lg font-medium text-charcoal">{profile?.email}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Account Type</label>
-                      <p className="text-lg font-medium text-charcoal capitalize">{profile?.role || 'User'}</p>
                     </div>
                   </div>
                 </div>

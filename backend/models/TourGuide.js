@@ -3,7 +3,10 @@ const mongoose = require("mongoose");
 const tourGuideSchema = new mongoose.Schema({
   // Basic Information
   name: { type: String, required: true },
-  image: { type: String, required: true },
+  image: {
+    type: String,
+    default: ''
+  },
   bio: { type: String, required: true },
   
   // Professional Details
