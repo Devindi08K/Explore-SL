@@ -43,56 +43,6 @@ const VehiclePremiumPage = () => {
             Get more bookings and stand out from the competition with our premium vehicle features.
           </p>
         </div>
-        
-        {/* Benefits Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-          <h2 className="text-2xl font-bold mb-6 text-center">Premium Benefits</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaArrowUp className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Priority Placement</h3>
-              <p className="text-gray-600 text-sm mt-2">Your vehicles appear at the top of search results and category pages</p>
-            </div>
-            
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaMedal className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Premium Badge</h3>
-              <p className="text-gray-600 text-sm mt-2">Stand out with a verified premium badge that builds trust</p>
-            </div>
-            
-            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
-              <FaChartLine className="text-3xl text-tan mx-auto mb-4" />
-              <h3 className="font-semibold text-charcoal">Performance Analytics</h3>
-              <p className="text-gray-600 text-sm mt-2">Track views and monitor your listing performance</p>
-            </div>
-          </div>
-        </div>
-
-        {/* How It Works Section */}
-        <div className="bg-tan/5 border border-tan/20 rounded-xl p-6 mb-8">
-          <h3 className="font-semibold text-tan mb-3">🚗 How It Works</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="bg-white rounded-lg p-4">
-              <h4 className="font-medium text-charcoal mb-2">Option 1: Vehicle First (Recommended)</h4>
-              <ol className="text-gray-700 space-y-1">
-                <li>1️⃣ Register your vehicle(s) first</li>
-                <li>2️⃣ Purchase premium subscription</li>
-                <li>3️⃣ Your vehicles get instant premium upgrade</li>
-              </ol>
-            </div>
-            <div className="bg-white rounded-lg p-4">
-              <h4 className="font-medium text-charcoal mb-2">Option 2: Premium First</h4>
-              <ol className="text-gray-700 space-y-1">
-                <li>1️⃣ Purchase premium subscription</li>
-                <li>2️⃣ Register your vehicle(s)</li>
-                <li>3️⃣ Vehicles automatically get premium features</li>
-              </ol>
-            </div>
-          </div>
-          <p className="text-tan text-sm mt-3">
-            💡 <strong>Tip:</strong> Both options work perfectly! Your premium benefits will apply to all vehicles you register.
-          </p>
-        </div>
 
         {/* Pricing Section */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
@@ -253,6 +203,56 @@ const VehiclePremiumPage = () => {
           </div>
         </div>
 
+        {/* Benefits Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-center">Premium Benefits</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaArrowUp className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Priority Placement</h3>
+              <p className="text-gray-600 text-sm mt-2">Your vehicles appear at the top of search results and category pages</p>
+            </div>
+            
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaMedal className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Premium Badge</h3>
+              <p className="text-gray-600 text-sm mt-2">Stand out with a verified premium badge that builds trust</p>
+            </div>
+            
+            <div className="text-center p-6 border border-tan/20 rounded-lg bg-tan/5">
+              <FaChartLine className="text-3xl text-tan mx-auto mb-4" />
+              <h3 className="font-semibold text-charcoal">Performance Analytics</h3>
+              <p className="text-gray-600 text-sm mt-2">Track views and monitor your listing performance</p>
+            </div>
+          </div>
+        </div>
+
+        {/* How It Works Section */}
+        <div className="bg-tan/5 border border-tan/20 rounded-xl p-6 mb-8">
+          <h3 className="font-semibold text-tan mb-3">🚗 How It Works</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="bg-white rounded-lg p-4">
+              <h4 className="font-medium text-charcoal mb-2">Option 1: Vehicle First (Recommended)</h4>
+              <ol className="text-gray-700 space-y-1">
+                <li>1️⃣ Register your vehicle(s) first</li>
+                <li>2️⃣ Purchase premium subscription</li>
+                <li>3️⃣ Your vehicles get instant premium upgrade</li>
+              </ol>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <h4 className="font-medium text-charcoal mb-2">Option 2: Premium First</h4>
+              <ol className="text-gray-700 space-y-1">
+                <li>1️⃣ Purchase premium subscription</li>
+                <li>2️⃣ Register your vehicle(s)</li>
+                <li>3️⃣ Vehicles automatically get premium features</li>
+              </ol>
+            </div>
+          </div>
+          <p className="text-tan text-sm mt-3">
+            💡 <strong>Tip:</strong> Both options work perfectly! Your premium benefits will apply to all vehicles you register.
+          </p>
+        </div>
+
         {/* Stats/Testimonial Section */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
           <h2 className="text-2xl font-bold mb-6 text-center">Why Upgrade?</h2>
@@ -269,7 +269,7 @@ const VehiclePremiumPage = () => {
           
           <div className="bg-gray-50 p-6 rounded-lg">
             <p className="text-gray-600 italic">"Since upgrading to a premium listing, we've seen a dramatic increase in bookings. The premium badge adds credibility, and the priority placement means more people find our vehicles."</p>
-            <p className="mt-4 font-medium text-charcoal">- Sampath K., Premium Vehicle Partner</p>
+            
           </div>
         </div>
       </div>

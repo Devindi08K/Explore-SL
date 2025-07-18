@@ -4,6 +4,7 @@ const AffiliateLink = require('../models/affiliateLink');
 const Payment = require('../models/Payment'); // Add this missing import
 const { protect, authorize } = require("../middleware/authMiddleware");
 const upload = require('../middleware/uploadMiddleware');
+const cloudinary = require('../config/cloudinaryConfig'); // Add this import
 
 // Route order matters - place more specific routes first
 // Get all listings (admin route)
@@ -119,13 +120,13 @@ router.get("/", async (req, res) => {
 // Create a new affiliate link
 router.post("/", protect, upload.single('image'), async (req, res) => {
   try {
-    // Use the correct field names from the form: businessName and businessType
     const { businessName, businessType, description, isExternal, redirectUrl, imageUrl, ...otherFields } = req.body;
     let finalImageUrl = imageUrl;
 
     if (req.file) {
-      // Use the path of the uploaded file, ensuring it's a web-accessible path
-      finalImageUrl = `/uploads/business-images/${req.file.filename}`;
+      // Upload to Cloudinary instead of using local path
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'business-listings' });
+      finalImageUrl = result.secure_url;
     }
 
     if (!finalImageUrl) {
@@ -198,20 +199,15 @@ router.put("/:id", protect, upload.single('image'), async (req, res) => {
       return res.status(404).json({ error: "Business listing not found or you don't have permission to update it" });
     }
 
-    // Create update data from req.body
     const updateData = { ...req.body };
     
-    // Handle image upload for local businesses
+    // Handle Cloudinary upload for new image
     if (req.file) {
-      updateData.image = req.file.path;
-      // Remove imageUrl if switching to local upload
-      updateData.imageUrl = undefined;
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'business-listings' });
+      updateData.imageUrl = result.secure_url;
     }
     
-    // Handle isExternal conversion from string to boolean
     updateData.isExternal = updateData.isExternal === 'true' || updateData.isExternal === true;
-    
-    // Preserve premium status and verification status
     updateData.isPremium = listing.isPremium;
     updateData.premiumExpiry = listing.premiumExpiry;
     updateData.isVerified = listing.isVerified;

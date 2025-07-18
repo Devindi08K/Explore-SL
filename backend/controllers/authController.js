@@ -11,6 +11,8 @@ const generateToken = (user) => {
     );
 };
 
+exports.generateToken = generateToken; // <-- Add this line
+
 // **REGISTER USER** (Fixed)
 exports.registerUser = async (req, res) => {
     try {

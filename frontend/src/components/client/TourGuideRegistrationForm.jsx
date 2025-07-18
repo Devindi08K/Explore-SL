@@ -23,6 +23,7 @@ const TourGuideRegistrationForm = () => {
   const [error, setError] = useState(null);
   const [loadingCheck, setLoadingCheck] = useState(true);
   const [hasSubmission, setHasSubmission] = useState(false);
+  const [image, setImage] = useState(null);
 
   useEffect(() => {
     const checkExistingSubmission = async () => {
@@ -89,25 +90,31 @@ const TourGuideRegistrationForm = () => {
     }
 
     try {
-      const validCertifications = formData.certifications.filter(cert => 
+      const validCertifications = formData.certifications.filter(cert =>
         cert.name || cert.issuedBy || cert.year
       );
 
-      const dataToSubmit = {
+      const submitData = new FormData();
+      Object.entries({
         ...formData,
-        certifications: validCertifications,
-        languages: formData.languages || [],
-        specialization: formData.specialization || [],
-        preferredAreas: formData.preferredAreas || [],
+        certifications: JSON.stringify(validCertifications),
+        languages: JSON.stringify(formData.languages || []),
+        specialization: JSON.stringify(formData.specialization || []),
+        preferredAreas: JSON.stringify(formData.preferredAreas || []),
         yearsOfExperience: parseInt(formData.yearsOfExperience),
         status: 'pending',
-        isVerified: false,
-        submittedAt: new Date(),
-        submittedBy: currentUser._id // Make sure this is added if not automatically handled
-      };
+        isVerified: false
+      }).forEach(([key, value]) => {
+        submitData.append(key, value);
+      });
+      if (image) {
+        submitData.append('image', image);
+      }
 
-      const response = await api.post("/tour-guides", dataToSubmit);
-      
+      const response = await api.post("/tour-guides", submitData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
       if (response.data) {
         alert("Tour guide registration submitted successfully! Awaiting admin approval.");
         navigate('/tour-guides');
@@ -115,7 +122,7 @@ const TourGuideRegistrationForm = () => {
     } catch (error) {
       console.error("Registration error:", error);
       setError(
-        error.response?.data?.error || 
+        error.response?.data?.error ||
         "Error submitting registration. Please check all required fields."
       );
     } finally {
@@ -164,7 +171,7 @@ const TourGuideRegistrationForm = () => {
           <p className="text-gray-600 mb-6">
             You have already submitted a tour guide registration. You can view its status on your profile page.
           </p>
-          <Link 
+          <Link
             to="/profile"
             className="inline-block bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition"
           >
@@ -372,9 +379,9 @@ const TourGuideRegistrationForm = () => {
                   value={cert.name}
                   onChange={(e) => {
                     const newCertifications = [...formData.certifications];
-                    newCertifications[index] = { 
-                      ...newCertifications[index], 
-                      name: e.target.value 
+                    newCertifications[index] = {
+                      ...newCertifications[index],
+                      name: e.target.value
                     };
                     setFormData({ ...formData, certifications: newCertifications });
                   }}
@@ -386,9 +393,9 @@ const TourGuideRegistrationForm = () => {
                   value={cert.issuedBy}
                   onChange={(e) => {
                     const newCertifications = [...formData.certifications];
-                    newCertifications[index] = { 
-                      ...newCertifications[index], 
-                      issuedBy: e.target.value 
+                    newCertifications[index] = {
+                      ...newCertifications[index],
+                      issuedBy: e.target.value
                     };
                     setFormData({ ...formData, certifications: newCertifications });
                   }}
@@ -400,9 +407,9 @@ const TourGuideRegistrationForm = () => {
                   value={cert.year}
                   onChange={(e) => {
                     const newCertifications = [...formData.certifications];
-                    newCertifications[index] = { 
-                      ...newCertifications[index], 
-                      year: e.target.value 
+                    newCertifications[index] = {
+                      ...newCertifications[index],
+                      year: e.target.value
                     };
                     setFormData({ ...formData, certifications: newCertifications });
                   }}
@@ -429,6 +436,16 @@ const TourGuideRegistrationForm = () => {
               onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
               className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
               placeholder="Government-issued license number if available"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-2">Profile Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setImage(e.target.files[0])}
+              className="w-full px-4 py-2 border border-tan rounded-lg"
             />
           </div>
 

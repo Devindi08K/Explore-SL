@@ -23,6 +23,7 @@ const TourGuideEdit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [image, setImage] = useState(null);
 
   const languageCategories = {
     local: ['English', 'Sinhala', 'Tamil'],
@@ -108,27 +109,35 @@ const TourGuideEdit = () => {
     }
 
     try {
-      const validCertifications = formData.certifications.filter(cert => 
+      const validCertifications = formData.certifications.filter(cert =>
         cert.name || cert.issuedBy || cert.year
       );
 
-      const dataToSubmit = {
+      const submitData = new FormData();
+      Object.entries({
         ...formData,
-        certifications: validCertifications,
-        languages: formData.languages || [],
-        specialization: formData.specialization || [],
-        preferredAreas: formData.preferredAreas || [],
+        certifications: JSON.stringify(validCertifications),
+        languages: JSON.stringify(formData.languages || []),
+        specialization: JSON.stringify(formData.specialization || []),
+        preferredAreas: JSON.stringify(formData.preferredAreas || []),
         yearsOfExperience: parseInt(formData.yearsOfExperience)
-      };
+      }).forEach(([key, value]) => {
+        submitData.append(key, value);
+      });
+      if (image) {
+        submitData.append('image', image);
+      }
 
       // Use PUT to update the existing guide
-      await api.put(`/tour-guides/${id}`, dataToSubmit);
+      await api.put(`/tour-guides/${id}`, submitData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       alert('Tour guide profile updated successfully!');
       navigate('/profile?tab=submissions');
     } catch (error) {
       console.error('Error updating tour guide:', error);
       setError(
-        error.response?.data?.error || 
+        error.response?.data?.error ||
         'Error updating tour guide profile. Please try again.'
       );
     } finally {
@@ -174,7 +183,7 @@ const TourGuideEdit = () => {
       <div className="min-h-screen bg-cream flex items-center justify-center text-center">
         <div className="bg-white p-8 rounded-lg shadow-lg">
           <p className="text-red-500 text-xl mb-4">{error}</p>
-          <button 
+          <button
             onClick={() => navigate('/profile?tab=submissions')}
             className="bg-tan text-cream px-6 py-2 rounded-lg hover:bg-gold transition"
           >
@@ -381,9 +390,9 @@ const TourGuideEdit = () => {
                   value={cert.name}
                   onChange={(e) => {
                     const newCertifications = [...formData.certifications];
-                    newCertifications[index] = { 
-                      ...newCertifications[index], 
-                      name: e.target.value 
+                    newCertifications[index] = {
+                      ...newCertifications[index],
+                      name: e.target.value
                     };
                     setFormData({ ...formData, certifications: newCertifications });
                   }}
@@ -395,9 +404,9 @@ const TourGuideEdit = () => {
                   value={cert.issuedBy}
                   onChange={(e) => {
                     const newCertifications = [...formData.certifications];
-                    newCertifications[index] = { 
-                      ...newCertifications[index], 
-                      issuedBy: e.target.value 
+                    newCertifications[index] = {
+                      ...newCertifications[index],
+                      issuedBy: e.target.value
                     };
                     setFormData({ ...formData, certifications: newCertifications });
                   }}
@@ -409,9 +418,9 @@ const TourGuideEdit = () => {
                   value={cert.year}
                   onChange={(e) => {
                     const newCertifications = [...formData.certifications];
-                    newCertifications[index] = { 
-                      ...newCertifications[index], 
-                      year: e.target.value 
+                    newCertifications[index] = {
+                      ...newCertifications[index],
+                      year: e.target.value
                     };
                     setFormData({ ...formData, certifications: newCertifications });
                   }}
@@ -438,6 +447,16 @@ const TourGuideEdit = () => {
               onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
               className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
               placeholder="Government-issued license number if available"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-2">Profile Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setImage(e.target.files[0])}
+              className="w-full px-4 py-2 border border-tan rounded-lg"
             />
           </div>
 

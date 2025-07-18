@@ -46,16 +46,20 @@ const Signup = () => {
     };
 
     const handleSocialSignup = (provider) => {
-        // Will be implemented with OAuth
-        console.log(`Signup with ${provider}`);
+        window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/${provider}`;
     };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-cream px-4">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+            <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-charcoal mb-2">Create Account</h2>
-                    <p className="text-gray-600">Join Explore Sri Lanka today</p>
+                    <img
+                        src="https://res.cloudinary.com/dxydsx0kf/image/upload/v1752847316/225844264_gsjo7w.png"
+                        alt="SLExplora Logo"
+                        className="mx-auto h-16 w-16 rounded-full mb-4 object-cover"
+                    />
+                    <h2 className="text-3xl font-bold text-charcoal mb-2">Welcome Back</h2>
+                    <p className="text-gray-600">Sign in to your account</p>
                 </div>
 
                 {/* Social Signup Buttons */}

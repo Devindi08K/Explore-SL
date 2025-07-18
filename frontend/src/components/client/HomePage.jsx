@@ -427,7 +427,11 @@ const HomePage = () => {
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold text-charcoal">Premium Tour Guides</h2>
-              <Link to="/tour-guides" className="text-tan hover:text-gold transition">
+              <Link 
+                to="/tour-guides"
+                className="text-tan hover:text-gold transition"
+                onClick={() => window.scrollTo(0, 0)}
+              >
                 View all guides →
               </Link>
             </div>
@@ -438,8 +442,12 @@ const HomePage = () => {
                   <div className="p-4 flex items-center">
                     <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-tan">
                       <img
-                        src="https://st2.depositphotos.com/2935785/10774/v/450/depositphotos_107746606-stock-illustration-tour-guide-with-group-of.jpg" // Always use the placeholder image
-                        alt="Tour Guide"
+                        src={
+                          guide.image && guide.image.startsWith('http')
+                            ? guide.image
+                            : "https://placehold.co/400x400?text=Guide+Image"
+                        }
+                        alt={guide.name}
                         className="w-full h-full object-cover"
                       />
                     </div>

@@ -4,6 +4,7 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 const Payment = require('../models/Payment');
 const User = require('../models/User');
 const multer = require('multer');
+const cloudinary = require('../config/cloudinaryConfig'); // <-- Add this line
 
 // Configure multer for image uploads
 const upload = multer({ dest: 'uploads/' });
@@ -13,11 +14,11 @@ const router = express.Router();
 // Get all tours (public - only verified)
 router.get("/", async (req, res) => {
   try {
-    const tours = await Tour.find({ 
+    const tours = await Tour.find({
       isVerified: true,
       status: 'approved'
     });
-    
+
     // Add location field to tours that don't have it
     const processedTours = tours.map(tour => {
       if (!tour.location) {
@@ -25,7 +26,7 @@ router.get("/", async (req, res) => {
       }
       return tour;
     });
-    
+
     res.json(processedTours);
   } catch (error) {
     res.status(500).json({ error: "Error fetching tours" });
@@ -61,11 +62,11 @@ router.get("/:id", async (req, res) => {
     const tour = await Tour.findById(req.params.id)
       .populate('submittedBy', 'userName email')
       .populate('reviews.user', 'userName');
-      
+
     if (!tour) {
       return res.status(404).json({ error: "Tour not found" });
     }
-    
+
     // Logic to prevent access to unapproved tours by the public
     if (tour.status !== 'approved') {
       // A simple check to see if a user is logged in and is either an admin or the owner.
@@ -73,7 +74,7 @@ router.get("/:id", async (req, res) => {
       // For now, we assume a basic protection check.
       return res.status(403).json({ error: "This tour is not yet available for viewing." });
     }
-    
+
     res.json(tour);
   } catch (error) {
     console.error("Error fetching tour details:", error);
@@ -84,26 +85,39 @@ router.get("/:id", async (req, res) => {
 // Add a new tour
 router.post("/", protect, upload.single('image'), async (req, res) => {
   try {
-    // Make sure to include location in the required fields check
-    const { name, description, type, location, isExternal } = req.body;
-    
+    const { name, description, type, location, isExternal, imageUrl, ...rest } = req.body;
+
     if (!name || !description || !type || !location) {
       return res.status(400).json({ error: 'Please provide all required fields' });
     }
-    
-    // Process and save the tour with the location field
+
+    let imagePath = imageUrl;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'tours' });
+      imagePath = result.secure_url;
+    }
+    if (!imagePath) {
+      imagePath = "https://placehold.co/600x400?text=Tour+Image";
+    }
+
     const tour = new Tour({
       name,
       description,
       type,
-      location, // Make sure to include this
+      location,
       isExternal: isExternal === 'true',
-      // Other fields...
+      image: imagePath,
+      ...rest,
+      submittedBy: req.user._id,
+      status: 'pending',
+      isVerified: false,
+      submittedAt: new Date(),
     });
-    
-    // Rest of your code...
+
+    await tour.save();
+    res.status(201).json(tour);
   } catch (error) {
-    // Error handling...
+    res.status(400).json({ error: "Error creating tour" });
   }
 });
 
@@ -111,27 +125,34 @@ router.post("/", protect, upload.single('image'), async (req, res) => {
 router.put("/:id", protect, upload.single('image'), async (req, res) => {
   try {
     const tour = await Tour.findById(req.params.id);
-    
+
     if (!tour) {
       return res.status(404).json({ error: 'Tour not found' });
     }
-    
-    // If tour doesn't have a location and one isn't provided in the update
+
     if (!tour.location && !req.body.location) {
       req.body.location = tour.startingPoint || 'Sri Lanka';
     }
-    
-    const updateData = {
+
+    let updateData = {
       ...req.body,
       location: req.body.location || tour.location || 'Sri Lanka'
     };
-    
+
+    // Handle Cloudinary upload if a new image is provided
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'tours' });
+      updateData.image = result.secure_url;
+    } else if (req.body.imageUrl) {
+      updateData.image = req.body.imageUrl;
+    }
+
     const updatedTour = await Tour.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true }
     );
-    
+
     res.json(updatedTour);
   } catch (error) {
     res.status(400).json({ error: "Error updating tour" });
@@ -187,22 +208,21 @@ router.post('/partnership', protect, upload.single('image'), async (req, res) =>
 
     // 2. Create the tour
     const premiumExpiryDate = new Date();
-    premiumExpiryDate.setFullYear(premiumExpiryDate.getFullYear() + 1); // 1 year partnership
+    premiumExpiryDate.setFullYear(premiumExpiryDate.getFullYear() + 1);
 
-    let imagePath;
-    if (imageUrl) {
-      imagePath = imageUrl;
-    } else if (req.file) {
-      imagePath = req.file.path;
-    } else {
-      imagePath = "https://placehold.co/600x400?text=Tour+Image"; // Default fallback
+    let imagePath = imageUrl;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'tours' });
+      imagePath = result.secure_url;
+    }
+    if (!imagePath) {
+      imagePath = "https://placehold.co/600x400?text=Tour+Image";
     }
 
-    // Sanitize and prepare the final tour data
     const tourData = {
       ...tourDataFromRequest,
-      isExternal: tourDataFromRequest.isExternal === 'true', // Ensure boolean type
-      itinerary: tourDataFromRequest.itinerary || [{ day: "Day 1", description: "Itinerary will be provided upon request." }] // Add default itinerary
+      isExternal: tourDataFromRequest.isExternal === 'true',
+      itinerary: tourDataFromRequest.itinerary || [{ day: "Day 1", description: "Itinerary will be provided upon request." }]
     };
 
     const newTour = new Tour({

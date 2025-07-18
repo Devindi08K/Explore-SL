@@ -6,6 +6,9 @@ const vehicleService = require('../services/vehicleService');
 const Destination = require("../models/Destination");
 const VehicleView = require('../models/VehicleView');
 const VehicleInquiry = require('../models/VehicleInquiry'); // Import VehicleInquiry model
+const multer = require('multer');
+const cloudinary = require('../config/cloudinaryConfig');
+const upload = multer({ dest: 'uploads/vehicles/' });
 
 // Get all vehicles
 router.get('/', async (req, res) => {
@@ -24,16 +27,34 @@ router.get('/', async (req, res) => {
 });
 
 // Submit new vehicle
-router.post('/', async (req, res) => {
+router.post('/', protect, upload.array('vehicleImages', 3), async (req, res) => {
   try {
     console.log('🚗 Starting vehicle registration...');
     console.log('📝 Request body submittedBy:', req.body.submittedBy);
     console.log('📝 Vehicle type received:', req.body.vehicleType); 
     
-    // Filter out empty image URLs before creating vehicle
-    const filteredImages = req.body.vehicleImages ? 
-      req.body.vehicleImages.filter(img => img && img.trim() !== '') : [];
-    
+    // Handle image uploads to Cloudinary
+    let imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path, { folder: 'vehicles' });
+        imageUrls.push(result.secure_url);
+      }
+    }
+
+    // Combine with any URLs sent directly in the body (for API/URL-based uploads)
+    let bodyImages = [];
+    if (req.body.vehicleImages) {
+      if (Array.isArray(req.body.vehicleImages)) {
+        bodyImages = req.body.vehicleImages.filter(img => img && img.trim() !== '');
+      } else if (typeof req.body.vehicleImages === 'string') {
+        bodyImages = [req.body.vehicleImages].filter(img => img && img.trim() !== '');
+      }
+    }
+
+    // Merge and deduplicate
+    const filteredImages = [...imageUrls, ...bodyImages].filter((v, i, arr) => arr.indexOf(v) === i);
+
     let vehicleData = {
       ...req.body,
       vehicleType: String(req.body.vehicleType), // Explicitly convert to string

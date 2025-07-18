@@ -21,6 +21,8 @@ const AdminTourGuidePage = () => {
     tourAreas: [],
     isVerified: false
   });
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null); // 1. Add preview state
   const location = useLocation();
 
   const fetchGuides = async () => {
@@ -73,10 +75,29 @@ const AdminTourGuidePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const submitData = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (
+          Array.isArray(value) ||
+          (typeof value === 'object' && value !== null)
+        ) {
+          submitData.append(key, JSON.stringify(value));
+        } else {
+          submitData.append(key, value);
+        }
+      });
+      if (image) {
+        submitData.append('image', image);
+      }
+
       if (editingGuide) {
-        await api.put(`/tour-guides/${editingGuide._id}`, formData);
+        await api.put(`/tour-guides/${editingGuide._id}`, submitData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       } else {
-        await api.post("/tour-guides", formData);
+        await api.post("/tour-guides", submitData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       }
       fetchGuides();
       resetForm();
@@ -174,6 +195,8 @@ const AdminTourGuidePage = () => {
       tourAreas: [],
       isVerified: false
     });
+    setImage(null);
+    setPreview(null); // Reset preview on form reset
   };
 
   // Update the handleRestorePremium function to check payment history
@@ -538,6 +561,32 @@ const AdminTourGuidePage = () => {
                 className="mt-1 block w-full p-2 border border-tan rounded-md"
               />
             </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Profile Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={e => {
+              const file = e.target.files[0];
+              setImage(file);
+              if (file) {
+                setPreview(URL.createObjectURL(file));
+              } else {
+                setPreview(null);
+              }
+            }}
+            className="w-full p-2 border border-tan rounded-md"
+          />
+          {/* 3. Show preview if available */}
+          {preview && (
+            <img
+              src={preview}
+              alt="Preview"
+              className="mt-2 w-32 h-32 object-cover rounded-md border"
+            />
           )}
         </div>
 

@@ -5,6 +5,7 @@ const Blog = require("../models/blog");
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 const multer = require('multer');
+const cloudinary = require('../config/cloudinaryConfig'); // Add this import
 
 // Note: Assuming a simple multer setup. Adjust if yours is different.
 const upload = multer({ dest: 'uploads/blogs/' });
@@ -84,16 +85,17 @@ router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
       blogData.title = title;
       blogData.author = author;
       blogData.blogUrl = blogUrl;
-      blogData.image = imageUrl; // <-- Save imageUrl as image
+      blogData.image = imageUrl;
     } else {
       blogData.title = title;
       blogData.content = content;
       blogData.author = user.userName;
       if (req.file) {
-        blogData.image = req.file.path;
+        const result = await cloudinary.uploader.upload(req.file.path, { folder: 'blogs' });
+        blogData.image = result.secure_url;
       }
     }
-    
+
     const newBlog = new Blog(blogData);
     await newBlog.save();
 
@@ -117,7 +119,8 @@ router.post("/", protect, authorize(["admin"]), upload.single('image'), async (r
      const { title, content, author } = req.body;
      const blogData = { title, content, author, status: 'approved', isVerified: true };
      if (req.file) {
-       blogData.image = req.file.path;
+       const result = await cloudinary.uploader.upload(req.file.path, { folder: 'blogs' });
+       blogData.image = result.secure_url;
      }
      const newBlog = new Blog(blogData);
      await newBlog.save();
@@ -156,7 +159,8 @@ router.put("/:id", protect, authorize(["admin"]), upload.single('image'), async 
     const { title, content, author } = req.body;
     const updateData = { title, content, author };
     if (req.file) {
-      updateData.image = req.file.path;
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'blogs' });
+      updateData.image = result.secure_url;
     }
     const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!updatedBlog) return res.status(404).json({ message: "Blog not found" });
@@ -197,43 +201,34 @@ router.patch("/:id/verify", protect, authorize(["admin"]), async (req, res) => {
 router.put("/user/:id", protect, upload.single('image'), async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
-    
-    // Check if blog exists
+
     if (!blog) {
       return res.status(404).json({ error: "Blog not found" });
     }
-    
-    // Check if user owns this blog
+
     if (blog.submittedBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "You can only edit your own blog posts" });
     }
-    
-    // Prepare update data
+
     const updateData = { ...req.body };
-    
-    // Handle image upload if present
+
     if (req.file) {
-      updateData.image = req.file.path;
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'blogs' });
+      updateData.image = result.secure_url;
     }
-    
-    // Don't allow changing isExternal status
+
     updateData.isExternal = blog.isExternal;
-    
-    // CHANGE: Preserve current approval status instead of resetting to pending
-    // Keep the original status and verification if it was already approved
     updateData.status = blog.status;
     updateData.isVerified = blog.isVerified;
-    
-    // Add a flag to indicate the content was updated
     updateData.lastUpdated = new Date();
-    updateData.needsReview = true;  // Optional: Add this if you want admins to know it was edited
-    
+    updateData.needsReview = true;
+
     const updatedBlog = await Blog.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true }
     );
-    
+
     res.json(updatedBlog);
   } catch (error) {
     console.error('Error updating blog:', error);

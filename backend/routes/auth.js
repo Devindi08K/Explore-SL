@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, loginUser, logoutUser, checkAuth, getCurrentUser } = require('../controllers/authController');
+const { registerUser, loginUser, logoutUser, checkAuth, getCurrentUser, generateToken } = require('../controllers/authController');
 const passport = require('passport');
 const User = require('../models/User'); // Make sure to import the User model
 const { protect } = require('../middleware/authMiddleware'); // Import the protect middleware
@@ -17,10 +17,15 @@ router.get('/google',
 );
 
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
   (req, res) => {
-    const token = generateToken(req.user);
-    res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
+    try {
+      const token = generateToken(req.user);
+      res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      res.redirect('http://localhost:5173/login?error=oauth_failed');
+    }
   }
 );
 
@@ -30,7 +35,7 @@ router.get('/facebook',
 );
 
 router.get('/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login' }),
+  passport.authenticate('facebook', { failureRedirect: '/login', session: false }),
   (req, res) => {
     const token = generateToken(req.user);
     res.redirect(`http://localhost:5173/auth/callback?token=${token}`);

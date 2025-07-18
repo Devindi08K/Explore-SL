@@ -398,17 +398,11 @@ const VehiclesPage = () => {
           </h1>
           <div className="flex items-center space-x-4">
             <Link 
-              to="/vehicle-registration" 
-              className="bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition duration-200"
-            >
-              Register Your Vehicle
-            </Link>
-            <Link 
               to="/partnership/vehicle-premium" 
               className="bg-gold/10 text-gold px-6 py-3 rounded-lg hover:bg-gold/20 transition duration-200 flex items-center gap-2 border border-gold/30"
             >
               <FaCrown className="text-gold" />
-              Boost Your Listing
+              Register Your Vehicle
             </Link>
           </div>
         </div>

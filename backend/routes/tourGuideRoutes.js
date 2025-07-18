@@ -4,6 +4,9 @@ const TourGuide = require("../models/TourGuide");
 const TourGuideView = require('../models/TourGuideView');
 const { protect, authorize } = require("../middleware/authMiddleware");
 const Payment = require('../models/Payment');
+const multer = require('multer');
+const cloudinary = require('../config/cloudinaryConfig');
+const upload = multer({ dest: 'uploads/guides/' });
 
 // --- Specific GET routes first ---
 
@@ -112,7 +115,7 @@ router.get("/:id", async (req, res) => {
 // --- POST, PUT, PATCH, DELETE routes ---
 
 // Submit new tour guide registration
-router.post("/", protect, async (req, res) => {
+router.post("/", protect, upload.single('image'), async (req, res) => {
   try {
     // Check if the user has already submitted a guide profile
     const existingGuide = await TourGuide.findOne({ submittedBy: req.user._id });
@@ -120,7 +123,38 @@ router.post("/", protect, async (req, res) => {
       return res.status(409).json({ error: "You have already submitted a tour guide registration." });
     }
 
-    let tourGuideData = { ...req.body, submittedBy: req.user._id, submittedAt: new Date(), status: 'pending', isVerified: false };
+    let imageUrl = req.body.imageUrl;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'guides' });
+      imageUrl = result.secure_url;
+    }
+    if (!imageUrl) {
+      imageUrl = "https://placehold.co/400x400?text=Guide+Image";
+    }
+
+    // Parse stringified fields if necessary
+    if (typeof req.body.languages === 'string') {
+      req.body.languages = JSON.parse(req.body.languages);
+    }
+    if (typeof req.body.specialization === 'string') {
+      req.body.specialization = JSON.parse(req.body.specialization);
+    }
+    if (typeof req.body.preferredAreas === 'string') {
+      req.body.preferredAreas = JSON.parse(req.body.preferredAreas);
+    }
+    if (typeof req.body.certifications === 'string') {
+      req.body.certifications = JSON.parse(req.body.certifications);
+    }
+
+    let tourGuideData = { 
+      ...req.body, 
+      image: imageUrl,
+      submittedBy: req.user._id, 
+      submittedAt: new Date(), 
+      status: 'pending', 
+      isVerified: false 
+    };
+
     const activePremiumPayment = await Payment.findOne({ userId: req.user._id, serviceType: { $in: ['guide_premium_monthly', 'guide_premium_yearly'] }, status: 'completed', 'subscriptionDetails.awaitingGuideRegistration': true }).sort({ createdAt: -1 });
     if (activePremiumPayment) {
       const expiryDate = new Date(activePremiumPayment.subscriptionDetails.endDate);
@@ -141,9 +175,16 @@ router.post("/", protect, async (req, res) => {
 });
 
 // Update a tour guide
-router.put("/:id", protect, async (req, res) => {
+router.put("/:id", protect, upload.single('image'), async (req, res) => {
   try {
-    const updatedGuide = await TourGuide.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    let updateData = { ...req.body };
+
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'guides' });
+      updateData.image = result.secure_url;
+    }
+
+    const updatedGuide = await TourGuide.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!updatedGuide) {
       return res.status(404).json({ error: "Tour guide not found" });
     }

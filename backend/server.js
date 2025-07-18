@@ -1,9 +1,11 @@
+require("dotenv").config(); // <-- Move this to the very top!
+require('./config/passport'); // <-- Make sure this is at the top, before routes
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require('path'); // Import the path module
-require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

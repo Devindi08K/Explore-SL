@@ -296,8 +296,12 @@ const TourGuidePage = () => {
                       <div className="p-3 flex items-center">
                         <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-tan">
                           <img
-                            src="https://st2.depositphotos.com/2935785/10774/v/450/depositphotos_107746606-stock-illustration-tour-guide-with-group-of.jpg" // Replace with your desired image URL
-                            alt="Tour Guide"
+                            src={
+                              guide.image && guide.image.startsWith('http')
+                                ? guide.image
+                                : "https://placehold.co/400x400?text=Guide+Image"
+                            }
+                            alt={guide.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -329,7 +333,12 @@ const TourGuidePage = () => {
                       </div>
                       
                       <div className="mt-auto p-4 bg-gray-50 text-center text-sm font-medium text-tan hover:bg-tan/20 transition-colors">
-                        View Profile
+                        <Link
+                          to={`/tour-guides/${guide._id}`}
+                          className="block mt-2 text-tan hover:text-gold text-sm font-medium text-center"
+                        >
+                          View Details →
+                        </Link>
                       </div>
                     
                   </div>
