@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "disposable-email-domains": "^1.0.62",
+    "express-rate-limit": "^8.0.1",
+    "nodemailer": "^7.0.5",
+    "validator": "^13.15.15"
+  }
+}

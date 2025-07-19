@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, loginUser, logoutUser, checkAuth, getCurrentUser, generateToken } = require('../controllers/authController');
+const { registerUser, loginUser, logoutUser, checkAuth, getCurrentUser, generateToken, requestPasswordReset, resetPassword, verifyEmail } = require('../controllers/authController');
 const passport = require('passport');
 const User = require('../models/User'); // Make sure to import the User model
 const { protect } = require('../middleware/authMiddleware'); // Import the protect middleware
@@ -29,19 +29,6 @@ router.get('/google/callback',
   }
 );
 
-// Facebook OAuth routes
-router.get('/facebook',
-  passport.authenticate('facebook', { scope: ['email'] })
-);
-
-router.get('/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login', session: false }),
-  (req, res) => {
-    const token = generateToken(req.user);
-    res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
-  }
-);
-
 // Profile endpoint
 router.get("/profile", protect, async (req, res) => {
   try {
@@ -58,5 +45,14 @@ router.get("/profile", protect, async (req, res) => {
 
 // Add this route to your existing routes
 router.get('/me', protect, getCurrentUser);
+
+// Request password reset (send email)
+router.post('/forgot-password', requestPasswordReset);
+
+// Reset password (user clicks link in email)
+router.post('/reset-password/:token', resetPassword);
+
+// Verify email route
+router.get('/verify-email/:token', verifyEmail);
 
 module.exports = router;

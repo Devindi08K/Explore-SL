@@ -15,7 +15,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['google', 'facebook', null],
         default: null
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
 }, {
     timestamps: true // Add this line to automatically manage createdAt and updatedAt
 });

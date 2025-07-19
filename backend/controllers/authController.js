@@ -1,6 +1,11 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const sendEmail = require('../utils/emailTransporter');
+const validator = require('validator');
+const disposableDomains = require('disposable-email-domains');
+const transporter = require('../utils/emailTransporter');
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -12,6 +17,17 @@ const generateToken = (user) => {
 };
 
 exports.generateToken = generateToken; // <-- Add this line
+
+// Password strength validation
+const strongPassword = (password) => {
+    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
+};
+
+function isDisposableEmail(email) {
+  const domain = email.split('@')[1].toLowerCase();
+  return disposableDomains.includes(domain);
+}
 
 // **REGISTER USER** (Fixed)
 exports.registerUser = async (req, res) => {
@@ -28,6 +44,19 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ error: "Username already taken" });
         }
 
+        // Password strength validation
+        if (!strongPassword(password)) {
+            return res.status(400).json({ error: "Password must be at least 8 characters, include uppercase, lowercase, and a number." });
+        }
+
+        // Email validation
+        if (!validator.isEmail(email)) {
+          return res.status(400).json({ error: "Invalid email address." });
+        }
+        if (isDisposableEmail(email)) {
+          return res.status(400).json({ error: "Disposable email addresses are not allowed." });
+        }
+
         // Create new user with default role 'regular'
         const user = new User({ 
             userName, 
@@ -39,7 +68,25 @@ exports.registerUser = async (req, res) => {
         await user.save();
         console.log("User registered successfully"); // Debug log
 
-        res.status(201).json({ message: "User registered successfully" });
+        // Generate email verification token
+        const token = crypto.randomBytes(32).toString('hex');
+        user.emailVerificationToken = token;
+        await user.save();
+
+        // Send verification email
+        const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+        await sendEmail({
+          to: user.email,
+          subject: 'Verify your email',
+          html: `
+            <h2>Welcome to SLExplora!</h2>
+            <p>Click the button below to verify your email and activate your account:</p>
+            <a href="${verifyUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Verify Email</a>
+            <p>If you did not sign up, please ignore this email.</p>
+          `
+        });
+
+        res.status(201).json({ message: "User registered successfully. Please check your email to verify your account." });
 
     } catch (error) {
         console.error("Registration error:", error); // Debug log
@@ -52,15 +99,20 @@ exports.loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
-        
+
         if (!user || !(await user.comparePassword(password))) {
             return res.status(401).json({ error: "Invalid credentials" });
         }
 
+        // Check if email is verified
+        if (!user.isVerified) {
+            return res.status(403).json({ error: "Please verify your email before logging in." });
+        }
+
         const token = generateToken(user);
-        
+
         res.json({
-            _id: user._id, // Make sure to include the user ID
+            _id: user._id,
             token,
             role: user.role,
             userName: user.userName,
@@ -117,4 +169,60 @@ exports.getCurrentUser = async (req, res) => {
     console.error("Error getting current user:", error);
     res.status(500).json({ error: "Server error" });
   }
+};
+
+// Request password reset
+exports.requestPasswordReset = async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+        // Don't reveal if user exists
+        return res.json({ message: "If this email exists, a reset link has been sent." });
+    }
+    const token = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    // Send reset email using the shared transporter
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+    await transporter.sendMail({
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER, // always slexplora@hotmail.com
+        to: user.email,
+        subject: 'Password Reset',
+        html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`
+    });
+
+    res.json({ message: "If this email exists, a reset link has been sent." });
+};
+
+// Reset password
+exports.resetPassword = async (req, res) => {
+    const { token } = req.params;
+    const { password } = req.body;
+    const user = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() }
+    });
+    if (!user) {
+        return res.status(400).json({ error: "Invalid or expired token" });
+    }
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+    res.json({ message: "Password reset successful" });
+};
+
+// Verify email
+exports.verifyEmail = async (req, res) => {
+    const { token } = req.params;
+    const user = await User.findOne({ emailVerificationToken: token });
+    if (!user) {
+        return res.status(400).json({ error: "Invalid or expired token" });
+    }
+    user.isVerified = true;
+    user.emailVerificationToken = undefined;
+    await user.save();
+    res.json({ message: "Email verified successfully" });
 };

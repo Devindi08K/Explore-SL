@@ -57,6 +57,10 @@ import PaymentCancelPage from './pages/PaymentCancelPage';
 import SubmitSponsoredBlogPage from './components/client/SubmitSponsoredBlogPage';
 import SubmitTourPartnershipPage from './components/client/SubmitTourPartnershipPage';
 
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+
 // Create a separate component for the app content that needs router hooks
 const AppContent = () => {
   const navigate = useNavigate();
@@ -141,6 +145,10 @@ const AppContent = () => {
           
           <Route path="/submit-sponsored-blog" element={<SubmitSponsoredBlogPage />} />
           <Route path="/submit-tour-partnership" element={<SubmitTourPartnershipPage />} />
+          
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           
           {/* Protected Admin Routes */}
           <Route path="/admin" element={

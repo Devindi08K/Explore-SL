@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaGoogle, FaFacebookF, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaGoogle, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import api from '../../utils/api';
 
 const Signup = () => {
@@ -71,6 +71,7 @@ const Signup = () => {
                         <FaGoogle className="text-red-500" />
                         <span>Google</span>
                     </button>
+                    {/* Remove or comment out this block:
                     <button
                         onClick={() => handleSocialSignup('facebook')}
                         className="flex items-center justify-center gap-2 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300"
@@ -78,6 +79,7 @@ const Signup = () => {
                         <FaFacebookF className="text-blue-600" />
                         <span>Facebook</span>
                     </button>
+                    */}
                 </div>
 
                 <div className="relative my-6">
