@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 
@@ -6,17 +6,21 @@ const VerifyEmailPage = () => {
   const { token } = useParams();
   const [status, setStatus] = useState("verifying");
   const navigate = useNavigate();
+  const hasVerified = useRef(false);
 
   useEffect(() => {
     const verify = async () => {
       try {
         await api.get(`/auth/verify-email/${token}`);
         setStatus("success");
+        hasVerified.current = true;
       } catch (err) {
-        setStatus("error");
+        // Only show error if never succeeded
+        if (!hasVerified.current) setStatus("error");
       }
     };
     verify();
+    // eslint-disable-next-line
   }, [token]);
 
   return (

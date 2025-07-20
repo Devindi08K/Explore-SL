@@ -859,7 +859,7 @@ const UserProfile = () => {
                 <div className="flex flex-col sm:flex-row items-center sm:items-baseline justify-center sm:justify-start gap-1 sm:gap-2 mt-2">
                   <span className="text-sm text-gray-500">Member since</span>
                   <span className="text-sm font-medium text-charcoal">
-                    {new Date(profile?.createdAt || Date.now()).toLocaleDateString()}
+                    {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : ""}
                   </span>
                 </div>
               </div>
@@ -1385,14 +1385,26 @@ const UserProfile = () => {
                       Start your journey by registering as a tour guide, adding your vehicle, or submitting a tour!
                     </p>
                     <div className="flex justify-center space-x-4">
-                      <Link to="/tour-guide-registration" className="bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition">
+                      <Link
+                        to="/partnership/tour-guide-premium"
+                        className="bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition"
+                        onClick={() => window.scrollTo(0, 0)}
+                      >
                         Become a Tour Guide
                       </Link>
-                      <Link to="/vehicle-registration" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                      <Link
+                        to="/partnership/vehicle-premium"
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                        onClick={() => window.scrollTo(0, 0)}
+                      >
                         Add Vehicle
                       </Link>
-                      <Link to="/tour-submission" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                        Submit Tour
+                      <Link
+                        to="/partnership/business-premium"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                        onClick={() => window.scrollTo(0, 0)}
+                      >
+                        Submit a business
                       </Link>
                     </div>
                   </div>
@@ -1440,25 +1452,14 @@ const UserProfile = () => {
                         
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              payment.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                              payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                            </span>
-                            
-                            {payment.subscriptionDetails && (
-                              <div className="text-sm text-gray-600">
-                                <span className="font-medium">
-                                  {payment.subscriptionDetails.plan === 'yearly' ? 'Yearly Plan' : 'Monthly Plan'}
+                            {/* Subscription badge */}
+                            {payment.subscriptionDetails?.endDate && (
+                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                Active Subscription
+                                <span className="ml-2">
+                                  • Expires: {new Date(payment.subscriptionDetails.endDate).toLocaleDateString()}
                                 </span>
-                                {payment.subscriptionDetails.endDate && (
-                                  <span className="ml-2">
-                                    • Expires: {new Date(payment.subscriptionDetails.endDate).toLocaleDateString()}
-                                  </span>
-                                )}
-                              </div>
+                              </span>
                             )}
                           </div>
                           

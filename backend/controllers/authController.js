@@ -58,20 +58,16 @@ exports.registerUser = async (req, res) => {
         }
 
         // Create new user with default role 'regular'
-        const user = new User({ 
-            userName, 
-            email, 
-            password, // Password will be hashed by the pre-save middleware
-            role: 'regular'
-        });
-
-        await user.save();
-        console.log("User registered successfully"); // Debug log
-
-        // Generate email verification token
         const token = crypto.randomBytes(32).toString('hex');
-        user.emailVerificationToken = token;
+        const user = new User({
+            userName,
+            email,
+            password,
+            role: 'regular',
+            emailVerificationToken: token
+        });
         await user.save();
+        console.log("Saved verification token:", token, "for user:", user.email);
 
         // Send verification email
         const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
@@ -80,6 +76,7 @@ exports.registerUser = async (req, res) => {
           subject: 'Verify your email',
           html: `
             <h2>Welcome to SLExplora!</h2>
+            <p>Thank you for signing up. <strong>You must verify your email before you can log in.</strong></p>
             <p>Click the button below to verify your email and activate your account:</p>
             <a href="${verifyUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Verify Email</a>
             <p>If you did not sign up, please ignore this email.</p>
@@ -184,13 +181,17 @@ exports.requestPasswordReset = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // Send reset email using the shared transporter
+    // Send reset email
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
-    await transporter.sendMail({
-        from: process.env.EMAIL_FROM || process.env.EMAIL_USER, // always slexplora@hotmail.com
+    await sendEmail({
         to: user.email,
         subject: 'Password Reset',
-        html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`
+        html: `
+            <h2>Password Reset Request</h2>
+            <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
+            <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Reset Password</a>
+            <p>If you did not request this, you can ignore this email.</p>
+        `
     });
 
     res.json({ message: "If this email exists, a reset link has been sent." });
@@ -217,7 +218,9 @@ exports.resetPassword = async (req, res) => {
 // Verify email
 exports.verifyEmail = async (req, res) => {
     const { token } = req.params;
+    console.log("Verifying token:", token);
     const user = await User.findOne({ emailVerificationToken: token });
+    console.log("User found for token:", user);
     if (!user) {
         return res.status(400).json({ error: "Invalid or expired token" });
     }
