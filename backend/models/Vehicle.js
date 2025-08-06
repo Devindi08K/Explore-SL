@@ -83,16 +83,13 @@ const vehicleSchema = new mongoose.Schema({
     }
   },
   driverLicense: {
-    type: String,
-    required: true
+    type: String
   },
   vehiclePermit: {
-    type: String,
-    required: true
+    type: String
   },
   insuranceInfo: {
-    type: String,
-    required: true
+    type: String
   },
   driverName: {
     type: String,

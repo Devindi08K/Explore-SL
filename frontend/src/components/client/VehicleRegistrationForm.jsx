@@ -42,9 +42,6 @@ const VehicleRegistrationForm = () => {
     willingToTravel: true,
     servingAreas: [],
     vehicleImages: [""], // Initialize with one empty string
-    driverLicense: "",
-    vehiclePermit: "",
-    insuranceInfo: "",
     driverName: "",
     driverExperience: "",
     preferredAreas: []
@@ -191,10 +188,8 @@ const VehicleRegistrationForm = () => {
       'contactEmail',
       'baseLocation',
       'driverName',
-      'driverExperience',
-      'driverLicense',
-      'vehiclePermit',
-      'insuranceInfo'
+      'driverExperience'
+      // Removed: 'driverLicense', 'vehiclePermit', 'insuranceInfo'
     ];
 
     for (const field of requiredFields) {
@@ -565,64 +560,6 @@ const VehicleRegistrationForm = () => {
             </div>
           </div>
 
-          {/* Documents */}
-          <div>
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-charcoal">Verification Documents</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                These documents are required for verification purposes only and will not be publicly displayed. 
-                We ensure the confidentiality and security of your information.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-2">
-                  Driver License Number*
-                  <span className="block text-xs text-gray-500">For verification only</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.driverLicense}
-                  onChange={(e) => setFormData({ ...formData, driverLicense: e.target.value })}
-                  className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-2">
-                  Vehicle Permit Number*
-                  <span className="block text-xs text-gray-500">For verification only</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.vehiclePermit}
-                  onChange={(e) => setFormData({ ...formData, vehiclePermit: e.target.value })}
-                  className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-2">
-                  Insurance Info*
-                  <span className="block text-xs text-gray-500">For verification only</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.insuranceInfo}
-                  onChange={(e) => setFormData({ ...formData, insuranceInfo: e.target.value })}
-                  className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-                  required
-                />
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              <span className="text-tan">🔒</span> Your information is encrypted and securely stored. Only authorized administrators have access to these details.
-            </p>
-          </div>
-
           {/* Vehicle Images */}
           <div>
             <label className="block text-sm font-medium text-charcoal mb-2">
@@ -631,13 +568,21 @@ const VehicleRegistrationForm = () => {
                 ({isPremiumUser ? 'Premium: up to 3 images' : 'Free: 1 image only'})
               </span>
             </label>
-            
+
             {/* Premium status indicator */}
             {checkingPremium ? (
               <div className="mb-2 text-sm text-gray-500">Checking premium status...</div>
             ) : (
               <div className={`mb-2 text-sm ${isPremiumUser ? 'text-green-600' : 'text-blue-600'}`}>
-                {isPremiumUser ? '✅ Premium account - Upload up to 3 images' : 'ℹ️ Free account - 1 image limit'}
+                {isPremiumUser
+                  ? '✅ Premium account - Upload up to 3 images'
+                  : 'ℹ️ Free account - 1 image limit'}
+              </div>
+            )}
+
+            {isPremiumUser && (
+              <div className="mb-2 text-xs text-tan">
+                <span className="font-semibold">Note:</span> Premium vehicles will be displayed in the Destination Details page for all districts in the province you select as your base location.
               </div>
             )}
             

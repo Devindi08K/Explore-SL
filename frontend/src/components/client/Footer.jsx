@@ -3,11 +3,8 @@ import { Link } from "react-router-dom";
 import { 
   FaFacebookF, 
   FaTwitter, 
-  FaInstagram, 
-  FaTripadvisor,
-  FaPhoneAlt,
-  FaEnvelope,
-  FaMapMarkerAlt 
+  FaInstagram,
+  FaEnvelope
 } from "react-icons/fa";
 
 const Footer = () => {
@@ -18,22 +15,19 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Company Info */}
           <div>
-            <h3 className="text-2xl font-bold mb-6">Explore Sri Lanka</h3>
+            <h3 className="text-2xl font-bold mb-6">SLExplora</h3>
             <p className="text-cream/80 mb-4">
-              Your trusted partner in discovering the pearl of the Indian Ocean. We connect travelers with authentic experiences and local expertise.
+              Your trusted partner in discovering Sri Lanka. We connect travelers with authentic experiences and local expertise.
             </p>
-            <div className="flex space-x-4">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition">
+            <div className="flex space-x-4 mt-4">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="Facebook">
                 <FaFacebookF size={20} />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition">
-                <FaTwitter size={20} />
+              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="X (Twitter)">
+                <FaTwitter size={20} /> {/* Still using the Twitter icon for now */}
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="Instagram">
                 <FaInstagram size={20} />
-              </a>
-              <a href="https://tripadvisor.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition">
-                <FaTripadvisor size={20} />
               </a>
             </div>
           </div>
@@ -107,16 +101,10 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-6">Contact Us</h4>
             <ul className="space-y-4">
               <li className="flex items-center space-x-3 text-cream/80">
-                <FaMapMarkerAlt className="text-gold" />
-                <span>123 Tourism Street, Colombo, Sri Lanka</span>
-              </li>
-              <li className="flex items-center space-x-3 text-cream/80">
-                <FaPhoneAlt className="text-gold" />
-                <span>+94 11 234 5678</span>
-              </li>
-              <li className="flex items-center space-x-3 text-cream/80">
                 <FaEnvelope className="text-gold" />
-                <span>info@slexplora.com</span>
+                <a href="mailto:slexplora@hotmail.com" className="hover:text-gold transition">
+                  slexplora@hotmail.com
+                </a>
               </li>
             </ul>
           </div>
@@ -136,9 +124,6 @@ const Footer = () => {
               </Link>
               <Link to="/terms-of-service" className="hover:text-gold transition">
                 Terms of Service
-              </Link>
-              <Link to="/sitemap" className="hover:text-gold transition">
-                Sitemap
               </Link>
             </div>
           </div>

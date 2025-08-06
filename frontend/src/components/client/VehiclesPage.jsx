@@ -354,32 +354,6 @@ const VehiclesPage = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Action Buttons */}
-                <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <a 
-                    href={`tel:${singleVehicle.contactPhone}`}
-                    className="flex-1 bg-tan text-cream py-3 px-6 rounded-lg hover:bg-gold transition duration-200 text-center font-medium"
-                  >
-                    Call Now
-                  </a>
-                  <a 
-                    href={`mailto:${singleVehicle.contactEmail}`}
-                    className="flex-1 border border-tan text-tan py-3 px-6 rounded-lg hover:bg-tan hover:text-cream transition duration-200 text-center font-medium"
-                  >
-                    Send Email
-                  </a>
-                  {singleVehicle.whatsapp && (
-                    <a 
-                      href={`https://wa.me/${singleVehicle.whatsapp.replace(/[^0-9]/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition duration-200 text-center font-medium"
-                    >
-                      WhatsApp
-                    </a>
-                  )}
-                </div>
               </div>
             </div>
           </div>

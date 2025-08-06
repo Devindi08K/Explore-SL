@@ -42,9 +42,6 @@ const VehicleEdit = () => {
     willingToTravel: true,
     servingAreas: [],
     vehicleImages: [""],
-    driverLicense: "",
-    vehiclePermit: "",
-    insuranceInfo: "",
     driverName: "",
     driverExperience: "",
     preferredAreas: []
@@ -183,6 +180,7 @@ const VehicleEdit = () => {
       'baseLocation',
       'driverName',
       'driverExperience'
+      // Removed: 'driverLicense', 'vehiclePermit', 'insuranceInfo'
     ];
 
     for (const field of requiredFields) {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import api from '../../utils/api';
 
 const Signup = () => {
@@ -15,6 +15,13 @@ const Signup = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [passwordChecks, setPasswordChecks] = useState({
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        number: false,
+    });
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -27,16 +34,31 @@ const Signup = () => {
         setSuccessMessage('');
         setLoading(true);
 
+        if (!acceptedTerms) {
+            setError('You must accept the Terms of Service and Privacy Policy to create an account.');
+            setLoading(false);
+            return;
+        }
+
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match');
             setLoading(false);
             return;
         }
 
+        const strongPassword = (password) => 
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
+
+        if (!strongPassword(formData.password)) {
+          setError('Password must be at least 8 characters, include uppercase, lowercase, and a number.');
+          setLoading(false);
+          return;
+        }
+
         try {
             await api.post("/auth/register", {
                 userName: formData.userName,
-                email: formData.email,
+                email: formData.email.toLowerCase(),
                 password: formData.password,
             });
             setSuccessMessage(
@@ -53,6 +75,18 @@ const Signup = () => {
 
     const handleSocialSignup = (provider) => {
         window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/${provider}`;
+    };
+
+    const handlePasswordChange = (e) => {
+        const value = e.target.value;
+        setFormData({ ...formData, password: value });
+
+        setPasswordChecks({
+            length: value.length >= 8,
+            uppercase: /[A-Z]/.test(value),
+            lowercase: /[a-z]/.test(value),
+            number: /\d/.test(value),
+        });
     };
 
     return (
@@ -148,7 +182,7 @@ const Signup = () => {
                                 type={showPassword ? "text" : "password"}
                                 name="password"
                                 value={formData.password}
-                                onChange={handleChange}
+                                onChange={handlePasswordChange}
                                 required
                                 className="w-full pl-10 pr-12 py-3 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-cream/50"
                                 placeholder="Create a password"
@@ -165,6 +199,25 @@ const Signup = () => {
                                 )}
                             </button>
                         </div>
+                        {/* Password checklist */}
+                        <ul className="mt-2 text-xs space-y-1">
+                            <li className="flex items-center gap-2">
+                                {passwordChecks.length ? <FaCheckCircle className="text-green-500" /> : <FaTimesCircle className="text-gray-400" />}
+                                At least 8 characters
+                            </li>
+                            <li className="flex items-center gap-2">
+                                {passwordChecks.uppercase ? <FaCheckCircle className="text-green-500" /> : <FaTimesCircle className="text-gray-400" />}
+                                One uppercase letter
+                            </li>
+                            <li className="flex items-center gap-2">
+                                {passwordChecks.lowercase ? <FaCheckCircle className="text-green-500" /> : <FaTimesCircle className="text-gray-400" />}
+                                One lowercase letter
+                            </li>
+                            <li className="flex items-center gap-2">
+                                {passwordChecks.number ? <FaCheckCircle className="text-green-500" /> : <FaTimesCircle className="text-gray-400" />}
+                                One number
+                            </li>
+                        </ul>
                     </div>
 
                     <div>
@@ -194,6 +247,28 @@ const Signup = () => {
                                 )}
                             </button>
                         </div>
+                    </div>
+
+                    <div className="flex items-center mb-2">
+                        <input
+                            type="checkbox"
+                            id="acceptTerms"
+                            checked={acceptedTerms}
+                            onChange={e => setAcceptedTerms(e.target.checked)}
+                            className="mr-2"
+                            required
+                        />
+                        <label htmlFor="acceptTerms" className="text-xs text-gray-600">
+                            I agree to the{' '}
+                            <Link to="/terms-of-service" className="text-tan hover:text-gold underline" target="_blank" rel="noopener noreferrer">
+                                Terms of Service
+                            </Link>
+                            {' '}and{' '}
+                            <Link to="/privacy-policy" className="text-tan hover:text-gold underline" target="_blank" rel="noopener noreferrer">
+                                Privacy Policy
+                            </Link>
+                            .
+                        </label>
                     </div>
 
                     {error && (

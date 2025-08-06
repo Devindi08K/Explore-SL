@@ -885,7 +885,6 @@ const UserProfile = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tan focus:border-transparent"
                 />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-2">Email</label>
                 <input
@@ -895,6 +894,9 @@ const UserProfile = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tan focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  To change your password, please go to the <b>Login</b> page, click <b>Forgot password?</b>, and follow the instructions to reset your password via email.
+                </p>
               </div>
 
               <div className="md:col-span-2 flex space-x-4 mt-4">

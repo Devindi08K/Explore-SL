@@ -2,12 +2,14 @@ import React, { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUserCircle, FaCog, FaSignOutAlt, FaUser } from "react-icons/fa";
 import { AuthContext } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const Navbar = ({ onLogout }) => {
     const { currentUser, isAuthReady } = useContext(AuthContext);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const navigate = useNavigate();
+    const { i18n } = useTranslation();
     
     // Determine if user is logged in based on context
     const isLoggedIn = Boolean(currentUser);

@@ -158,18 +158,52 @@ const HomePage = () => {
           />
         ))}
         <div className="relative z-20 text-center text-white px-4 sm:px-6 max-w-4xl">
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 drop-shadow-lg">
+          <h1
+            className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 drop-shadow-lg animate__animated animate__fadeInDown"
+            data-aos="fade-down"
+            data-aos-delay="100"
+            style={{ animationDuration: '1.2s' }}
+          >
             Explore Sri Lanka with SLExplora
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto drop-shadow-md font-light">
-            Your trusted guide to the pearl of the Indian Ocean
+          <p className="text-lg sm:text-xl md:text-2xl mb-4 sm:mb-6 max-w-3xl mx-auto drop-shadow-md font-light">
+            <span className="font-semibold text-gold block mb-2">
+              Discover Sri Lanka – Your Gateway to Authentic Local Experiences
+            </span>
+            Guiding You Through Every Journey
           </p>
-          <Link 
-            to="/destinations"
-            className="inline-block bg-tan text-cream px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-gold transition duration-300 text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            Start Exploring
-          </Link>
+          {/* Unique Selling Points */}
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 text-base font-medium shadow">
+              <span role="img" aria-label="Verified">✅</span> Verified Local Guides
+            </div>
+            <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 text-base font-medium shadow">
+              <span role="img" aria-label="Tours">🌏</span> Curated Tours
+            </div>
+            <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 text-base font-medium shadow">
+              <span role="img" aria-label="Secure">🔒</span> Safe & Secure Payments
+            </div>
+          </div>
+          {/* Trust Signal Badge */}
+          <div className="flex justify-center mb-6">
+            <div className="flex items-center gap-2 bg-white/30 rounded-full px-5 py-2 shadow text-base font-semibold text-gold border border-gold/30">
+              <FaRegCheckSquare className="text-gold" />
+              Trusted by Travelers Worldwide
+            </div>
+          </div>
+          {/* Only one prominent CTA */}
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <Link 
+              to="/destinations"
+              className="bg-tan text-cream px-8 py-4 rounded-lg text-xl font-bold shadow-xl hover:bg-gold hover:text-white transition duration-300 border-2 border-gold"
+              style={{ minWidth: 220 }}
+              data-aos="zoom-in"
+              data-aos-delay="200"
+              onClick={() => window.scrollTo(0, 0)}
+            >
+              Start Exploring
+            </Link>
+          </div>
         </div>
 
         {/* Enhanced scroll indicator */}
@@ -263,6 +297,7 @@ const HomePage = () => {
               to="/destinations"
               className="inline-flex items-center bg-tan text-cream px-6 py-3 rounded-lg hover:bg-gold transition-all duration-300 shadow-md hover:shadow-lg"
               data-aos="fade-up"
+              onClick={() => window.scrollTo(0, 0)}
             >
               <span>View All Destinations</span>
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

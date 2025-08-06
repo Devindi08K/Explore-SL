@@ -33,9 +33,8 @@ const AdminVehiclesPage = () => {
     willingToTravel: true,
     servingAreas: [],
     vehicleImages: [],
-    driverLicense: "",
-    vehiclePermit: "",
-    insuranceInfo: "",
+    driverName: "",
+    driverExperience: "",
     isVerified: false
   });
 
@@ -171,9 +170,8 @@ const AdminVehiclesPage = () => {
       willingToTravel: true,
       servingAreas: [],
       vehicleImages: [],
-      driverLicense: "",
-      vehiclePermit: "",
-      insuranceInfo: "",
+      driverName: "",
+      driverExperience: "",
       isVerified: false
     });
   };
@@ -322,28 +320,31 @@ const AdminVehiclesPage = () => {
           </div>
         </div>
 
-        {/* Additional Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Price per Day</label>
-            <input
-              type="text"
-              value={formData.pricePerDay}
-              onChange={(e) => setFormData({ ...formData, pricePerDay: e.target.value })}
-              className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Price per Km</label>
-            <input
-              type="text"
-              value={formData.pricePerKm}
-              onChange={(e) => setFormData({ ...formData, pricePerKm: e.target.value })}
-              className="w-full px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-            />
-          </div>
+        {/* Vehicle Images */}
+        <div>
+          <label className="block text-sm font-medium text-charcoal mb-2">Vehicle Images (URLs)</label>
+          {formData.vehicleImages.map((url, index) => (
+            <div key={index} className="mb-2 flex items-center space-x-2">
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => {
+                  const newImages = [...formData.vehicleImages];
+                  newImages[index] = e.target.value;
+                  setFormData({ ...formData, vehicleImages: newImages });
+                }}
+                className="flex-1 px-4 py-2 border border-tan rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+                placeholder={`Image URL ${index + 1}`}
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, vehicleImages: [...formData.vehicleImages, ""] })}
+            className="mt-2 text-gold hover:underline"
+          >
+            Add another image
+          </button>
         </div>
 
         <button
