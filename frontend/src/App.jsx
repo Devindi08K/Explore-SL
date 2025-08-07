@@ -66,6 +66,7 @@ import TermsOfService from './components/client/TermsOfService';
 
 // Add this to your imports if it's not already there
 import PayhereTestPage from './pages/PayhereTestPage';
+import RefundPolicy from "./pages/RefundPolicy";
 
 // Create a separate component for the app content that needs router hooks
 const AppContent = () => {
@@ -158,6 +159,7 @@ const AppContent = () => {
           
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
           
           {/* Protected Admin Routes */}
           <Route path="/admin" element={
