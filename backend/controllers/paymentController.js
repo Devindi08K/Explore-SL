@@ -1,5 +1,5 @@
 const Payment = require('../models/Payment');
-const { processSuccessfulPayment } = require('./stripeController');
+const { processSuccessfulPayment } = require('./payhereController');
 const Vehicle = require('../models/Vehicle');
 const TourGuide = require('../models/TourGuide');
 
@@ -15,34 +15,36 @@ exports.getUserPayments = async (req, res) => {
   }
 };
 
-// Create a new payment (direct payment, not through Stripe)
+// Create a new payment (direct payment, not through PayHere)
 exports.createPayment = async (req, res) => {
   try {
     const { serviceType, amount, description, itemId, customerName, customerEmail, customerPhone } = req.body;
     
-    // Create a unique order ID
-    const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const orderId = `SLX-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     
     const payment = new Payment({
       userId: req.user._id,
       amount,
-      description,
-      serviceType,
+      currency: 'LKR',
       orderId,
+      serviceType,
+      description,
+      status: 'pending',
+      paymentMethod: 'manual',
       itemId: itemId || null,
       customerDetails: {
         name: customerName || req.user.userName,
         email: customerEmail || req.user.email,
         phone: customerPhone || ''
-      },
-      status: 'pending'
+      }
     });
     
     await payment.save();
     
-    res.status(201).json({
-      message: 'Payment created successfully',
-      payment
+    res.json({ 
+      message: 'Payment created successfully', 
+      payment,
+      orderId
     });
   } catch (error) {
     console.error('Error creating payment:', error);
@@ -53,7 +55,9 @@ exports.createPayment = async (req, res) => {
 // Get payment by ID
 exports.getPaymentById = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id);
+    const { id } = req.params;
+    
+    const payment = await Payment.findById(id);
     
     if (!payment) {
       return res.status(404).json({ error: 'Payment not found' });
@@ -111,11 +115,6 @@ exports.completePayment = async (req, res) => {
 // For testing: Make a vehicle premium
 exports.makePremiumForTesting = async (req, res) => {
   try {
-    // Temporarily removing NODE_ENV check for testing
-    // if (process.env.NODE_ENV !== 'development') {
-    //   return res.status(403).json({ error: 'This endpoint is only available in development mode' });
-    // }
-    
     const { vehicleId } = req.params;
     const vehicle = await Vehicle.findById(vehicleId);
     
@@ -129,10 +128,9 @@ exports.makePremiumForTesting = async (req, res) => {
     
     vehicle.isPremium = true;
     vehicle.premiumExpiry = expiryDate;
-    vehicle.maxPhotos = 3; // More realistic value
+    vehicle.maxPhotos = 3;
     vehicle.analyticsEnabled = true;
     vehicle.bookingNotifications = true;
-    // Don't set viewCount or inquiryCount - let them accumulate naturally
     
     // Add some test availability data
     if (!vehicle.availabilityCalendar) {
@@ -169,10 +167,12 @@ exports.testCompletePayment = async (req, res) => {
     const payment = await Payment.findOne({ orderId });
     
     if (!payment) {
+      console.error('❌ Payment not found:', orderId);
       return res.status(404).json({ error: 'Payment not found' });
     }
     
     if (payment.status === 'completed') {
+      console.log('✅ Payment already completed:', orderId);
       return res.json({
         message: 'Payment already completed',
         payment
@@ -186,9 +186,10 @@ exports.testCompletePayment = async (req, res) => {
     payment.updatedAt = new Date();
     
     await payment.save();
+    console.log('✅ Payment status updated to completed');
     
     // Process the successful payment
-    const { processSuccessfulPayment } = require('./stripeController');
+    const { processSuccessfulPayment } = require('./payhereController');
     await processSuccessfulPayment(payment);
     
     console.log('✅ Manual payment completion successful');
@@ -199,12 +200,11 @@ exports.testCompletePayment = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error completing payment:', error);
-    res.status(500).json({ error: 'Failed to complete payment' });
+    res.status(500).json({ error: 'Failed to complete payment: ' + error.message });
   }
 };
 
 // Add this function to handle immediate premium activation
-
 exports.activatePremiumFeatures = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -216,9 +216,9 @@ exports.activatePremiumFeatures = async (req, res) => {
       return res.status(404).json({ error: 'No vehicles found for this user' });
     }
     
-    // Set premium expiry (30 days + 2 months free = 90 days)
+    // Set premium expiry (30 days)
     const premiumExpiry = new Date();
-    premiumExpiry.setDate(premiumExpiry.getDate() + 90);
+    premiumExpiry.setDate(premiumExpiry.getDate() + 30);
     
     // Update all vehicles to premium
     const updatePromises = vehicles.map(async (vehicle) => {
@@ -227,7 +227,7 @@ exports.activatePremiumFeatures = async (req, res) => {
       vehicle.maxPhotos = 10;
       vehicle.analyticsEnabled = true;
       vehicle.bookingNotifications = true;
-      vehicle.featuredStatus = 'homepage'; // Auto-feature premium vehicles
+      vehicle.featuredStatus = 'homepage';
       
       // Add some analytics data for demonstration
       if (vehicle.viewCount === 0) {

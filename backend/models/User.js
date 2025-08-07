@@ -18,8 +18,9 @@ const userSchema = new mongoose.Schema({
     },
     resetPasswordToken: String,
     resetPasswordExpires: Date,
-    emailVerificationToken: String, // <-- Make sure this is here
-    isVerified: { type: Boolean, default: false }, // <-- And this
+    emailVerificationToken: String,
+    isVerified: { type: Boolean, default: true }, // Changed from false to true to allow immediate login
+    emailVerified: { type: Boolean, default: false } // New field to track actual email verification status
 }, {
     timestamps: true // Add this line to automatically manage createdAt and updatedAt
 });

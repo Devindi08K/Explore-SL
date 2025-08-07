@@ -50,12 +50,33 @@ export const AuthProvider = ({ children }) => {
     updateUserState(null);
   }, [updateUserState]);
 
+  // Update the setCurrentUser function in your AuthContext to include emailVerified
+  const setUser = (userData) => {
+    if (userData) {
+      localStorage.setItem('token', userData.token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
+      
+      // Include emailVerified in the user state
+      setCurrentUser({
+        id: userData.id,
+        userName: userData.userName,
+        email: userData.email,
+        role: userData.role,
+        emailVerified: userData.emailVerified
+      });
+    } else {
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+      setCurrentUser(null);
+    }
+  };
+
   const value = {
     currentUser,
     isAuthReady,
     logout,
     user: currentUser,
-    setCurrentUser: updateUserState
+    setCurrentUser: setUser
   };
 
   return (

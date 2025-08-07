@@ -1,37 +1,31 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaCreditCard, FaTimes, FaStripe } from 'react-icons/fa';
+import { FaCreditCard, FaTimes, FaLock, FaShieldAlt, FaInfoCircle } from 'react-icons/fa';
 import api from '../../utils/api';
+import { redirectToPayhere } from '../../utils/paymentUtils';
 
 const PaymentModal = ({ isOpen, onClose, serviceType, amount, description, itemId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
-  const handleStripePayment = async () => {
+  const handlePayherePayment = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Get customer info from localStorage if available
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      const response = await api.post('/payments/stripe/create-checkout', {
+      const response = await api.post('/payments/payhere/create-checkout', {
         serviceType,
         amount,
         description,
-        itemId,
-        customerName: user.userName || '',
-        customerEmail: user.email || '',
-        customerPhone: ''
+        itemId
       });
       
-      // Redirect to Stripe Checkout
-      window.location.href = response.data.url;
+      // Redirect to PayHere using the utility function
+      redirectToPayhere(response.data);
+      
     } catch (error) {
-      console.error('Stripe payment initialization failed:', error);
+      console.error('Payment initialization failed:', error);
       setError('Failed to initialize payment. Please try again later.');
       setLoading(false);
     }
@@ -52,6 +46,7 @@ const PaymentModal = ({ isOpen, onClose, serviceType, amount, description, itemI
             <FaCreditCard className="text-tan text-2xl" />
           </div>
           <h3 className="text-xl font-bold text-charcoal">Complete Your Purchase</h3>
+          <p className="text-sm text-gray-500 mt-1">Secure payment via PayHere</p>
         </div>
         
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -72,7 +67,7 @@ const PaymentModal = ({ isOpen, onClose, serviceType, amount, description, itemI
         )}
         
         <button
-          onClick={handleStripePayment}
+          onClick={handlePayherePayment}
           disabled={loading}
           className={`w-full bg-blue-600 text-white py-3 rounded-lg flex items-center justify-center ${
             loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'
@@ -88,14 +83,52 @@ const PaymentModal = ({ isOpen, onClose, serviceType, amount, description, itemI
             </>
           ) : (
             <>
-              <FaStripe className="mr-2 text-xl" /> Pay with Stripe
+              Pay with PayHere
             </>
           )}
         </button>
         
-        <div className="mt-4 text-center text-xs text-gray-500">
-          <p>You'll be redirected to Stripe to complete the payment securely.</p>
-          <p className="mt-1">Your information is protected with industry-standard encryption.</p>
+        {/* Security badges */}
+        <div className="flex justify-center items-center space-x-4 mb-4">
+          <div className="flex items-center text-gray-500 text-xs">
+            <FaLock className="mr-1 text-green-600" />
+            <span>Secure Checkout</span>
+          </div>
+          <div className="flex items-center text-gray-500 text-xs">
+            <FaShieldAlt className="mr-1 text-blue-600" />
+            <span>PCI Compliant</span>
+          </div>
+        </div>
+        
+        {/* Payment information and compliance notice */}
+        <div className="mt-2 text-center text-xs text-gray-500 border-t border-gray-100 pt-4">
+          <div className="mb-3 bg-blue-50 p-3 rounded-lg text-blue-700 flex">
+            <FaInfoCircle className="mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-left">You'll be redirected to PayHere's secure payment page to complete your transaction.</p>
+          </div>
+          
+          <div className="space-y-2 text-left text-gray-600">
+            <p className="font-medium">Merchant Information:</p>
+            <p>
+              <strong>Business Name:</strong> SLExplora Ltd<br />
+              <strong>Registration No:</strong> BRG12345678<br />
+              <strong>Address:</strong> 123 Temple Road, Colombo 00300, Sri Lanka<br />
+              <strong>Email:</strong> info@slexplora.com
+            </p>
+            
+            <p className="font-medium mt-3">Payment Terms:</p>
+            <ul className="list-disc list-inside">
+              <li>All payments are processed in LKR (Sri Lankan Rupees)</li>
+              <li>International cards may incur conversion fees from your bank</li>
+              <li>Your payment information is protected with industry-standard encryption</li>
+              <li>Transaction data is retained for 7 years for accounting purposes</li>
+              <li>No full card details are stored on our servers</li>
+            </ul>
+            
+            <p className="mt-3">
+              By proceeding, you agree to our <a href="/terms-of-service" className="text-tan hover:underline" target="_blank">Terms of Service</a> and <a href="/privacy-policy" className="text-tan hover:underline" target="_blank">Privacy Policy</a>.
+            </p>
+          </div>
         </div>
       </div>
     </div>

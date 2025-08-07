@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaUserCircle, FaCog, FaSignOutAlt, FaUser } from "react-icons/fa";
 import { AuthContext } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import api from '../../utils/api'; // Adjust the import based on your project structure
 
 const Navbar = ({ onLogout }) => {
     const { currentUser, isAuthReady } = useContext(AuthContext);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [notificationCount, setNotificationCount] = useState(0);
     const navigate = useNavigate();
     const { i18n } = useTranslation();
     
@@ -35,6 +37,76 @@ const Navbar = ({ onLogout }) => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [showProfileMenu]);
+
+    // Count subscription renewals and pending actions
+    useEffect(() => {
+        const fetchNotificationCounts = async () => {
+            if (!currentUser) return;
+            
+            try {
+                // Get vehicles, tour guides, and business listings that need renewal
+                const [vehiclesRes, guidesRes, listingsRes, paymentsRes] = await Promise.all([
+                    api.get('/vehicles/my-submissions').catch(() => ({ data: [] })),
+                    api.get('/tour-guides/my-submissions').catch(() => ({ data: [] })),
+                    api.get('/affiliate-links/user').catch(() => ({ data: [] })),
+                    api.get('/payments/user').catch(() => ({ data: [] }))
+                ]);
+                
+                // Count items needing renewal (expiring in next 14 days)
+                const needsRenewalSoon = (expiryDate) => {
+                    if (!expiryDate) return false;
+                    const now = new Date();
+                    const expiry = new Date(expiryDate);
+                    const diffDays = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+                    return diffDays > 0 && diffDays <= 14;
+                };
+                
+                let count = 0;
+                
+                // Count vehicle renewals
+                const vehicles = Array.isArray(vehiclesRes.data) ? vehiclesRes.data : [];
+                vehicles.forEach(vehicle => {
+                    if (vehicle.isPremium && vehicle.premiumExpiry && needsRenewalSoon(vehicle.premiumExpiry)) {
+                        count++;
+                    }
+                });
+                
+                // Count guide renewals
+                const guides = Array.isArray(guidesRes.data) ? guidesRes.data : [];
+                guides.forEach(guide => {
+                    if (guide.isPremium && guide.premiumExpiry && needsRenewalSoon(guide.premiumExpiry)) {
+                        count++;
+                    }
+                });
+                
+                // Count business listing renewals
+                const listings = Array.isArray(listingsRes.data) ? listingsRes.data : [];
+                listings.forEach(listing => {
+                    if (listing.isPremium && listing.premiumExpiry && needsRenewalSoon(listing.premiumExpiry)) {
+                        count++;
+                    }
+                });
+                
+                // Count pending actions from payments
+                const payments = Array.isArray(paymentsRes.data) ? paymentsRes.data : [];
+                payments.forEach(payment => {
+                    if (payment.subscriptionDetails?.awaitingSubmission) {
+                        count++;
+                    }
+                });
+                
+                setNotificationCount(count);
+            } catch (error) {
+                console.error('Error fetching notification counts:', error);
+            }
+        };
+        
+        fetchNotificationCounts();
+        
+        // Refresh notification count every 5 minutes
+        const interval = setInterval(fetchNotificationCounts, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [currentUser]);
 
     return (
         <nav className="bg-charcoal text-cream py-4 sticky top-0 z-50 shadow-md">
@@ -64,23 +136,35 @@ const Navbar = ({ onLogout }) => {
                         <div className="relative profile-menu-container">
                             <button 
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                className="flex items-center space-x-2 text-cream hover:text-gold transition-colors duration-200"
+                                className="flex items-center space-x-2 text-cream hover:text-gold transition-colors duration-200 relative"
                                 aria-expanded={showProfileMenu}
                                 aria-haspopup="true"
                             >
                                 <FaUserCircle className="w-8 h-8" />
                                 <span className="font-medium">{currentUser?.userName}</span>
+                                
+                                {/* Notification indicator */}
+                                {notificationCount > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                        {notificationCount}
+                                    </span>
+                                )}
                             </button>
                             
                             {showProfileMenu && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
                                     <Link 
                                         to="/profile" 
-                                        className="flex items-center px-4 py-2 text-gray-700 hover:bg-cream hover:text-charcoal"
+                                        className="flex items-center px-4 py-2 text-gray-700 hover:bg-cream hover:text-charcoal relative"
                                         onClick={() => setShowProfileMenu(false)}
                                     >
                                         <FaUser className="w-5 h-5 mr-2" />
                                         My Profile
+                                        {notificationCount > 0 && (
+                                            <span className="ml-auto bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                                {notificationCount}
+                                            </span>
+                                        )}
                                     </Link>
                                     
                                     {currentUser.role === 'admin' && (
@@ -239,14 +323,21 @@ const Navbar = ({ onLogout }) => {
                       <div className="bg-white rounded-lg shadow-xl py-2 mt-2">
                         <Link
                           to="/profile"
-                          className="flex items-center px-4 py-2 text-gray-700 hover:bg-gold hover:text-white rounded"
+                          className="flex items-center justify-between px-4 py-2 text-gray-700 hover:bg-gold hover:text-white rounded"
                           onClick={() => {
                             setShowProfileMenu(false);
                             setShowMobileMenu(false);
                           }}
                         >
-                          <FaUser className="w-5 h-5 mr-2" />
-                          My Profile
+                          <div className="flex items-center">
+                            <FaUser className="w-5 h-5 mr-2" />
+                            My Profile
+                          </div>
+                          {notificationCount > 0 && (
+                            <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                              {notificationCount}
+                            </span>
+                          )}
                         </Link>
                         {currentUser.role === 'admin' && (
                           <Link

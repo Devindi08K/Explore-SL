@@ -11,8 +11,8 @@ const PaymentSuccess = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [hasVehicles, setHasVehicles] = useState(false);
   
-  const orderId = searchParams.get('orderId');
-  const sessionId = searchParams.get('session_id');
+  // Update this line to support PayHere's parameter format
+  const orderId = searchParams.get('order_id') || searchParams.get('orderId');
   
   const checkPaymentStatus = async (retryAttempt = 0) => {
     try {
@@ -23,7 +23,9 @@ const PaymentSuccess = () => {
       }
       
       console.log(`Checking payment status (attempt ${retryAttempt + 1})...`);
-      const response = await api.get(`/payments/stripe/status/${orderId}`);
+      
+      // Check payment status with PayHere
+      const response = await api.get(`/payments/payhere/status/${orderId}`);
       const paymentData = response.data;
       
       setPayment(paymentData);
@@ -76,15 +78,23 @@ const PaymentSuccess = () => {
     
     try {
       setLoading(true);
-      console.log('Manually completing payment...');
+      console.log('Manually completing payment...', orderId);
+      
+      // Try manual completion
       const response = await api.post(`/payments/test/complete/${orderId}`);
       if (response.data) {
+        console.log('Manual payment completion successful');
         setPayment(response.data.payment);
-        setLoading(false);
+        
+        // Refresh the page after 2 seconds to show updated status
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       }
     } catch (error) {
       console.error('Error completing payment:', error);
-      setError('Failed to complete payment');
+      setError('Failed to complete payment: ' + (error.response?.data?.error || error.message));
+    } finally {
       setLoading(false);
     }
   };

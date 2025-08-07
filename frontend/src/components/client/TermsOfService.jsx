@@ -14,8 +14,14 @@ const TermsOfService = () => (
 
     <h2 className="text-2xl font-semibold mt-10 mb-3 text-charcoal">2. Payments & Refunds</h2>
     <ul className="list-disc ml-6 mb-4 text-gray-700">
-      <li>All payments for premium services are <b>non-refundable</b>, including but not limited to subscriptions, listings, and sponsored content. Once a payment is made, it cannot be refunded for any reason.</li>
-      <li>By making a payment, you agree to our pricing and billing terms as displayed at the time of purchase.</li>
+      <li>All payments for premium services are <b>non-refundable</b>, including but not limited to premium listings and sponsored content.</li>
+      <li>Payments are processed securely by Stripe, our third-party payment processor.</li>
+      <li>You agree to provide accurate and complete payment information.</li>
+      <li>Premium services will not automatically renew. You will need to manually renew your service when it expires.</li>
+      <li>Prices are listed in Sri Lankan Rupees (LKR) and include all applicable taxes.</li>
+      <li><strong>International Payments:</strong> If you are paying with a card issued in a currency other than LKR, your bank may apply currency conversion rates and additional fees. These conversion rates are determined by your card issuer, not by SLExplora.</li>
+      <li>SLExplora reserves the right to change pricing at any time, but changes will not affect existing paid services.</li>
+      <li>In case of payment disputes, please contact us at info@slexplora.com before initiating a chargeback.</li>
     </ul>
 
     <h2 className="text-2xl font-semibold mt-10 mb-3 text-charcoal">3. User Content & Conduct</h2>
@@ -44,7 +50,7 @@ const TermsOfService = () => (
 
     <h2 className="text-2xl font-semibold mt-10 mb-3 text-charcoal">7. Contact</h2>
     <p className="mb-4 text-gray-700">
-      For questions about these Terms, contact us at <a href="mailto:slexplora@hotmail.com" className="text-tan hover:underline">slexplora@hotmail.com</a>.
+      If you have any questions about these Terms, please contact us at <a href="mailto:info@slexplora.com" className="text-tan hover:underline">info@slexplora.com</a>.
     </p>
   </div>
 );

@@ -64,6 +64,9 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import PrivacyPolicy from './components/client/PrivacyPolicy';
 import TermsOfService from './components/client/TermsOfService';
 
+// Add this to your imports if it's not already there
+import PayhereTestPage from './pages/PayhereTestPage';
+
 // Create a separate component for the app content that needs router hooks
 const AppContent = () => {
   const navigate = useNavigate();
@@ -197,6 +200,7 @@ const AppContent = () => {
           <Route path="/blog-edit/:id" element={<BlogEdit />} />
           <Route path="/business-edit/:id" element={<BusinessEdit />} />
           <Route path="/tour-edit/:id" element={<TourEdit />} />
+          <Route path="/test/payhere" element={<PayhereTestPage />} />
         </Routes>
       </main>
       <Footer />

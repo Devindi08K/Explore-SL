@@ -158,13 +158,6 @@ const PartnershipPage = () => {
                 </div>
               </div>
               
-              {/* Special Promotion Badge */}
-              <div className="bg-gold/10 rounded-lg p-3 mb-6 border border-gold/20">
-                <p className="text-center text-sm font-medium text-charcoal">
-                  <span className="text-gold">🎉 Special Launch Offer:</span> 50% off your first month with code <span className="font-bold">LAUNCH50</span>
-                </p>
-              </div>
-              
               <div className="mt-auto">
                 <Link 
                   to="/partnership/business-premium"
@@ -218,14 +211,14 @@ const PartnershipPage = () => {
                   </ul>
                 </div>
                 
-                <p className="text-center font-bold text-tan text-lg">Starting from LKR 600/mo</p>
+                <p className="text-center font-bold text-tan text-lg">Starting from LKR 2000/mo</p>
               </div>
               
               <div className="flex space-x-3 mt-6">
                 <button 
                   onClick={() => handlePaymentClick(
                     'tour_partnership', 
-                    600, 
+                    2000, 
                     'Tour Partnership (Monthly)'
                   )}
                   className="flex-1 flex justify-center items-center bg-tan text-cream py-3 px-4 rounded-md hover:bg-gold transition duration-200"
@@ -377,7 +370,7 @@ const PartnershipPage = () => {
           </p>
           <div className="flex justify-center">
             <Link 
-              to="/contact"
+              
               className="bg-tan text-cream px-8 py-3 rounded-lg hover:bg-gold transition duration-200 inline-flex items-center"
             >
               Contact Us

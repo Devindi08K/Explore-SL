@@ -37,7 +37,7 @@ const PrivacyPolicy = () => (
 
     <h2 className="text-2xl font-semibold mt-10 mb-3 text-charcoal">5. Your Rights</h2>
     <p className="mb-4 text-gray-700">
-      You may access, update, or delete your personal information by contacting us at <a href="mailto:slexplora@hotmail.com" className="text-tan hover:underline">slexplora@hotmail.com</a>. We may retain certain information as required by law or for legitimate business purposes.
+      You may access, update, or delete your personal information by contacting us at <a href="mailto:info@slexplora.com" className="text-tan hover:underline">info@slexplora.com</a>. We may retain certain information as required by law or for legitimate business purposes.
     </p>
 
     <h2 className="text-2xl font-semibold mt-10 mb-3 text-charcoal">6. Children's Privacy</h2>
@@ -54,6 +54,20 @@ const PrivacyPolicy = () => (
     <p className="mb-4 text-gray-700">
       If you have any questions about this Privacy Policy, please contact us at <a href="mailto:slexplora@hotmail.com" className="text-tan hover:underline">slexplora@hotmail.com</a>.
     </p>
+
+    <h2 className="text-2xl font-semibold mt-10 mb-3 text-charcoal">Payment Processing</h2>
+    <p className="mb-4 text-gray-700">
+      When you make a payment on SLExplora:
+    </p>
+    <ul className="list-disc ml-6 mb-4 text-gray-700">
+      <li>Your payment information is processed securely by Stripe, a PCI-DSS Level 1 certified payment processor.</li>
+      <li>SLExplora does not store your full credit card details on our servers.</li>
+      <li>We collect and store transaction data including amount, date, description, and order IDs for accounting and customer service purposes.</li>
+      <li>Payment data may be used for fraud detection and prevention.</li>
+      <li><strong>Data Retention:</strong> We retain transaction data for accounting purposes. Your payment method details (such as the last 4 digits of your card) are retained to assist with transaction inquiries and disputes.</li>
+      <li><strong>Data Access:</strong> You may request a copy of your payment records by contacting us at info@slexplora.com.</li>
+      <li><strong>International Payments:</strong> If you are paying with a card issued in a currency other than LKR, your bank may apply currency conversion rates and additional fees. These conversion rates are determined by your card issuer, not by SLExplora.</li>
+    </ul>
   </div>
 );
 

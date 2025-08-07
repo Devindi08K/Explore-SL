@@ -10,6 +10,7 @@ const Login = ({ onLoginSuccess }) => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
     const { setCurrentUser } = useContext(AuthContext);
 
@@ -48,6 +49,43 @@ const Login = ({ onLoginSuccess }) => {
 
     const handleSocialLogin = (provider) => {
         window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/${provider}`;
+    };
+
+    const handleResendVerification = async (email) => {
+        if (!email) {
+            setError("Please enter your email address first");
+            return;
+        }
+        
+        try {
+            setLoading(true);
+            const response = await api.post("/auth/resend-verification", { email });
+            
+            // Check for development link
+            if (response.data.devVerificationLink) {
+                setSuccessMessage(
+                    <>
+                      Verification email sent. If you don't receive it, you can 
+                      <a 
+                        href={response.data.devVerificationLink} 
+                        className="text-tan ml-1 underline"
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        click here to verify
+                      </a>
+                    </>
+                );
+            } else {
+                setSuccessMessage("Verification email has been resent. Please check your inbox.");
+            }
+            
+            setError("");
+        } catch (err) {
+            setError(err.response?.data?.error || "Failed to resend verification email");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -150,6 +188,22 @@ const Login = ({ onLoginSuccess }) => {
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
                             {error}
+                        </div>
+                    )}
+
+                    {error === "Please verify your email before logging in." && (
+                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p className="text-sm text-yellow-800 mb-2">
+                              Your email is not verified. Please check your inbox for the verification email 
+                              or request a new one.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleResendVerification(email)}
+                              className="text-sm bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700"
+                            >
+                              Resend Verification Email
+                            </button>
                         </div>
                     )}
 

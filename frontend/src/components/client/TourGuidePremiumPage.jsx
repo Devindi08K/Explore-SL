@@ -105,7 +105,6 @@ const TourGuidePremiumPage = () => {
               <div className="mb-3">
                 <h3 className="font-bold text-charcoal text-lg sm:text-xl mb-1">Premium</h3>
                 <div className="text-2xl sm:text-3xl font-bold text-charcoal mb-1 sm:mb-2">LKR 500 <span className="text-xs sm:text-sm font-normal text-gray-500">/month</span></div>
-                <p className="text-gray-600 text-xs sm:text-sm">First 2 months free!</p>
               </div>
               
               <ul className="mb-4 sm:mb-6 flex-grow space-y-1 sm:space-y-2">
@@ -203,11 +202,7 @@ const TourGuidePremiumPage = () => {
             </div>
           </div>
 
-          <div className="mt-8 bg-gold/10 rounded-lg p-4 border border-gold/20">
-            <p className="text-center font-medium text-sm">
-              <span className="text-gold">🎉 Special Launch Offer:</span> First 2 months free with any premium plan subscription!
-            </p>
-          </div>
+          {/* Removed promo block as per update */}
         </div>
         
         {/* Benefits Section - MOVED AFTER PRICING */}
@@ -239,8 +234,11 @@ const TourGuidePremiumPage = () => {
           <h3 className="text-2xl font-bold mb-6 text-center">Frequently Asked Questions</h3>
           <div className="space-y-6 max-w-3xl mx-auto">
             <div>
-              <h4 className="font-semibold text-charcoal mb-2">When will I be charged after my free months?</h4>
-              <p className="text-gray-600">Your first payment will be collected exactly 60 days after you sign up. We'll send you a reminder email 7 days before your free period ends.</p>
+              <h4 className="font-semibold text-charcoal mb-2">When will I be charged after signing up?</h4>
+              <p className="text-gray-600">
+                For monthly plans, you'll be charged immediately and then every month after that.
+                For annual plans, you'll get 2 months free, and your first payment covers a full year of service.
+              </p>
             </div>
             <div>
               <h4 className="font-semibold text-charcoal mb-2">Can I cancel my premium subscription?</h4>

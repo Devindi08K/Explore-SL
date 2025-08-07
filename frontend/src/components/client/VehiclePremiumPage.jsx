@@ -92,7 +92,8 @@ const VehiclePremiumPage = () => {
               <div className="mb-4">
                 <h3 className="font-bold text-charcoal text-xl mb-2">Premium</h3>
                 <div className="text-3xl font-bold text-charcoal mb-2">LKR 500 <span className="text-sm font-normal text-gray-500">/month</span></div>
-                <p className="text-gray-600 text-sm">First 2 months free!</p>
+                {/* Remove this line about 2 months free */}
+                {/* <p className="text-gray-600 text-sm">First 2 months free!</p> */}
               </div>
               
               <ul className="mb-6 flex-grow space-y-2">
@@ -196,11 +197,13 @@ const VehiclePremiumPage = () => {
             </div>
           </div>
 
+          {/* Update or remove this promo block
           <div className="mt-8 bg-gold/10 rounded-lg p-4 border border-gold/20">
             <p className="text-center font-medium text-sm">
               <span className="text-gold">🎉 Special Launch Offer:</span> First 2 months free with any premium plan subscription!
             </p>
           </div>
+          */}
         </div>
 
         {/* Benefits Section */}

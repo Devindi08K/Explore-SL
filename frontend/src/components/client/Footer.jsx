@@ -20,13 +20,13 @@ const Footer = () => {
               Your trusted partner in discovering Sri Lanka. We connect travelers with authentic experiences and local expertise.
             </p>
             <div className="flex space-x-4 mt-4">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="Facebook">
+              <a href="https://facebook.com/slexplora" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="Facebook">
                 <FaFacebookF size={20} />
               </a>
-              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="X (Twitter)">
+              <a href="https://x.com/slexplora" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="X (Twitter)">
                 <FaTwitter size={20} /> {/* Still using the Twitter icon for now */}
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="Instagram">
+              <a href="https://instagram.com/slexplora" target="_blank" rel="noopener noreferrer" className="text-cream/80 hover:text-gold transition" aria-label="Instagram">
                 <FaInstagram size={20} />
               </a>
             </div>
@@ -102,8 +102,8 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-center space-x-3 text-cream/80">
                 <FaEnvelope className="text-gold" />
-                <a href="mailto:slexplora@hotmail.com" className="hover:text-gold transition">
-                  slexplora@hotmail.com
+                <a href="mailto:info@slexplora.com" className="hover:text-gold transition">
+                  info@slexplora.com
                 </a>
               </li>
             </ul>

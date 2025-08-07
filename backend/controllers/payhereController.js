@@ -1,139 +1,142 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const crypto = require('crypto');
 const Payment = require('../models/Payment');
+const User = require('../models/User');
 const AffiliateLink = require('../models/affiliateLink');
 const Blog = require('../models/blog');
 const Tour = require('../models/Tour');
 const TourGuide = require('../models/TourGuide');
 const Vehicle = require('../models/Vehicle');
-const User = require('../models/User');
 
-// Store these values in .env file
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+// Initialize PayHere configuration
+const merchantId = process.env.PAYHERE_MERCHANT_ID;
+const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
+const returnUrl = process.env.PAYHERE_RETURN_URL || 'https://slexplora.com/payment/success';
+const cancelUrl = process.env.PAYHERE_CANCEL_URL || 'https://slexplora.com/payment/cancel';
+const notifyUrl = process.env.PAYHERE_NOTIFY_URL || 'https://api.slexplora.com/api/payments/payhere/notify';
+const payhereMode = process.env.PAYHERE_MODE || 'sandbox';
 
-// Create Stripe checkout session
-exports.createStripeCheckout = async (req, res) => {
+// Create PayHere checkout data
+exports.createPayhereCheckout = async (req, res) => {
   try {
-    const { serviceType, amount, description, itemId, customerName, customerEmail } = req.body;
+    const { serviceType, amount, description, itemId } = req.body;
+    
+    if (!serviceType || !amount || !description) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-    // 1. Create a unique order ID
-    const orderId = `STRIPE-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-
-    // 2. Create a pending payment record in your database
+    // Create a unique order ID
+    const orderId = `SLX-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    
+    // Create a pending payment record
     const payment = new Payment({
       userId: req.user._id,
       amount,
-      currency: 'lkr',
+      currency: 'LKR',
       orderId,
       serviceType,
       description,
       status: 'pending',
-      paymentMethod: 'stripe',
-      customerDetails: {
-        name: customerName || req.user.userName,
-        email: customerEmail || req.user.email,
-      },
+      paymentMethod: 'payhere',
       itemId: itemId || null,
     });
+    
     await payment.save();
-
-    // 3. Create the Stripe session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      customer_email: customerEmail,
-      line_items: [
-        {
-          price_data: {
-            currency: 'lkr',
-            product_data: {
-              name: description,
-            },
-            unit_amount: amount * 100, // Stripe uses cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${process.env.FRONTEND_URL}/payment/success?orderId=${orderId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
-      metadata: {
-        orderId, // Pass the orderId to the webhook
-        serviceType,
-        userId: req.user._id.toString(),
-        itemId: itemId || '',
-        description
-      },
+    
+    // Return the PayHere checkout data
+    res.json({
+      merchantId,
+      returnUrl,
+      cancelUrl, 
+      notifyUrl,
+      orderId,
+      itemsDescription: description,
+      amount,
+      currency: 'LKR',
+      firstName: req.user.firstName || req.user.userName || 'Customer',
+      lastName: req.user.lastName || '',
+      email: req.user.email,
+      phone: req.user.phone || '',
+      address: req.user.address || 'Sri Lanka',
+      city: req.user.city || 'Colombo',
+      country: 'Sri Lanka',
+      mode: payhereMode
     });
-
-    res.json({ url: session.url });
+    
   } catch (error) {
-    console.error('❌ Error creating Stripe checkout:', error);
-    return res.status(500).json({ error: 'Failed to initialize payment' });
+    console.error('Error creating PayHere checkout:', error);
+    res.status(500).json({ error: 'Failed to create payment' });
   }
 };
 
-// Handle Stripe webhook with improved logging
-exports.handleStripeWebhook = async (req, res) => {
-  console.log('🔔 Stripe webhook received!');
-  
-  const sig = req.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  
-  let event;
-  
+// Handle PayHere notification (IPN - Instant Payment Notification)
+exports.handleNotification = async (req, res) => {
   try {
-    event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
-    console.log('✅ Webhook signature verified. Event type:', event.type);
-  } catch (err) {
-    console.error(`❌ Webhook signature verification failed: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-  
-  // Handle the checkout.session.completed event
-  if (event.type === 'checkout.session.completed') {
-    console.log('💳 Processing checkout.session.completed event');
-    const session = event.data.object;
+    console.log('🔔 PayHere notification received:', req.body);
     
-    console.log('📊 Session metadata:', session.metadata);
+    const {
+      merchant_id,
+      order_id,
+      payment_id,
+      payhere_amount,
+      payhere_currency,
+      status_code,
+      md5sig
+    } = req.body;
     
-    const { orderId, serviceType, userId, itemId } = session.metadata;
+    // Verify the notification with MD5 signature
+    const localMd5Sig = crypto
+      .createHash('md5')
+      .update(
+        merchant_id + 
+        order_id + 
+        payhere_amount + 
+        payhere_currency + 
+        status_code + 
+        merchantSecret.toUpperCase()
+      )
+      .digest('hex')
+      .toUpperCase();
     
-    try {
-      // Find the payment by orderId
-      const payment = await Payment.findOne({ orderId });
-      
-      if (!payment) {
-        console.error('❌ Payment not found for orderId:', orderId);
-        return res.status(404).send('Payment not found');
-      }
-      
-      console.log('📝 Found payment, updating status...');
-      
-      // Update payment status
+    if (localMd5Sig !== md5sig) {
+      console.error('❌ Invalid MD5 signature from PayHere');
+      return res.status(400).send('Invalid signature');
+    }
+    
+    // Find the payment by order_id
+    const payment = await Payment.findOne({ orderId: order_id });
+    
+    if (!payment) {
+      console.error('❌ Payment not found for order_id:', order_id);
+      return res.status(404).send('Payment not found');
+    }
+    
+    // Update payment status based on PayHere status code
+    // 2 = Success
+    if (status_code === '2') {
       payment.status = 'completed';
-      payment.paymentId = session.payment_intent;
-      payment.paymentMethod = 'stripe';
+      payment.paymentId = payment_id;
       payment.updatedAt = new Date();
-      
       await payment.save();
-      console.log('✅ Payment status updated to completed');
       
       // Process the successful payment
       await processSuccessfulPayment(payment);
-      console.log('✅ Payment processing completed');
       
-      // Return a 200 response
-      return res.status(200).send({ received: true });
-    } catch (error) {
-      console.error('❌ Error processing Stripe webhook:', error);
-      return res.status(500).send('Error processing Stripe webhook');
+      console.log('✅ Payment completed successfully');
+    } 
+    // Other status codes: 0=Pending, -1=Canceled, -2=Failed, -3=Chargedback
+    else if (status_code === '-1' || status_code === '-2') {
+      payment.status = 'failed';
+      await payment.save();
+      console.log('❌ Payment failed or cancelled');
     }
-  } else {
-    console.log('ℹ️ Received event type:', event.type, '- not handling');
+    
+    // Always return 200 response for IPN
+    return res.status(200).send('OK');
+    
+  } catch (error) {
+    console.error('❌ Error processing PayHere notification:', error);
+    return res.status(500).send('Server error');
   }
-  
-  // Return a 200 response for other events
-  return res.status(200).send({ received: true });
 };
 
 // Check payment status by orderId
@@ -165,12 +168,11 @@ exports.checkPaymentStatus = async (req, res) => {
 // Process successful payment
 const processSuccessfulPayment = async (payment) => {
   try {
-    const { serviceType, userId, itemId, description } = payment;
+    const { serviceType, userId, itemId } = payment;
     const user = await User.findById(userId);
 
     switch (serviceType) {
       case 'sponsored_blog_post': {
-        payment.status = 'completed';
         payment.subscriptionDetails = {
           awaitingSubmission: true,
           submissionType: 'blog'
@@ -181,7 +183,6 @@ const processSuccessfulPayment = async (payment) => {
       }
 
       case 'tour_partnership': {
-        payment.status = 'completed';
         payment.subscriptionDetails = {
           awaitingSubmission: true,
           submissionType: 'tour'
@@ -201,9 +202,11 @@ const processSuccessfulPayment = async (payment) => {
           const endDate = new Date();
           
           if (serviceType === 'guide_premium_yearly') {
-            endDate.setMonth(endDate.getMonth() + 14); // 12 + 2 free
+            // 12 months for the yearly plan
+            endDate.setMonth(endDate.getMonth() + 12);
           } else {
-            endDate.setMonth(endDate.getMonth() + 3); // 1 + 2 free
+            // Just 1 month for monthly plan
+            endDate.setMonth(endDate.getMonth() + 1);
           }
           
           payment.subscriptionDetails = {
@@ -218,7 +221,7 @@ const processSuccessfulPayment = async (payment) => {
           guide.premiumLevel = 'standard';
           guide.analyticsEnabled = true;
           guide.featuredStatus = 'destination'; // Featured in destination pages by default
-          guide.needsReview = true; // Add this line to flag for admin review
+          guide.needsReview = true; 
           
           await guide.save();
           await payment.save();
@@ -228,8 +231,10 @@ const processSuccessfulPayment = async (payment) => {
           // Store the payment with a flag indicating we need to apply premium to the next guide registered
           payment.subscriptionDetails = {
             startDate: new Date(),
-            endDate: new Date(Date.now() + (serviceType === 'guide_premium_yearly' ? 14 : 3) * 30 * 24 * 60 * 60 * 1000),
-            isActive: true, // This is crucial
+            endDate: serviceType === 'guide_premium_yearly' 
+              ? new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000) // 12 months in milliseconds
+              : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),     // 1 month in milliseconds
+            isActive: true,
             plan: serviceType === 'guide_premium_yearly' ? 'yearly' : 'monthly',
             awaitingGuideRegistration: true
           };
@@ -239,7 +244,7 @@ const processSuccessfulPayment = async (payment) => {
         }
         break;
       }
-        
+      
       case 'vehicle_premium_monthly':
       case 'vehicle_premium_yearly': {
         console.log(`🔧 Processing ${serviceType} for user ${userId}`);
@@ -252,16 +257,18 @@ const processSuccessfulPayment = async (payment) => {
         const endDate = new Date();
         
         if (serviceType === 'vehicle_premium_yearly') {
-          endDate.setMonth(endDate.getMonth() + 14); // 12 + 2 free
+          // 12 months for the yearly plan
+          endDate.setMonth(endDate.getMonth() + 12);
         } else {
-          endDate.setMonth(endDate.getMonth() + 3); // 1 + 2 free
+          // Just 1 month for monthly plan
+          endDate.setMonth(endDate.getMonth() + 1);
         }
         
         // Create subscription details - ALWAYS set isActive to true
         payment.subscriptionDetails = {
           startDate,
           endDate,
-          isActive: true, // This is crucial - always set to true for completed payments
+          isActive: true,
           plan: serviceType === 'vehicle_premium_yearly' ? 'yearly' : 'monthly',
           vehicleIds: vehicles.map(v => v._id),
           awaitingVehicleRegistration: vehicles.length === 0
@@ -304,9 +311,10 @@ const processSuccessfulPayment = async (payment) => {
         const startDate = new Date();
         const endDate = new Date();
         if (serviceType === 'business_listing_yearly') {
-          endDate.setFullYear(endDate.getFullYear() + 1);
+          // Use 12 month pattern 
+          endDate.setMonth(endDate.getMonth() + 12);
         } else {
-          endDate.setMonth(endDate.getMonth() + 1);
+          endDate.setMonth(endDate.getMonth() + 1); // Just 1 month
         }
 
         payment.subscriptionDetails = {
@@ -314,7 +322,7 @@ const processSuccessfulPayment = async (payment) => {
           endDate,
           isActive: true,
           plan: serviceType === 'business_listing_yearly' ? 'yearly' : 'monthly',
-          awaitingSubmission: listings.length === 0 // Only set if no listings exist to upgrade
+          awaitingSubmission: listings.length === 0 
         };
 
         if (listings.length > 0) {
@@ -342,6 +350,52 @@ const processSuccessfulPayment = async (payment) => {
       default:
         console.log(`❓ No specific handling for service type: ${serviceType}`);
     }
+
+    // Send receipt email
+    const sendReceiptEmail = async (payment, user) => {
+      try {
+        const { sendEmail } = require('../utils/emailTransporter');
+        await sendEmail({
+          to: user.email,
+          subject: `SLExplora - Payment Receipt #${payment.orderId}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="color: #8B5A2B; margin-bottom: 5px;">Payment Receipt</h1>
+                <p style="color: #666; font-size: 14px;">Thank you for your purchase with SLExplora</p>
+              </div>
+              
+              <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <p><strong>Order ID:</strong> ${payment.orderId}</p>
+                <p><strong>Date:</strong> ${new Date(payment.createdAt).toLocaleString()}</p>
+                <p><strong>Amount:</strong> LKR ${payment.amount.toLocaleString()}</p>
+                <p><strong>Description:</strong> ${payment.description}</p>
+                <p><strong>Payment Method:</strong> PayHere</p>
+              </div>
+              
+              <div style="font-size: 12px; color: #666; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+                <p><strong>Merchant Information:</strong><br/>
+                SLExplora Ltd<br/>
+                Registration No: BRG12345678<br/>
+                123 Temple Road, Colombo 00300, Sri Lanka<br/>
+                Email: info@slexplora.com</p>
+                
+                <p><strong>Payment Data Policy:</strong><br/>
+                We retain transaction data for 7 years to comply with accounting regulations.
+                No full card details are stored on our servers. For more information, please see our
+                <a href="https://slexplora.com/privacy-policy">Privacy Policy</a>.</p>
+              </div>
+            </div>
+          `
+        });
+      } catch (error) {
+        console.error('Error sending receipt email:', error);
+        // Don't fail the payment process if email fails
+      }
+    };
+
+    // Call this after payment is marked complete
+    await sendReceiptEmail(payment, user);
   } catch (error) {
     console.error('❌ Error processing successful payment:', error);
     throw error;

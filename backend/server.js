@@ -6,31 +6,40 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require('path'); // Import the path module
+const payhereController = require('./controllers/payhereController'); // <-- Import payhereController
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001; // Ensure it's using 5001 consistently
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://slexplora.com', 'https://www.slexplora.com'] 
+    : 'http://localhost:5173',
+  credentials: true
 }));
-app.use(express.json()); // Regular JSON parsing for most routes
+
+// Special handling for Stripe webhooks to access raw body
+app.post('/api/payments/stripe/webhook', 
+  express.raw({ type: 'application/json' }), 
+  (req, res, next) => {
+    // Correctly handle raw body for Stripe
+    req.rawBody = req.body;
+    next();
+  },
+  require('./controllers/stripeController').handleStripeWebhook
+);
+
+// Special handling for PayHere webhook
+app.post('/api/payments/payhere/notify', express.json(), payhereController.handleNotification);
+
+// Regular express json parsing for all other routes
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Serve static files from the 'uploads' directory and its subdirectories
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Special handling for Stripe webhook (must be before the express.json middleware)
-app.post('/api/payments/stripe/webhook', 
-  express.raw({ type: 'application/json' }), 
-  (req, res, next) => {
-    req.rawBody = req.body; // Save raw body for Stripe signature verification
-    next();
-  },
-  require('./controllers/stripeController').handleStripeWebhook
-);
 
 // Import routes
 const authRoutes = require("./routes/auth");

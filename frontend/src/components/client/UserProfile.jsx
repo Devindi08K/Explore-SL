@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../utils/api';
+import { AuthContext } from '../../context/AuthContext';
 import { 
   FaUser, 
   FaEdit, 
@@ -26,7 +27,9 @@ import {
   FaMapMarkedAlt,
   FaBuilding,
   FaSyncAlt,
-  FaTrash
+  FaTrash,
+  FaCheckCircle,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 
 const UserProfile = () => {
@@ -291,8 +294,28 @@ const UserProfile = () => {
           
           {/* Premium Expiry */}
           {vehicle.premiumExpiry && (
-            <div className="mt-2 pt-2 border-t border-gold/20 text-xs text-gray-600">
-              Premium expires: {new Date(vehicle.premiumExpiry).toLocaleDateString()}
+            <div className="mt-2 pt-2 border-t border-gold/20 text-xs">
+              <span className={getDaysRemaining(vehicle.premiumExpiry) < 14 ? 'text-orange-600 font-medium' : 'text-gray-600'}>
+                Premium expires: {formatDate(vehicle.premiumExpiry)}
+                {getDaysRemaining(vehicle.premiumExpiry) < 14 && ` (${getDaysRemaining(vehicle.premiumExpiry)} days left)`}
+              </span>
+              
+              {/* Renewal Reminder */}
+              {needsRenewalSoon(vehicle.premiumExpiry) && (
+                <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-700 text-xs">
+                  <div className="flex items-center mb-1">
+                    <FaClock className="mr-1" />
+                    <span className="font-semibold">Renewal Reminder</span>
+                  </div>
+                  <p>Your premium subscription will expire soon. Renew now to maintain premium benefits without interruption.</p>
+                  <Link 
+                    to="/partnership/vehicle-premium" 
+                    className="mt-2 inline-block bg-orange-600 text-white px-3 py-1 rounded text-xs hover:bg-orange-700"
+                  >
+                    Renew Subscription
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -474,7 +497,24 @@ const UserProfile = () => {
           </div>
           {listing.premiumExpiry && (
             <div className="mt-2 pt-2 border-t border-gold/20 text-xs text-gray-600">
-              Premium expires: {new Date(listing.premiumExpiry).toLocaleDateString()}
+              Premium expires: {formatDate(listing.premiumExpiry)}
+              
+              {/* Renewal Reminder */}
+              {needsRenewalSoon(listing.premiumExpiry) && (
+                <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-700 text-xs">
+                  <div className="flex items-center mb-1">
+                    <FaClock className="mr-1" />
+                    <span className="font-semibold">Renewal Reminder</span>
+                  </div>
+                  <p>Your business listing premium will expire soon. Renew now to keep premium features active.</p>
+                  <Link 
+                    to="/partnership/business-premium" 
+                    className="mt-2 inline-block bg-orange-600 text-white px-3 py-1 rounded text-xs hover:bg-orange-700"
+                  >
+                    Renew Subscription
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -559,7 +599,24 @@ const UserProfile = () => {
           
           {guide.premiumExpiry && (
             <div className="mt-2 pt-2 border-t border-gold/20 text-xs text-gray-600">
-              Premium expires: {new Date(guide.premiumExpiry).toLocaleDateString()}
+              Premium expires: {formatDate(guide.premiumExpiry)}
+              
+              {/* Renewal Reminder */}
+              {needsRenewalSoon(guide.premiumExpiry) && (
+                <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-700 text-xs">
+                  <div className="flex items-center mb-1">
+                    <FaClock className="mr-1" />
+                    <span className="font-semibold">Renewal Reminder</span>
+                  </div>
+                  <p>Your tour guide premium subscription will expire soon. Renew now to maintain your premium benefits.</p>
+                  <Link 
+                    to="/partnership/tour-guide-premium" 
+                    className="mt-2 inline-block bg-orange-600 text-white px-3 py-1 rounded text-xs hover:bg-orange-700"
+                  >
+                    Renew Subscription
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -832,6 +889,54 @@ const UserProfile = () => {
     );
   };
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  const getDaysRemaining = (expiryDate) => {
+    const now = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry - now;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const needsRenewalSoon = (expiryDate) => {
+    const daysRemaining = getDaysRemaining(expiryDate);
+    return daysRemaining > 0 && daysRemaining <= 14; // Show renewal notice for subscriptions expiring in next 14 days
+  };
+
+  // Add the new countRenewalReminders function here
+  const countRenewalReminders = () => {
+    let count = 0;
+    
+    // Check vehicle subscriptions
+    vehicleSubmissions.forEach(vehicle => {
+      if (vehicle.isPremium && vehicle.premiumExpiry && needsRenewalSoon(vehicle.premiumExpiry)) {
+        count++;
+      }
+    });
+    
+    // Check tour guide subscriptions
+    tourGuideSubmissions.forEach(guide => {
+      if (guide.isPremium && guide.premiumExpiry && needsRenewalSoon(guide.premiumExpiry)) {
+        count++;
+      }
+    });
+    
+    // Check business listing subscriptions
+    affiliateSubmissions.forEach(listing => {
+      if (listing.isPremium && listing.premiumExpiry && needsRenewalSoon(listing.premiumExpiry)) {
+        count++;
+      }
+    });
+    
+    return count;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
@@ -921,6 +1026,29 @@ const UserProfile = () => {
         {/* Render Pending Actions */}
         {renderPendingActions()}
 
+        {/* Renewal Notifications */}
+        {countRenewalReminders() > 0 && (
+          <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-8 rounded-r-lg shadow-md">
+            <h4 className="font-bold text-orange-800">Subscription Renewal</h4>
+            <p className="text-sm text-orange-700 mt-1">
+              You have {countRenewalReminders()} premium subscription{countRenewalReminders() > 1 ? 's' : ''} expiring soon.
+            </p>
+            <div className="mt-3">
+              <Link to="#renewal-section" className="inline-block bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 text-sm font-semibold" onClick={() => {
+                setActiveTab('submissions');
+                setTimeout(() => {
+                  const renewalItems = document.querySelectorAll('.bg-orange-50.border-orange-200');
+                  if (renewalItems.length > 0) {
+                    renewalItems[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }, 100);
+              }}>
+                Review Expiring Subscriptions
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Enhanced Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="flex flex-col sm:flex-row border-b border-gray-200">
@@ -974,6 +1102,10 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-6">
                   <h2 className="font-semibold text-xl text-charcoal">Profile Information</h2>
+                  
+                  {/* Add the verification section here */}
+                  <EmailVerificationSection />
+                  
                   <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                     <div>
                       <label className="text-sm font-medium text-gray-600">Username</label>
@@ -1196,7 +1328,7 @@ const UserProfile = () => {
                       {blogSubmissions.map((blog) => (
                         <div key={blog._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-lg truncate" title={blog.title}>{blog.title}</h4>
+                            <h4 className="font-medium text-lg">{blog.title}</h4>
                             {blog.isSponsored && (
                               <span className="text-yellow-500" title="Sponsored">
                                 <FaCrown />
@@ -1406,7 +1538,7 @@ const UserProfile = () => {
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                         onClick={() => window.scrollTo(0, 0)}
                       >
-                        Submit a business
+                        Upgrade Business Listing
                       </Link>
                     </div>
                   </div>
@@ -1416,13 +1548,6 @@ const UserProfile = () => {
 
             {activeTab === 'payments' && (
               <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-semibold text-charcoal">Payment History</h2>
-                  <Link to="/partnership" className="bg-tan text-cream px-4 py-2 rounded-lg hover:bg-gold transition">
-                    View Partnership Options
-                  </Link>
-                </div>
-                
                 {paymentLoading ? (
                   <div className="flex justify-center items-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tan"></div>
@@ -1447,26 +1572,21 @@ const UserProfile = () => {
                               LKR {payment.amount.toLocaleString()}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {new Date(payment.createdAt).toLocaleDateString()}
+                              <div className="flex items-center space-x-4">
+                                {payment.subscriptionDetails?.endDate && (
+                                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                    Active Subscription
+                                    <span className="ml-2">
+                                      • Expires: {new Date(payment.subscriptionDetails.endDate).toLocaleDateString()}
+                                    </span>
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="text-sm text-gray-500">
+                                Order ID: {payment.orderId}
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            {/* Subscription badge */}
-                            {payment.subscriptionDetails?.endDate && (
-                              <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                                Active Subscription
-                                <span className="ml-2">
-                                  • Expires: {new Date(payment.subscriptionDetails.endDate).toLocaleDateString()}
-                                </span>
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div className="text-sm text-gray-500">
-                            Order ID: {payment.orderId}
                           </div>
                         </div>
                       </div>
@@ -1486,6 +1606,87 @@ const UserProfile = () => {
               </div>
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+const EmailVerificationSection = () => {
+  const [sending, setSending] = useState(false);
+  const [message, setMessage] = useState('');
+  const { user, setUser } = useContext(AuthContext); // Import this context at the top of the file
+  
+  const handleResendVerification = async () => {
+    try {
+      setSending(true);
+      setMessage('');
+      const response = await api.post('/auth/resend-verification');
+      setMessage(response.data.message || 'Verification email sent successfully');
+      
+      // Update user context if the email was verified
+      if (response.data.verified) {
+        setUser({
+          ...user,
+          emailVerified: true
+        });
+      }
+    } catch (error) {
+      setMessage('Failed to send verification email. Please try again later.');
+      console.error('Error resending verification email:', error);
+    } finally {
+      setSending(false);
+    }
+  };
+  
+  if (user?.emailVerified) {
+    return (
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start">
+          <FaCheckCircle className="text-green-500 mt-1 mr-3" />
+          <div>
+            <h3 className="font-medium text-green-800">Email Verified</h3>
+            <p className="text-sm text-green-700">Your email address has been verified.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start">
+        <FaExclamationTriangle className="text-yellow-500 mt-1 mr-3 hidden sm:block" />
+        <div className="flex-1">
+          <div className="flex items-center mb-2">
+            <FaExclamationTriangle className="text-yellow-500 mr-2 sm:hidden" />
+            <h3 className="font-medium text-yellow-800">Verify Your Email</h3>
+          </div>
+          <p className="text-sm text-yellow-700 mb-3">
+            We recommend verifying your email address. This ensures you can receive important notifications
+            and recover your account if needed.
+          </p>
+          {message && (
+            <div className={`text-sm mb-3 ${message.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>
+              {message}
+            </div>
+          )}
+          <button
+            onClick={handleResendVerification}
+            disabled={sending}
+            className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition text-sm flex items-center"
+          >
+            {sending ? (
+              <>
+                <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                Sending...
+              </>
+            ) : (
+              <>
+                <FaEnvelope className="mr-2" />
+                Send Verification Email
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

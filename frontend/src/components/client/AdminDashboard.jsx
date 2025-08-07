@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { 
   FaUsers, FaMapMarkedAlt, FaCar, FaUserTie, FaBlog, 
   FaLink, FaRoute, FaBuilding, FaCheck, FaTimes,
-  FaCreditCard, FaClock, FaChartLine, FaEdit
+  FaCreditCard, FaClock, FaChartLine, FaEdit, FaSync
 } from 'react-icons/fa';
 import api from '../../utils/api';
 
@@ -219,6 +219,36 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error completing payment:', error);
       alert('Failed to complete payment');
+    }
+  };
+
+  // Add this function to handle payment debugging
+  const handlePaymentDebug = async (orderId) => {
+    try {
+      // First check status directly
+      const statusResponse = await api.get(`/payments/payhere/status/${orderId}`);
+      console.log('Payment status check:', statusResponse.data);
+      
+      // Then try manual completion
+      const completeResponse = await api.post(`/payments/test/complete/${orderId}`);
+      console.log('Manual completion result:', completeResponse.data);
+      
+      alert('Payment processed successfully. Check console for details.');
+      fetchPayments();
+    } catch (error) {
+      console.error('Payment debug error:', error);
+      alert('Error processing payment: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
+  const handlePaymentReconciliation = async () => {
+    try {
+      const response = await api.post('/admin/payments/reconcile');
+      alert(`Reconciliation complete. Updated ${response.data.updatedCount} payments.`);
+      fetchPayments();
+    } catch (error) {
+      console.error('Payment reconciliation error:', error);
+      alert('Failed to reconcile payments');
     }
   };
 
@@ -545,6 +575,12 @@ const AdminDashboard = () => {
     </button>
   );
 
+  const handleViewPaymentDetails = (orderId) => {
+    // Currently this function doesn't exist
+    // Implement with proper security measures and avoid logging full payment details
+    window.open(`/admin/payments/view/${orderId}`, '_blank');
+  }
+
   return (
     <div className="min-h-screen bg-cream py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -636,40 +672,6 @@ const AdminDashboard = () => {
           />
         </div>
 
-        {/* Debug/Refresh Section - Remove this after testing */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-charcoal">Debug Payment Stats</h2>
-            <button
-              onClick={() => {
-                console.log('🔄 Manual refresh triggered');
-                fetchPayments();
-              }}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Refresh Payment Stats
-            </button>
-          </div>
-          <div className="mt-4 grid grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="font-medium">Total Payments:</p>
-              <p>{payments.length}</p>
-            </div>
-            <div>
-              <p className="font-medium">Completed:</p>
-              <p>{paymentStats.completedPayments}</p>
-            </div>
-            <div>
-              <p className="font-medium">Pending:</p>
-              <p>{paymentStats.pendingPayments}</p>
-            </div>
-            <div>
-              <p className="font-medium">Total Revenue:</p>
-              <p>LKR {paymentStats.totalRevenue.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-
         {/* Management Dashboard Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
           <h2 className="text-2xl font-semibold text-charcoal mb-4">
@@ -677,6 +679,60 @@ const AdminDashboard = () => {
           </h2>
           {renderPendingSubmissionsTable()}
         </div>
+
+        {/* Pending Payments Section - Newly Added */}
+        {paymentStats.pendingPayments > 0 && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-charcoal">Pending Payments</h2>
+              <button
+                onClick={handlePaymentReconciliation}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+              >
+                <FaSync className="mr-2" />
+                Reconcile Old Payments
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-gray-100 text-left">
+                    <th className="px-4 py-2">Order ID</th>
+                    <th className="px-4 py-2">Service</th>
+                    <th className="px-4 py-2">Amount</th>
+                    <th className="px-4 py-2">Date</th>
+                    <th className="px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.filter(p => p.status === 'pending').map(payment => (
+                    <tr key={payment._id} className="border-b">
+                      <td className="px-4 py-2 font-mono text-sm">{payment.orderId}</td>
+                      <td className="px-4 py-2">{payment.description}</td>
+                      <td className="px-4 py-2">LKR {payment.amount.toLocaleString()}</td>
+                      <td className="px-4 py-2">{new Date(payment.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-2">
+                        {/* Replace debug button with a more appropriate action for production */}
+                        <button
+                          onClick={() => handleViewPaymentDetails(payment.orderId)}
+                          className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 mr-2"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => handleCompletePayment(payment._id)}
+                          className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                        >
+                          Complete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

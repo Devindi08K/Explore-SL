@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const paymentController = require('../controllers/paymentController');
-const stripeController = require('../controllers/stripeController');
-const Payment = require('../models/Payment'); // Add this import
+const payhereController = require('../controllers/payhereController');
+const Payment = require('../models/Payment');
 
 // Regular payment routes
 router.get('/user', protect, paymentController.getUserPayments);
@@ -15,9 +15,10 @@ router.patch('/:paymentId/complete', protect, authorize(['admin']), paymentContr
 router.post('/test/make-premium/:vehicleId', protect, paymentController.makePremiumForTesting);
 router.post('/test/complete/:orderId', protect, paymentController.testCompletePayment);
 
-// Stripe specific routes
-router.post('/stripe/create-checkout', protect, stripeController.createStripeCheckout);
-router.get('/stripe/status/:orderId', stripeController.checkPaymentStatus);
+// PayHere specific routes
+router.post('/payhere/create-checkout', protect, payhereController.createPayhereCheckout);
+router.post('/payhere/notify', payhereController.handleNotification);
+router.get('/payhere/status/:orderId', payhereController.checkPaymentStatus);
 
 // Check for an unused payment voucher for a specific service
 router.get('/check-voucher/:serviceType', protect, async (req, res) => {

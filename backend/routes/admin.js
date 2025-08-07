@@ -10,6 +10,7 @@ const AffiliateLink = require("../models/affiliateLink");
 const Review = require("../models/Review"); // Add this line to fix the review deletion issue
 const Payment = require("../models/Payment"); // Import Payment model
 const mongoose = require("mongoose"); // Import mongoose for database status check
+const adminController = require("../controllers/adminController"); // Import the admin controller
 
 const router = express.Router();
 
@@ -586,6 +587,9 @@ router.patch("/business-listings/:id/restore-premium", protect, authorize(["admi
     res.status(500).json({ error: 'Error restoring premium status' });
   }
 });
+
+// Payment reconciliation endpoint
+router.post("/payments/reconcile", protect, authorize(["admin"]), adminController.reconcilePayments);
 
 
 module.exports = router;

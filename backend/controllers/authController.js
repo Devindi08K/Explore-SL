@@ -32,8 +32,9 @@ function isDisposableEmail(email) {
 // **REGISTER USER** (Fixed)
 exports.registerUser = async (req, res) => {
     try {
+        console.log("Starting registration process with simplified verification");
         const { userName, email, password } = req.body;
-        console.log("Registration attempt:", email); // Debug log
+        console.log("Registration attempt:", email);
 
         // Check if user already exists
         if (await User.findOne({ email })) {
@@ -57,36 +58,51 @@ exports.registerUser = async (req, res) => {
           return res.status(400).json({ error: "Disposable email addresses are not allowed." });
         }
 
-        // Create new user with default role 'regular'
+        // Create verification token
         const token = crypto.randomBytes(32).toString('hex');
+        
+        // Create user with auto-verification for login but track email verification separately
         const user = new User({
             userName,
             email,
             password,
             role: 'regular',
+            isVerified: true,           // Allow immediate login
+            emailVerified: false,        // Track actual email verification
             emailVerificationToken: token
         });
         await user.save();
-        console.log("Saved verification token:", token, "for user:", user.email);
 
-        // Send verification email
-        const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
-        await sendEmail({
-          to: user.email,
-          subject: 'Verify your email',
-          html: `
-            <h2>Welcome to SLExplora!</h2>
-            <p>Thank you for signing up. <strong>You must verify your email before you can log in.</strong></p>
-            <p>Click the button below to verify your email and activate your account:</p>
-            <a href="${verifyUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Verify Email</a>
-            <p>If you did not sign up, please ignore this email.</p>
-          `
+        // Attempt to send verification email
+        try {
+            const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+            console.log(`🔄 Sending verification email to: ${user.email}`);
+            
+            await sendEmail({
+                to: user.email,
+                subject: 'Verify your email address',
+                html: `
+                  <h2>Welcome to SLExplora!</h2>
+                  <p>Thank you for signing up. We recommend verifying your email address to ensure you receive important notifications and can recover your account if needed.</p>
+                  <p>Click the button below to verify your email:</p>
+                  <a href="${verifyUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Verify Email</a>
+                  <p>If you did not sign up, please ignore this email.</p>
+                  <p>Best regards,<br>The SLExplora Team<br><a href="https://slexplora.com">slexplora.com</a></p>
+                `
+            });
+            console.log(`✅ Verification email sent to ${user.email}`);
+        } catch (emailError) {
+            console.error("Error sending verification email:", emailError);
+            // Non-critical error, user can still log in
+        }
+
+        // Always return a consistent response (no dev-specific details)
+        res.status(201).json({ 
+            message: "Account created successfully! You can now log in. Please check your email to verify your address."
         });
 
-        res.status(201).json({ message: "User registered successfully. Please check your email to verify your account." });
-
     } catch (error) {
-        console.error("Registration error:", error); // Debug log
+        console.error("Registration error:", error);
         res.status(500).json({ error: error.message || "Registration failed" });
     }
 };
@@ -95,29 +111,38 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log(`🔄 Login attempt for email: ${email}`);
+        
         const user = await User.findOne({ email });
-
-        if (!user || !(await user.comparePassword(password))) {
+        if (!user) {
+            console.log(`❌ Login failed: No user found with email ${email}`);
             return res.status(401).json({ error: "Invalid credentials" });
         }
-
-        // Check if email is verified
-        if (!user.isVerified) {
-            return res.status(403).json({ error: "Please verify your email before logging in." });
+        
+        // We no longer check if email is verified
+        // Users can log in immediately
+        
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.log(`❌ Login failed: Invalid password for ${email}`);
+            return res.status(401).json({ error: "Invalid credentials" });
         }
-
+        
+        // Generate JWT token
         const token = generateToken(user);
-
+        console.log(`✅ Login successful for ${email}`);
+        
         res.json({
-            _id: user._id,
             token,
-            role: user.role,
+            id: user._id,
             userName: user.userName,
-            email: user.email
+            email: user.email,
+            role: user.role,
+            emailVerified: user.emailVerified // Include email verification status
         });
     } catch (error) {
         console.error("Login error:", error);
-        res.status(500).json({ error: "Login failed" });
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -183,16 +208,23 @@ exports.requestPasswordReset = async (req, res) => {
 
     // Send reset email
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
-    await sendEmail({
+    try {
+      await sendEmail({
         to: user.email,
-        subject: 'Password Reset',
+        subject: 'Password Reset Request',
         html: `
-            <h2>Password Reset Request</h2>
-            <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
-            <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Reset Password</a>
-            <p>If you did not request this, you can ignore this email.</p>
+          <h2>Password Reset Request</h2>
+          <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
+          <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Reset Password</a>
+          <p>If you did not request this, you can ignore this email.</p>
+          <p>Best regards,<br>The SLExplora Team<br><a href="https://slexplora.com">slexplora.com</a></p>
         `
-    });
+      });
+      console.log(`✅ Password reset email sent to ${user.email}`);
+    } catch (emailError) {
+      console.error("Error sending password reset email:", emailError);
+      // Consider how to handle this error - either show generic message or specific error
+    }
 
     res.json({ message: "If this email exists, a reset link has been sent." });
 };
@@ -219,13 +251,17 @@ exports.resetPassword = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
     const { token } = req.params;
     console.log("Verifying token:", token);
+    
     const user = await User.findOne({ emailVerificationToken: token });
     console.log("User found for token:", user);
+    
     if (!user) {
         return res.status(400).json({ error: "Invalid or expired token" });
     }
-    user.isVerified = true;
+    
+    user.emailVerified = true; // Set emailVerified to true
     user.emailVerificationToken = undefined;
     await user.save();
+    
     res.json({ message: "Email verified successfully" });
 };

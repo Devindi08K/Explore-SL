@@ -12,11 +12,7 @@ const getSessionId = () => {
 };
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api` : '/api',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-Session-ID': getSessionId() // Add session ID to each request
-  },
+  baseURL: import.meta.env.VITE_BACKEND_URL || 'https://api.slexplora.com',
   withCredentials: true
 });
 
@@ -27,6 +23,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+    config.headers['X-Session-ID'] = getSessionId(); // Add session ID to each request
     return config;
   },
   (error) => Promise.reject(error)

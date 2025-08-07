@@ -32,22 +32,30 @@ export const redirectToPayhere = (paymentDetails) => {
   const { 
     merchantId, 
     orderId, 
-    amount, 
-    currency, 
-    hash, 
-    returnUrl, 
-    cancelUrl, 
+    amount,
+    currency,
+    itemsDescription,
+    firstName,
+    lastName,
+    email,
+    phone,
+    address,
+    city,
+    country,
+    returnUrl,
+    cancelUrl,
     notifyUrl,
-    customerName,
-    customerEmail,
-    customerPhone,
-    itemDescription 
+    mode
   } = paymentDetails;
-
+  
   // Create a form to submit to PayHere
   const form = document.createElement('form');
   form.method = 'POST';
-  form.action = 'https://sandbox.payhere.lk/pay/checkout'; // Change to 'https://www.payhere.lk/pay/checkout' for production
+  
+  // Set the correct PayHere URL based on mode
+  form.action = mode === 'live' 
+    ? 'https://www.payhere.lk/pay/checkout'
+    : 'https://sandbox.payhere.lk/pay/checkout';
   
   // Add all required fields
   const addField = (name, value) => {
@@ -64,23 +72,21 @@ export const redirectToPayhere = (paymentDetails) => {
   addField('cancel_url', cancelUrl);
   addField('notify_url', notifyUrl);
   addField('order_id', orderId);
-  addField('items', itemDescription || 'Tourism Services');
+  addField('items', itemsDescription);
   addField('currency', currency);
   addField('amount', amount);
   
   // Customer details
-  addField('first_name', customerName?.split(' ')[0] || '');
-  addField('last_name', customerName?.split(' ').slice(1).join(' ') || '');
-  addField('email', customerEmail);
-  addField('phone', customerPhone);
-  addField('address', 'Sri Lanka');
-  addField('city', 'Colombo');
-  addField('country', 'Sri Lanka');
+  addField('first_name', firstName);
+  addField('last_name', lastName);
+  addField('email', email);
+  addField('phone', phone || '0771234567'); // PayHere requires a phone number
+  addField('address', address);
+  addField('city', city);
+  addField('country', country);
   
-  // Hash value
-  addField('hash', hash);
-  
-  // Add the form to the body and submit it
+  // Append the form to the body and submit it
   document.body.appendChild(form);
   form.submit();
+  document.body.removeChild(form);
 };

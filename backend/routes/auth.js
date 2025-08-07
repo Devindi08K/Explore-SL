@@ -3,6 +3,8 @@ const { registerUser, loginUser, logoutUser, checkAuth, getCurrentUser, generate
 const passport = require('passport');
 const User = require('../models/User'); // Make sure to import the User model
 const { protect } = require('../middleware/authMiddleware'); // Import the protect middleware
+const sendEmail = require('../utils/emailTransporter'); // Correct import
+const crypto = require('crypto'); // Import crypto for token generation
 
 const router = express.Router();
 
@@ -21,7 +23,7 @@ router.get('/google/callback',
   (req, res) => {
     try {
       const token = generateToken(req.user);
-      res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
+      res.redirect(`https://slexplora.com/auth/callback?token=${token}`);
     } catch (error) {
       console.error('OAuth callback error:', error);
       res.redirect('http://localhost:5173/login?error=oauth_failed');
@@ -54,5 +56,144 @@ router.post('/reset-password/:token', resetPassword);
 
 // Verify email route
 router.get('/verify-email/:token', verifyEmail);
+
+// Resend verification email - accessible when logged in
+router.post('/resend-verification', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    if (user.emailVerified) {
+      return res.json({ message: "Your email is already verified." });
+    }
+    
+    // Generate a new token
+    const token = crypto.randomBytes(32).toString('hex');
+    user.emailVerificationToken = token;
+    await user.save();
+    
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+    
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify your email address',
+        html: `
+          <h2>Email Verification</h2>
+          <p>Please click the button below to verify your email address:</p>
+          <a href="${verifyUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Verify Email</a>
+          <p>If you didn't request this, you can ignore this email.</p>
+        `
+      });
+      
+      res.json({ message: "Verification email has been sent. Please check your inbox." });
+    } catch (emailError) {
+      console.error("Error sending verification email:", emailError);
+      res.status(500).json({ 
+        error: "Unable to send verification email. Please try again later." 
+      });
+    }
+  } catch (error) {
+    console.error("Error in resend verification:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Test email sending
+router.post('/test-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email address is required' });
+    }
+    
+    console.log(`🧪 Testing email sending to ${email}`);
+    
+    const result = await sendEmail({
+      to: email,
+      subject: 'Test Email from SLExplora',
+      html: `
+        <h1>This is a test email</h1>
+        <p>If you received this, email sending is working correctly.</p>
+        <p>Timestamp: ${new Date().toISOString()}</p>
+      `
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Test email sent successfully', 
+      result 
+    });
+  } catch (error) {
+    console.error('Test email error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to send test email' 
+    });
+  }
+});
+
+// Test email with custom domain
+router.post('/test-domain-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email address is required' });
+    }
+    
+    console.log(`🧪 Testing custom domain email to: ${email}`);
+    
+    const result = await sendEmail({
+      to: email,
+      subject: 'Test Email from SLExplora',
+      html: `
+        <h1>This is a test email from SLExplora</h1>
+        <p>If you received this, your custom domain email configuration is working correctly.</p>
+        <p>Timestamp: ${new Date().toISOString()}</p>
+        <p>Best regards,<br>The SLExplora Team<br><a href="https://slexplora.com">slexplora.com</a></p>
+      `
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Custom domain test email sent successfully', 
+      result 
+    });
+  } catch (error) {
+    console.error('Custom domain test email error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to send test email' 
+    });
+  }
+});
+
+// Development-only route to verify users without email
+if (process.env.NODE_ENV !== 'production') {
+    router.post('/dev-verify', async (req, res) => {
+        try {
+            const { email } = req.body;
+            if (!email) {
+                return res.status(400).json({ error: 'Email is required' });
+            }
+            
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            
+            user.isVerified = true;
+            await user.save();
+            
+            res.json({ message: 'User verified for development purposes' });
+        } catch (error) {
+            console.error('Error in dev verification:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+}
 
 module.exports = router;

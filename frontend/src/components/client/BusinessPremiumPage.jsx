@@ -116,13 +116,6 @@ const BusinessPremiumPage = () => {
               </button>
             </div>
           </div>
-          
-          {/* Add a special promotion notice */}
-          <div className="mt-8 bg-gold/10 rounded-lg p-4 border border-gold/20">
-            <p className="text-center font-medium text-sm">
-              <span className="text-gold">🎉 Special Launch Offer:</span> First month free with any premium plan subscription!
-            </p>
-          </div>
         </div>
 
         {/* Benefits Section - MOVED AFTER PRICING */}
