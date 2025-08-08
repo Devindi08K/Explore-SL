@@ -53,15 +53,19 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/user-requests', userRequestsRoutes);
 
+// Add this to your server.js file
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'SLExplora API is running' });
+});
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', message: 'API is working properly' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
-});
-
-// Health check endpoint for Vercel
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'SLExplora API is running' });
 });
 
 // Connect to MongoDB
