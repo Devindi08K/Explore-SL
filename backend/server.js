@@ -81,5 +81,5 @@ mongoose.connect(process.env.MONGO_URI, {
     console.error("MongoDB connection error:", err);
 });
 
-// Export for Vercel serverless deployment
+// For Vercel serverless functions, we need to export the app
 module.exports = app;

@@ -22,7 +22,7 @@
       "dest": "server.js"
     },
     {
-      "src": "/uploads/(.*)",
+      "src": "/(.*)",
       "dest": "server.js"
     }
   ]
