@@ -9,13 +9,11 @@ const path = require('path'); // Import the path module
 const payhereController = require('./controllers/payhereController'); // <-- Import payhereController
 
 const app = express();
-const PORT = process.env.PORT || 5001; // Ensure it's using 5001 consistently
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://slexplora.com', 'https://www.slexplora.com'] 
-    : 'http://localhost:5173',
+  origin: ['https://slexplora.com', 'https://www.slexplora.com'],
   credentials: true
 }));
 
@@ -80,4 +78,6 @@ mongoose.connect(process.env.MONGO_URI, {
     console.log("Connected to MongoDB");
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 })
-.catch((error) => console.error("Error connecting to MongoDB:", error));
+.catch((err) => {
+    console.error("MongoDB connection error:", err);
+});
