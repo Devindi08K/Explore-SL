@@ -62,16 +62,15 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'healthy', message: 'API is working properly' });
 });
 
-// Add this near the top of your server.js file, after importing express
-// const path = require('path');
-
-// Add this with your other middleware
+// Replace the current favicon handler with this
 app.get('/favicon.ico', (req, res) => {
-  // Either serve a favicon if you have one
-  res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
-  
-  // Or just send a 204 No Content status to stop the browser from requesting it again
-  // res.status(204).end();
+  // Just send a 204 No Content status to stop the browser from requesting it again
+  res.status(204).end();
+});
+
+// Add another handler for favicon.png (browsers may request either)
+app.get('/favicon.png', (req, res) => {
+  res.status(204).end();
 });
 
 // Error handling middleware
