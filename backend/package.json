@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "echo 'Building backend...'"
+    "build": "npm install"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +35,6 @@
     "nodemon": "^2.0.22"
   },
   "engines": {
-    "node": ">=14.x <17"
+    "node": "16.x"
   }
 }
