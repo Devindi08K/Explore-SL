@@ -1,7 +1,8 @@
 require("dotenv").config();
 require('./config/passport');
-const { MongooseServerless } = require('mongoose-serverless');
-const mongoose = new MongooseServerless();
+
+// Use regular mongoose instead of mongoose-serverless (which is for Vercel)
+const mongoose = require("mongoose");
 
 const express = require("express");
 const cors = require("cors");
@@ -17,7 +18,7 @@ app.use(cors({
   credentials: true
 }));
 
-// Special handling for PayHere webhook
+// Special handling for PayHere webhook - keep this BEFORE other middleware
 app.post('/api/payments/payhere/notify', express.json(), payhereController.handleNotification);
 
 // Regular express json parsing for all other routes
@@ -25,7 +26,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve static files from the 'uploads' directory and its subdirectories
+// Serve static files from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import routes
@@ -41,6 +42,16 @@ const reviewRoutes = require('./routes/review');
 const paymentRoutes = require('./routes/paymentRoutes');
 const userRequestsRoutes = require('./routes/userRequestsRoutes');
 
+// Handle favicon requests
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'SLExplora API is running' });
+});
+
 // Mount routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tour-guides", tourGuideRoutes);
@@ -54,47 +65,29 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/user-requests', userRequestsRoutes);
 
-// Add this to your server.js file
+// Base route
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'SLExplora API is running' });
-});
-
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', message: 'API is working properly' });
-});
-
-// Replace the current favicon handler with this
-app.get('/favicon.ico', (req, res) => {
-  // Just send a 204 No Content status to stop the browser from requesting it again
-  res.status(204).end();
-});
-
-// Add another handler for favicon.png (browsers may request either)
-app.get('/favicon.png', (req, res) => {
-  res.status(204).end();
+  res.send('SLExplora API is running. Visit /api/health for status.');
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ error: 'Something went wrong!', details: err.message });
 });
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
 .then(() => {
-    console.log("Connected to MongoDB");
-    // If not running on Vercel, start the server
-    if (process.env.NODE_ENV !== 'production') {
-      const PORT = process.env.PORT || 5001;
-      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-    }
+  console.log("Connected to MongoDB");
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 })
 .catch((err) => {
-    console.error("MongoDB connection error:", err);
+  console.error("MongoDB connection error:", err);
 });
 
 // For Vercel serverless functions, we need to export the app
