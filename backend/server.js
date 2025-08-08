@@ -1,5 +1,6 @@
 require("dotenv").config();
 require('./config/passport');
+require('mongodb-aws-driver').configure({ mongoose: require('mongoose') });
 
 const express = require("express");
 const mongoose = require("mongoose");
