@@ -1,9 +1,9 @@
 require("dotenv").config();
 require('./config/passport');
-require('mongodb-aws-driver').configure({ mongoose: require('mongoose') });
+const { MongooseServerless } = require('mongoose-serverless');
+const mongoose = new MongooseServerless();
 
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require('path');
