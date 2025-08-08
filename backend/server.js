@@ -1,32 +1,20 @@
-require("dotenv").config(); // <-- Move this to the very top!
-require('./config/passport'); // <-- Make sure this is at the top, before routes
+require("dotenv").config();
+require('./config/passport');
 
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require('path'); // Import the path module
-const payhereController = require('./controllers/payhereController'); // <-- Import payhereController
+const path = require('path');
+const payhereController = require('./controllers/payhereController');
 
 const app = express();
-const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-  origin: ['https://slexplora.com', 'https://www.slexplora.com'],
+  origin: ['https://slexplora.com', 'https://www.slexplora.com', 'http://localhost:3000'],
   credentials: true
 }));
-
-// Special handling for Stripe webhooks to access raw body
-app.post('/api/payments/stripe/webhook', 
-  express.raw({ type: 'application/json' }), 
-  (req, res, next) => {
-    // Correctly handle raw body for Stripe
-    req.rawBody = req.body;
-    next();
-  },
-  require('./controllers/stripeController').handleStripeWebhook
-);
 
 // Special handling for PayHere webhook
 app.post('/api/payments/payhere/notify', express.json(), payhereController.handleNotification);
@@ -51,6 +39,7 @@ const affiliateLinksRoute = require("./routes/affiliateLinksRoute");
 const reviewRoutes = require('./routes/review');
 const paymentRoutes = require('./routes/paymentRoutes');
 const userRequestsRoutes = require('./routes/userRequestsRoutes');
+
 // Mount routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tour-guides", tourGuideRoutes);
@@ -63,10 +52,16 @@ app.use("/api/affiliate-links", affiliateLinksRoute);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/user-requests', userRequestsRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// Health check endpoint for Vercel
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'SLExplora API is running' });
 });
 
 // Connect to MongoDB
@@ -76,8 +71,15 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => {
     console.log("Connected to MongoDB");
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    // If not running on Vercel, start the server
+    if (process.env.NODE_ENV !== 'production') {
+      const PORT = process.env.PORT || 5001;
+      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    }
 })
 .catch((err) => {
     console.error("MongoDB connection error:", err);
 });
+
+// Export for Vercel serverless deployment
+module.exports = app;
