@@ -40,7 +40,7 @@ app.use(cors({
 }));
 
 // Special handling for PayHere webhook - keep this BEFORE other middleware
-app.post('/api/payments/payhere/notify', express.json(), payhereController.handleNotification);
+app.post('/payments/payhere/notify', express.json(), payhereController.handleNotification);
 
 // Regular express json parsing for all other routes
 app.use(express.json());
@@ -74,17 +74,17 @@ app.get('/api/health', (req, res) => {
 });
 
 // Mount routes
-app.use("/api/auth", authRoutes);
-app.use("/api/tour-guides", tourGuideRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/vehicles", vehicleRoutes);
-app.use("/api/blogs", blogRoutes);
-app.use("/api/tours", tourRoutes);
-app.use("/api/destinations", destinationRoutes);
-app.use("/api/affiliate-links", affiliateLinksRoute);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/user-requests', userRequestsRoutes);
+app.use("/auth", authRoutes);
+app.use("/tour-guides", tourGuideRoutes);
+app.use("/admin", adminRoutes);
+app.use("/vehicles", vehicleRoutes);
+app.use("/blogs", blogRoutes);
+app.use("/tours", tourRoutes);
+app.use("/destinations", destinationRoutes);
+app.use("/affiliate-links", affiliateLinksRoute);
+app.use('/reviews', reviewRoutes);
+app.use('/payments', paymentRoutes);
+app.use('/user-requests', userRequestsRoutes);
 
 // Base route
 app.get('/', (req, res) => {
