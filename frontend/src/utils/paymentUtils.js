@@ -44,7 +44,7 @@ export const redirectToPayhere = (paymentDetails) => {
     country,
     returnUrl,
     cancelUrl,
-    notifyUrl,
+    notifyUrl, // This should be /payments/payhere/notify not /api/payments/payhere/notify
     mode
   } = paymentDetails;
   

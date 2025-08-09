@@ -11,8 +11,9 @@ const getSessionId = () => {
   return sessionId;
 };
 
+// Create API instance without /api prefix
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || 'https://api.slexplora.com',
+  baseURL: import.meta.env.VITE_BACKEND_URL || 'https://explore-sl.onrender.com',
   withCredentials: true
 });
 
@@ -44,7 +45,6 @@ api.interceptors.response.use(
         localStorage.removeItem('token');
         
         // Force a redirect to the login page.
-        // This is more reliable than using navigate() from outside a component.
         window.location.href = '/login?session_expired=true';
       }
     }
