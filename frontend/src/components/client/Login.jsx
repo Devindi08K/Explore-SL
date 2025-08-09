@@ -10,6 +10,8 @@ const Login = ({ onLoginSuccess }) => {
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
     const [showResendVerification, setShowResendVerification] = useState(false);
+    const [showPassword, setShowPassword] = useState(false); // Added
+    const [loading, setLoading] = useState(false); // Added
     const { setCurrentUser } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -54,18 +56,19 @@ const Login = ({ onLoginSuccess }) => {
     };
 
     const handleSocialLogin = (provider) => {
-        window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/${provider}`;
+        // Corrected URL to remove /api prefix
+        window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/${provider}`;
     };
 
-    const handleResendVerification = async (email) => {
-        if (!email) {
+    const handleResendVerification = async (userEmail) => {
+        if (!userEmail) {
             setError("Please enter your email address first");
             return;
         }
         
         try {
             setLoading(true);
-            const response = await api.post("/auth/resend-verification", { email });
+            const response = await api.post("/auth/resend-verification", { email: userEmail });
             
             // Check for development link
             if (response.data.devVerificationLink) {
@@ -187,11 +190,6 @@ const Login = ({ onLoginSuccess }) => {
                         </div>
                     </div>
 
-                    <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-charcoal">Welcome Back</h1>
-                        <p className="text-gray-600 mt-2">Log in to continue your journey with SLExplora.</p>
-                    </div>
-
                     {error && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
                             <span className="block sm:inline">{error}</span>
@@ -201,7 +199,7 @@ const Login = ({ onLoginSuccess }) => {
                     {showResendVerification && (
                         <div className="text-center mb-6">
                             <button
-                                onClick={() => handleResendVerification(formData.email)}
+                                onClick={() => handleResendVerification(email)}
                                 disabled={loading}
                                 className="w-full bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 transition font-semibold flex items-center justify-center"
                             >
