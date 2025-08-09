@@ -103,7 +103,7 @@ const Footer = () => {
               <li className="flex items-center space-x-3 text-cream/80">
                 <FaEnvelope className="text-gold" />
                 <a href="mailto:info@slexplora.com" className="hover:text-gold transition">
-                  info@slexplora.com
+                  slexplora@hotmail.com
                 </a>
               </li>
             </ul>
