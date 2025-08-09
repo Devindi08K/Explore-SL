@@ -1620,7 +1620,11 @@ const EmailVerificationSection = () => {
     try {
       setSending(true);
       setMessage('');
-      const response = await api.post('/auth/resend-verification');
+      
+      // Get email from user context or profile
+      const email = user?.email || profile?.email;
+      
+      const response = await api.post('/auth/resend-verification', { email });
       setMessage(response.data.message || 'Verification email sent successfully');
       
       // Update user context if the email was verified

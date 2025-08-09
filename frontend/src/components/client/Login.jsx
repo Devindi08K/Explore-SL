@@ -77,12 +77,13 @@ const Login = ({ onLoginSuccess }) => {
                     </>
                 );
             } else {
-                setSuccessMessage("Verification email has been resent. Please check your inbox.");
+                setSuccessMessage("Verification email has been sent. Please check your inbox.");
             }
             
             setError("");
         } catch (err) {
-            setError(err.response?.data?.error || "Failed to resend verification email");
+            console.error("Error resending verification:", err);
+            setError("Failed to resend verification email. Please try again later.");
         } finally {
             setLoading(false);
         }

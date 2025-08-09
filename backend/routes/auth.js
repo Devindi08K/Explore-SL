@@ -57,13 +57,24 @@ router.post('/reset-password/:token', resetPassword);
 // Verify email route
 router.get('/verify-email/:token', verifyEmail);
 
-// Resend verification email - accessible when logged in
-router.post('/resend-verification', protect, async (req, res) => {
+// Resend verification email - accessible both logged in and logged out
+router.post('/resend-verification', async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const { email } = req.body;
+    let user;
+    
+    // If no email in request body but user is logged in, use their email
+    if (!email && req.user) {
+      user = await User.findById(req.user._id);
+    } else if (email) {
+      user = await User.findOne({ email });
+    } else {
+      return res.status(400).json({ error: "Email is required" });
+    }
     
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      // Don't reveal if user exists or not for security
+      return res.json({ message: "If this email exists, a verification link has been sent." });
     }
     
     if (user.emailVerified) {
@@ -89,9 +100,22 @@ router.post('/resend-verification', protect, async (req, res) => {
         `
       });
       
-      res.json({ message: "Verification email has been sent. Please check your inbox." });
+      // If in development, provide a direct verification link
+      let response = { message: "Verification email has been sent. Please check your inbox." };
+      if (process.env.NODE_ENV !== 'production') {
+        response.devVerificationLink = `${process.env.BACKEND_URL}/auth/dev-verify-direct/${token}`;
+      }
+      
+      res.json(response);
     } catch (emailError) {
       console.error("Error sending verification email:", emailError);
+      // Log the detailed error for debugging
+      console.error("Detailed error:", {
+        name: emailError.name,
+        message: emailError.message,
+        stack: emailError.stack
+      });
+      
       res.status(500).json({ 
         error: "Unable to send verification email. Please try again later." 
       });
@@ -101,6 +125,28 @@ router.post('/resend-verification', protect, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// Add a direct verification endpoint for development
+if (process.env.NODE_ENV !== 'production') {
+  router.get('/dev-verify-direct/:token', async (req, res) => {
+    try {
+      const { token } = req.params;
+      const user = await User.findOne({ emailVerificationToken: token });
+      
+      if (!user) {
+        return res.send('Invalid or expired token');
+      }
+      
+      user.emailVerified = true;
+      user.emailVerificationToken = undefined;
+      await user.save();
+      
+      res.send('Email verified successfully! You can now close this page and log in.');
+    } catch (error) {
+      res.send('Error verifying email: ' + error.message);
+    }
+  });
+}
 
 // Test email sending
 router.post('/test-email', async (req, res) => {

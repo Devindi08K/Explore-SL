@@ -74,7 +74,12 @@ const sendEmail = async ({ to, subject, html }) => {
       responseCode: err.responseCode,
     });
     
-    throw err;
+    // Don't throw an error - instead return a standardized error object
+    return {
+      error: true,
+      message: err.message || 'Email sending failed',
+      details: err
+    };
   }
 };
 
