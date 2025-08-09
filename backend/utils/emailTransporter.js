@@ -18,13 +18,15 @@ const sendEmail = async ({ to, subject, html }) => {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const fromAddress = 'SLExplora <slexplora@hotmail.com>';
+    // Change the "from" address to use Resend's default domain
+    const fromAddress = 'SLExplora <noreply@on.resend.com>';
 
     const { data, error } = await resend.emails.send({
       from: fromAddress,
       to,
       subject,
       html,
+      // This ensures that if a user replies, it goes to your actual email
       reply_to: 'slexplora@hotmail.com'
     });
 
