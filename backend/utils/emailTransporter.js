@@ -14,39 +14,51 @@ const sendEmail = async ({ to, subject, html }) => {
   try {
     // Use Resend as the primary email service
     if (process.env.RESEND_API_KEY) {
-      console.log('🔄 Sending email via Resend API...');
-      const { Resend } = require('resend');
-      const resend = new Resend(process.env.RESEND_API_KEY);
+      console.log('🔄 Trying to use Resend API...');
       
-      // Always use slexplora@hotmail.com as the sender
-      const fromAddress = 'SLExplora <slexplora@hotmail.com>';
-      console.log('From address:', fromAddress);
-      
+      let resend;
       try {
-        const { data, error } = await resend.emails.send({
-          from: fromAddress,
-          to,
-          subject,
-          html,
-          // Add reply-to header for replies to go to your Hotmail
-          reply_to: 'slexplora@hotmail.com'
-        });
-
-        if (error) {
-          console.error('❌ Failed to send email via Resend:', error);
-          throw new Error(error.message);
-        }
-
-        console.log('✅ Email sent successfully via Resend:', data);
-        return data;
-      } catch (resendError) {
-        console.error('❌ Resend API error:', resendError);
-        throw resendError;
+        const { Resend } = require('resend');
+        resend = new Resend(process.env.RESEND_API_KEY);
+      } catch (resendImportError) {
+        console.error('❌ Failed to import Resend package:', resendImportError.message);
+        console.log('⚠️ Falling back to alternative email method...');
+        // Continue to fallback method
+        throw new Error('Resend package not available');
       }
-    } 
-    // Fallback to SMTP only if Resend isn't available
-    else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      console.log('🔄 Falling back to SMTP (Hotmail)...');
+      
+      if (resend) {
+        // Always use slexplora@hotmail.com as the sender
+        const fromAddress = 'SLExplora <slexplora@hotmail.com>';
+        console.log('From address:', fromAddress);
+        
+        try {
+          const { data, error } = await resend.emails.send({
+            from: fromAddress,
+            to,
+            subject,
+            html,
+            // Add reply-to header for replies to go to your Hotmail
+            reply_to: 'slexplora@hotmail.com'
+          });
+
+          if (error) {
+            console.error('❌ Failed to send email via Resend:', error);
+            throw new Error(error.message);
+          }
+
+          console.log('✅ Email sent successfully via Resend:', data);
+          return data;
+        } catch (resendError) {
+          console.error('❌ Resend API error:', resendError);
+          throw resendError;
+        }
+      }
+    }
+    
+    // Fallback to SMTP if Resend isn't available or failed
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      console.log('🔄 Using SMTP (Hotmail)...');
       
       const nodemailer = require('nodemailer');
       

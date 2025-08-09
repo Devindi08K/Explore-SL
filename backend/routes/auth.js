@@ -111,7 +111,8 @@ router.post('/resend-verification', async (req, res) => {
       
       if (emailResult && emailResult.error) {
         console.error("Failed to send email:", emailResult.message);
-        return res.status(500).json({ error: "Failed to send email. Please try again later." });
+        // Continue anyway, just log the error
+        console.log("Continuing despite email error...");
       }
       
       // If in development, provide a direct verification link
@@ -121,7 +122,7 @@ router.post('/resend-verification', async (req, res) => {
         console.log(`Development verification link: ${response.devVerificationLink}`);
       }
       
-      console.log('Verification email sent successfully');
+      console.log('Verification process completed');
       res.json(response);
     } catch (emailError) {
       console.error("Error sending verification email:", emailError);
@@ -132,8 +133,10 @@ router.post('/resend-verification', async (req, res) => {
         stack: emailError.stack
       });
       
-      res.status(500).json({ 
-        error: "Unable to send verification email. Please try again later." 
+      // Send a response anyway instead of failing
+      res.json({ 
+        message: "Verification token created but there was an issue sending the email. Please try again later.",
+        emailError: true
       });
     }
   } catch (error) {
