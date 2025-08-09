@@ -12,9 +12,36 @@ const sendEmail = async ({ to, subject, html }) => {
   console.log('=============================================');
 
   try {
-    // Use Hotmail SMTP as primary method since PayHere integration requires a deployed site
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      console.log('🔄 Sending email via SMTP (Hotmail)...');
+    // Use Resend as the primary email service
+    if (process.env.RESEND_API_KEY) {
+      console.log('🔄 Sending email via Resend API...');
+      const { Resend } = require('resend');
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      // Always use slexplora@hotmail.com as the sender
+      const fromAddress = 'SLExplora <slexplora@hotmail.com>';
+      console.log('From address:', fromAddress);
+      
+      const { data, error } = await resend.emails.send({
+        from: fromAddress,
+        to,
+        subject,
+        html,
+        // Add reply-to header for replies to go to your Hotmail
+        reply_to: 'slexplora@hotmail.com'
+      });
+
+      if (error) {
+        console.error('❌ Failed to send email via Resend:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('✅ Email sent successfully via Resend:', data);
+      return data;
+    } 
+    // Fallback to SMTP only if Resend isn't available
+    else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      console.log('🔄 Falling back to SMTP (Hotmail)...');
       
       const nodemailer = require('nodemailer');
       
@@ -29,7 +56,7 @@ const sendEmail = async ({ to, subject, html }) => {
       });
       
       const result = await transporter.sendMail({
-        from: process.env.EMAIL_FROM || 'SLExplora <slexplora@hotmail.com>',
+        from: 'SLExplora <slexplora@hotmail.com>',
         to,
         subject,
         html,
@@ -37,29 +64,6 @@ const sendEmail = async ({ to, subject, html }) => {
       
       console.log('✅ Email sent successfully via SMTP:', result.messageId);
       return result;
-    } 
-    // Fallback to Resend if SMTP credentials aren't available
-    else if (process.env.RESEND_API_KEY) {
-      console.log('🔄 Falling back to Resend API...');
-      const { Resend } = require('resend');
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      
-      const fromAddress = process.env.EMAIL_FROM || 'SLExplora <info@slexplora.com>';
-      
-      const { data, error } = await resend.emails.send({
-        from: fromAddress,
-        to,
-        subject,
-        html,
-      });
-
-      if (error) {
-        console.error('❌ Failed to send email via Resend:', error);
-        throw new Error(error.message);
-      }
-
-      console.log('✅ Email sent successfully via Resend:', data);
-      return data;
     } else {
       throw new Error('No email configuration available');
     }
@@ -74,7 +78,7 @@ const sendEmail = async ({ to, subject, html }) => {
       responseCode: err.responseCode,
     });
     
-    // Don't throw an error - instead return a standardized error object
+    // Return error object instead of throwing
     return {
       error: true,
       message: err.message || 'Email sending failed',

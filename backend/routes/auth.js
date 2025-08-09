@@ -89,7 +89,7 @@ router.post('/resend-verification', async (req, res) => {
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
     
     try {
-      await sendEmail({
+      const emailResult = await sendEmail({
         to: user.email,
         subject: 'Verify your email address',
         html: `
@@ -99,6 +99,11 @@ router.post('/resend-verification', async (req, res) => {
           <p>If you didn't request this, you can ignore this email.</p>
         `
       });
+      
+      if (emailResult.error) {
+        console.error("Failed to send email:", emailResult.message);
+        return res.status(500).json({ error: "Failed to send email. Please try again later." });
+      }
       
       // If in development, provide a direct verification link
       let response = { message: "Verification email has been sent. Please check your inbox." };
@@ -168,6 +173,11 @@ router.post('/test-email', async (req, res) => {
       `
     });
     
+    if (result.error) {
+      console.error("Failed to send test email:", result.message);
+      return res.status(500).json({ error: "Failed to send test email. Please try again later." });
+    }
+    
     res.json({ 
       success: true, 
       message: 'Test email sent successfully', 
@@ -202,6 +212,11 @@ router.post('/test-domain-email', async (req, res) => {
         <p>Best regards,<br>The SLExplora Team<br><a href="https://slexplora.com">slexplora.com</a></p>
       `
     });
+    
+    if (result.error) {
+      console.error("Failed to send custom domain test email:", result.message);
+      return res.status(500).json({ error: "Failed to send custom domain test email. Please try again later." });
+    }
     
     res.json({ 
       success: true, 

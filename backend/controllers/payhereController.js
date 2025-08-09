@@ -355,7 +355,7 @@ const processSuccessfulPayment = async (payment) => {
     const sendReceiptEmail = async (payment, user) => {
       try {
         const { sendEmail } = require('../utils/emailTransporter');
-        await sendEmail({
+        const emailResult = await sendEmail({
           to: user.email,
           subject: `SLExplora - Payment Receipt #${payment.orderId}`,
           html: `
@@ -374,11 +374,8 @@ const processSuccessfulPayment = async (payment) => {
               </div>
               
               <div style="font-size: 12px; color: #666; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
-                <p><strong>Merchant Information:</strong><br/>
-                SLExplora Ltd<br/>
-                Registration No: BRG12345678<br/>
-                123 Temple Road, Colombo 00300, Sri Lanka<br/>
-                Email: info@slexplora.com</p>
+              
+                Email: slexplora@hotmail.com</p>
                 
                 <p><strong>Payment Data Policy:</strong><br/>
                 We retain transaction data for 7 years to comply with accounting regulations.
@@ -388,9 +385,12 @@ const processSuccessfulPayment = async (payment) => {
             </div>
           `
         });
+        
+        if (emailResult.error) {
+          console.error("Failed to send receipt email:", emailResult.message);
+        }
       } catch (error) {
         console.error('Error sending receipt email:', error);
-        // Don't fail the payment process if email fails
       }
     };
 
