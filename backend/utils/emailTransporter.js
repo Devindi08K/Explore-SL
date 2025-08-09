@@ -18,8 +18,8 @@ const sendEmail = async ({ to, subject, html }) => {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    // Change the "from" address to use Resend's default domain
-    const fromAddress = 'SLExplora <noreply@on.resend.com>';
+    // Use your verified domain to send emails. This is the correct way.
+    const fromAddress = 'SLExplora <noreply@slexplora.com>';
 
     const { data, error } = await resend.emails.send({
       from: fromAddress,
