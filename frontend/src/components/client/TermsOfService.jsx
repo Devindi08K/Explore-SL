@@ -21,10 +21,10 @@ const TermsOfService = () => (
       <li>Prices are listed in Sri Lankan Rupees (LKR) and include all applicable taxes.</li>
       <li><strong>International Payments:</strong> If you are paying with a card issued in a currency other than LKR, your bank may apply currency conversion rates and additional fees. These conversion rates are determined by your card issuer, not by SLExplora.</li>
       <li>SLExplora reserves the right to change pricing at any time, but changes will not affect existing paid services.</li>
-      <li>In case of payment disputes, please contact us at info@slexplora.com before initiating a chargeback.</li>
+      <li>In case of payment disputes, please contact us at slexplora@hotmail.com before initiating a chargeback.</li>
     </ul>
 
-    <h2 className="text-2xl font-semibold mt-10 mb-3 text-charcoal">3. User Content & Conduct</h2>
+    <h3 className="text-xl font-semibold mb-2 text-charcoal mt-6">4. User Content</h3>
     <ul className="list-disc ml-6 mb-4 text-gray-700">
       <li>You are responsible for any content you submit or display on our platform.</li>
       <li>You must not post unlawful, misleading, or harmful content.</li>

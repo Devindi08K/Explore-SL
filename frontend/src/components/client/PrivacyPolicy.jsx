@@ -68,6 +68,13 @@ const PrivacyPolicy = () => (
       <li><strong>Data Access:</strong> You may request a copy of your payment records by contacting us at info@slexplora.com.</li>
       <li><strong>International Payments:</strong> If you are paying with a card issued in a currency other than LKR, your bank may apply currency conversion rates and additional fees. These conversion rates are determined by your card issuer, not by SLExplora.</li>
     </ul>
+    <h3 className="text-xl font-semibold mb-2 text-charcoal">Payment Data</h3>
+    <ul className="list-disc ml-6 mb-4 text-gray-700 space-y-1">
+      <li>We partner with PayHere for secure payment processing. We do not store your full credit card details on our servers.</li>
+      <li>We retain transaction data (order ID, amount, date, service type) for 7 years to comply with accounting regulations.</li>
+      <li><strong>Data Access:</strong> You may request a copy of your payment records by contacting us at slexplora@hotmail.com.</li>
+      <li><strong>International Payments:</strong> If you are paying with a card issued in a currency other than LKR, your bank may apply currency conversion rates and additional fees. These conversion rates are determined by your card issuer, not by SLExplora.</li>
+    </ul>
   </div>
 );
 

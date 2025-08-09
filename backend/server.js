@@ -62,6 +62,7 @@ const affiliateLinksRoute = require("./routes/affiliateLinksRoute");
 const reviewRoutes = require('./routes/review');
 const paymentRoutes = require('./routes/paymentRoutes');
 const userRequestsRoutes = require('./routes/userRequestsRoutes');
+// const inquiryRoutes = require('./routes/inquiryRoutes'); // Temporarily disable
 
 // Handle favicon requests
 app.get('/favicon.ico', (req, res) => {
@@ -82,9 +83,24 @@ app.use("/blogs", blogRoutes);
 app.use("/tours", tourRoutes);
 app.use("/destinations", destinationRoutes);
 app.use("/affiliate-links", affiliateLinksRoute);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/user-requests', userRequestsRoutes);
+// app.use('/api/inquiries', inquiryRoutes); // Temporarily disable
+
+// Also mount routes without /api prefix for backward compatibility
+app.use("/auth", authRoutes);
+app.use("/tour-guides", tourGuideRoutes);
+app.use("/admin", adminRoutes);
+app.use("/vehicles", vehicleRoutes);
+app.use("/blogs", blogRoutes);
+app.use("/tours", tourRoutes);
+app.use("/destinations", destinationRoutes);
+app.use("/affiliate-links", affiliateLinksRoute);
 app.use('/reviews', reviewRoutes);
 app.use('/payments', paymentRoutes);
 app.use('/user-requests', userRequestsRoutes);
+// app.use('/inquiries', inquiryRoutes); // Temporarily disable
 
 // Base route
 app.get('/', (req, res) => {

@@ -69,8 +69,8 @@ const PaymentModal = ({ isOpen, onClose, serviceType, amount, description, itemI
         <button
           onClick={handlePayherePayment}
           disabled={loading}
-          className={`w-full bg-blue-600 text-white py-3 rounded-lg flex items-center justify-center ${
-            loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'
+          className={`w-full bg-tan text-white py-3 rounded-lg flex items-center justify-center ${
+            loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gold'
           } transition mb-3`}
         >
           {loading ? (
@@ -108,12 +108,8 @@ const PaymentModal = ({ isOpen, onClose, serviceType, amount, description, itemI
           </div>
           
           <div className="space-y-2 text-left text-gray-600">
-            <p className="font-medium">Merchant Information:</p>
             <p>
-              <strong>Business Name:</strong> SLExplora Ltd<br />
-              <strong>Registration No:</strong> BRG12345678<br />
-              <strong>Address:</strong> 123 Temple Road, Colombo 00300, Sri Lanka<br />
-              <strong>Email:</strong> info@slexplora.com
+              <strong>Email:</strong> slexplora@hotmail.com
             </p>
             
             <p className="font-medium mt-3">Payment Terms:</p>
