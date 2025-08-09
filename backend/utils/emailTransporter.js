@@ -22,22 +22,27 @@ const sendEmail = async ({ to, subject, html }) => {
       const fromAddress = 'SLExplora <slexplora@hotmail.com>';
       console.log('From address:', fromAddress);
       
-      const { data, error } = await resend.emails.send({
-        from: fromAddress,
-        to,
-        subject,
-        html,
-        // Add reply-to header for replies to go to your Hotmail
-        reply_to: 'slexplora@hotmail.com'
-      });
+      try {
+        const { data, error } = await resend.emails.send({
+          from: fromAddress,
+          to,
+          subject,
+          html,
+          // Add reply-to header for replies to go to your Hotmail
+          reply_to: 'slexplora@hotmail.com'
+        });
 
-      if (error) {
-        console.error('❌ Failed to send email via Resend:', error);
-        throw new Error(error.message);
+        if (error) {
+          console.error('❌ Failed to send email via Resend:', error);
+          throw new Error(error.message);
+        }
+
+        console.log('✅ Email sent successfully via Resend:', data);
+        return data;
+      } catch (resendError) {
+        console.error('❌ Resend API error:', resendError);
+        throw resendError;
       }
-
-      console.log('✅ Email sent successfully via Resend:', data);
-      return data;
     } 
     // Fallback to SMTP only if Resend isn't available
     else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
@@ -55,15 +60,20 @@ const sendEmail = async ({ to, subject, html }) => {
         },
       });
       
-      const result = await transporter.sendMail({
-        from: 'SLExplora <slexplora@hotmail.com>',
-        to,
-        subject,
-        html,
-      });
-      
-      console.log('✅ Email sent successfully via SMTP:', result.messageId);
-      return result;
+      try {
+        const result = await transporter.sendMail({
+          from: 'SLExplora <slexplora@hotmail.com>',
+          to,
+          subject,
+          html,
+        });
+        
+        console.log('✅ Email sent successfully via SMTP:', result.messageId);
+        return result;
+      } catch (smtpError) {
+        console.error('❌ SMTP error:', smtpError);
+        throw smtpError;
+      }
     } else {
       throw new Error('No email configuration available');
     }

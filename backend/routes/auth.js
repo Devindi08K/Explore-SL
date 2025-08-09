@@ -63,22 +63,29 @@ router.post('/resend-verification', async (req, res) => {
     const { email } = req.body;
     let user;
     
+    console.log(`🔄 Resend verification request for email: ${email || 'not provided'}`);
+    
     // If no email in request body but user is logged in, use their email
     if (!email && req.user) {
       user = await User.findById(req.user._id);
+      console.log(`Using logged-in user's email: ${user?.email || 'not found'}`);
     } else if (email) {
       user = await User.findOne({ email });
+      console.log(`Looking up user by email: ${email}, found: ${user ? 'yes' : 'no'}`);
     } else {
+      console.log('No email provided and user not logged in');
       return res.status(400).json({ error: "Email is required" });
     }
     
     if (!user) {
       // Don't reveal if user exists or not for security
+      console.log('User not found, sending generic response');
       return res.json({ message: "If this email exists, a verification link has been sent." });
     }
     
     if (user.emailVerified) {
-      return res.json({ message: "Your email is already verified." });
+      console.log(`User ${user.email} is already verified`);
+      return res.json({ message: "Your email is already verified.", verified: true });
     }
     
     // Generate a new token
@@ -87,8 +94,10 @@ router.post('/resend-verification', async (req, res) => {
     await user.save();
     
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+    console.log(`Generated verification URL: ${verifyUrl}`);
     
     try {
+      console.log(`Attempting to send verification email to ${user.email}`);
       const emailResult = await sendEmail({
         to: user.email,
         subject: 'Verify your email address',
@@ -100,7 +109,7 @@ router.post('/resend-verification', async (req, res) => {
         `
       });
       
-      if (emailResult.error) {
+      if (emailResult && emailResult.error) {
         console.error("Failed to send email:", emailResult.message);
         return res.status(500).json({ error: "Failed to send email. Please try again later." });
       }
@@ -109,8 +118,10 @@ router.post('/resend-verification', async (req, res) => {
       let response = { message: "Verification email has been sent. Please check your inbox." };
       if (process.env.NODE_ENV !== 'production') {
         response.devVerificationLink = `${process.env.BACKEND_URL}/auth/dev-verify-direct/${token}`;
+        console.log(`Development verification link: ${response.devVerificationLink}`);
       }
       
+      console.log('Verification email sent successfully');
       res.json(response);
     } catch (emailError) {
       console.error("Error sending verification email:", emailError);
