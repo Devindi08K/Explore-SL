@@ -23,10 +23,13 @@ router.get('/google/callback',
   (req, res) => {
     try {
       const token = generateToken(req.user);
-      res.redirect(`https://slexplora.com/auth/callback?token=${token}`);
+      // Use the FRONTEND_URL from environment variables for the redirect
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
     } catch (error) {
       console.error('OAuth callback error:', error);
-      res.redirect('http://localhost:5173/login?error=oauth_failed');
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/login?error=oauth_failed`);
     }
   }
 );
