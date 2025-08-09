@@ -355,11 +355,12 @@ const processSuccessfulPayment = async (payment) => {
     const sendReceiptEmail = async (payment, user) => {
       try {
         const { sendEmail } = require('../utils/emailTransporter');
+        const profileUrl = `${process.env.FRONTEND_URL}/profile?tab=payments`;
         const emailResult = await sendEmail({
           to: user.email,
           subject: `SLExplora - Payment Receipt #${payment.orderId}`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; line-height: 1.6;">
               <div style="text-align: center; margin-bottom: 20px;">
                 <h1 style="color: #8B5A2B; margin-bottom: 5px;">Payment Receipt</h1>
                 <p style="color: #666; font-size: 14px;">Thank you for your purchase with SLExplora</p>
@@ -372,9 +373,13 @@ const processSuccessfulPayment = async (payment) => {
                 <p><strong>Description:</strong> ${payment.description}</p>
                 <p><strong>Payment Method:</strong> PayHere</p>
               </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${profileUrl}" style="display:inline-block; padding:12px 24px; font-size: 16px; color: #ffffff; background-color: #eab308; border-radius: 5px; text-decoration: none;">View Payment History</a>
+              </div>
               
               <div style="font-size: 12px; color: #666; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
-              
+                
                 Email: slexplora@hotmail.com</p>
                 
                 <p><strong>Payment Data Policy:</strong><br/>

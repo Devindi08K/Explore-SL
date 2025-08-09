@@ -82,12 +82,13 @@ exports.registerUser = async (req, res) => {
                 to: user.email,
                 subject: 'Verify your email address',
                 html: `
-                  <h2>Welcome to SLExplora!</h2>
-                  <p>Thank you for signing up. We recommend verifying your email address to ensure you receive important notifications and can recover your account if needed.</p>
-                  <p>Click the button below to verify your email:</p>
-                  <a href="${verifyUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Verify Email</a>
-                  <p>If you did not sign up, please ignore this email.</p>
-                  <p>Best regards,<br>The SLExplora Team<br><a href="https://slexplora.com">slexplora.com</a></p>
+                  <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <h2>Welcome to SLExplora!</h2>
+                    <p>Thank you for signing up. Please click the button below to verify your email address and secure your account.</p>
+                    <a href="${verifyUrl}" style="display:inline-block; padding:12px 24px; margin: 20px 0; font-size: 16px; color: #ffffff; background-color: #eab308; border-radius: 5px; text-decoration: none;">Verify Email Address</a>
+                    <p>If you did not sign up, please ignore this email.</p>
+                    <p>Best regards,<br>The SLExplora Team</p>
+                  </div>
                 `
             });
             console.log(`✅ Verification email sent to ${user.email}`);
@@ -119,8 +120,14 @@ exports.loginUser = async (req, res) => {
             return res.status(401).json({ error: "Invalid credentials" });
         }
         
-        // We no longer check if email is verified
-        // Users can log in immediately
+        // Enforce email verification before login
+        if (!user.emailVerified) {
+            console.log(`❌ Login failed: Email not verified for ${email}`);
+            return res.status(401).json({ 
+                error: "Email not verified. Please check your inbox for a verification link.",
+                code: "EMAIL_NOT_VERIFIED" 
+            });
+        }
         
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -213,11 +220,13 @@ exports.requestPasswordReset = async (req, res) => {
         to: user.email,
         subject: 'Password Reset Request',
         html: `
-          <h2>Password Reset Request</h2>
-          <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
-          <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Reset Password</a>
-          <p>If you did not request this, you can ignore this email.</p>
-          <p>Best regards,<br>The SLExplora Team<br><a href="https://slexplora.com">slexplora.com</a></p>
+          <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2>Password Reset Request</h2>
+            <p>You requested to reset your password. Click the button below to set a new one. This link will expire in 1 hour.</p>
+            <a href="${resetUrl}" style="display:inline-block; padding:12px 24px; margin: 20px 0; font-size: 16px; color: #ffffff; background-color: #eab308; border-radius: 5px; text-decoration: none;">Reset Password</a>
+            <p>If you did not request this, you can ignore this email.</p>
+            <p>Best regards,<br>The SLExplora Team</p>
+          </div>
         `
       });
       console.log(`✅ Password reset email sent to ${user.email}`);

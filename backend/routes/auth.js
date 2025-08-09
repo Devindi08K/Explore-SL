@@ -102,10 +102,12 @@ router.post('/resend-verification', async (req, res) => {
         to: user.email,
         subject: 'Verify your email address',
         html: `
-          <h2>Email Verification</h2>
-          <p>Please click the button below to verify your email address:</p>
-          <a href="${verifyUrl}" style="display:inline-block;padding:10px 20px;background:#eab308;color:#fff;text-decoration:none;border-radius:5px;">Verify Email</a>
-          <p>If you didn't request this, you can ignore this email.</p>
+          <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2>Email Verification</h2>
+            <p>Please click the button below to verify your email address:</p>
+            <a href="${verifyUrl}" style="display:inline-block; padding:12px 24px; margin: 20px 0; font-size: 16px; color: #ffffff; background-color: #eab308; border-radius: 5px; text-decoration: none;">Verify Email Address</a>
+            <p>If you didn't request this, you can ignore this email.</p>
+          </div>
         `
       });
       

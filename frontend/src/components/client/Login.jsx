@@ -7,12 +7,11 @@ import { AuthContext } from '../../context/AuthContext';
 const Login = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
-    const navigate = useNavigate();
+    const [error, setError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+    const [showResendVerification, setShowResendVerification] = useState(false);
     const { setCurrentUser } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,7 +40,14 @@ const Login = ({ onLoginSuccess }) => {
             }
         } catch (err) {
             console.error("❌ Login error:", err);
-            setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
+            const errData = err.response?.data;
+            if (errData?.code === 'EMAIL_NOT_VERIFIED') {
+                setError(errData.error);
+                setShowResendVerification(true);
+            } else {
+                setError(errData?.error || 'Login failed. Please check your credentials.');
+                setShowResendVerification(false);
+            }
         } finally {
             setLoading(false);
         }
@@ -93,13 +99,8 @@ const Login = ({ onLoginSuccess }) => {
         <div className="min-h-screen flex items-center justify-center bg-cream px-4">
             <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
                 <div className="text-center mb-8">
-                    <img
-                        src="https://res.cloudinary.com/dxydsx0kf/image/upload/v1752847316/225844264_gsjo7w.png"
-                        alt="SLExplora Logo"
-                        className="mx-auto h-16 w-16 rounded-full mb-4 object-cover"
-                    />
-                    <h2 className="text-3xl font-bold text-charcoal mb-2">Welcome Back</h2>
-                    <p className="text-gray-600">Sign in to your account</p>
+                    <h1 className="text-4xl font-bold text-charcoal">Welcome Back</h1>
+                    <p className="text-gray-600 mt-2">Log in to continue your journey with SLExplora.</p>
                 </div>
 
                 {/* Social Login Button */}
@@ -186,25 +187,33 @@ const Login = ({ onLoginSuccess }) => {
                         </div>
                     </div>
 
+                    <div className="text-center mb-8">
+                        <h1 className="text-4xl font-bold text-charcoal">Welcome Back</h1>
+                        <p className="text-gray-600 mt-2">Log in to continue your journey with SLExplora.</p>
+                    </div>
+
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                            {error}
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
+                            <span className="block sm:inline">{error}</span>
                         </div>
                     )}
 
-                    {error === "Please verify your email before logging in." && (
-                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <p className="text-sm text-yellow-800 mb-2">
-                              Your email is not verified. Please check your inbox for the verification email 
-                              or request a new one.
-                            </p>
+                    {showResendVerification && (
+                        <div className="text-center mb-6">
                             <button
-                              type="button"
-                              onClick={() => handleResendVerification(email)}
-                              className="text-sm bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700"
+                                onClick={() => handleResendVerification(formData.email)}
+                                disabled={loading}
+                                className="w-full bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 transition font-semibold flex items-center justify-center"
                             >
-                              Resend Verification Email
+                                <FaEnvelope className="mr-2" />
+                                Resend Verification Email
                             </button>
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
+                            <span className="block sm:inline">{successMessage}</span>
                         </div>
                     )}
 

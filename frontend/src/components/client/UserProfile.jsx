@@ -1103,9 +1103,6 @@ const UserProfile = () => {
                 <div className="space-y-6">
                   <h2 className="font-semibold text-xl text-charcoal">Profile Information</h2>
                   
-                  {/* Add the verification section here */}
-                  <EmailVerificationSection />
-                  
                   <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                     <div>
                       <label className="text-sm font-medium text-gray-600">Username</label>
@@ -1606,91 +1603,6 @@ const UserProfile = () => {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-const EmailVerificationSection = () => {
-  const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState('');
-  const { user, setUser } = useContext(AuthContext); // Import this context at the top of the file
-  
-  const handleResendVerification = async () => {
-    try {
-      setSending(true);
-      setMessage('');
-      
-      // Get email from user context or profile
-      const email = user?.email || profile?.email;
-      
-      const response = await api.post('/auth/resend-verification', { email });
-      setMessage(response.data.message || 'Verification email sent successfully');
-      
-      // Update user context if the email was verified
-      if (response.data.verified) {
-        setUser({
-          ...user,
-          emailVerified: true
-        });
-      }
-    } catch (error) {
-      setMessage('Failed to send verification email. Please try again later.');
-      console.error('Error resending verification email:', error);
-    } finally {
-      setSending(false);
-    }
-  };
-  
-  if (user?.emailVerified) {
-    return (
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-        <div className="flex items-start">
-          <FaCheckCircle className="text-green-500 mt-1 mr-3" />
-          <div>
-            <h3 className="font-medium text-green-800">Email Verified</h3>
-            <p className="text-sm text-green-700">Your email address has been verified.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-start">
-        <FaExclamationTriangle className="text-yellow-500 mt-1 mr-3 hidden sm:block" />
-        <div className="flex-1">
-          <div className="flex items-center mb-2">
-            <FaExclamationTriangle className="text-yellow-500 mr-2 sm:hidden" />
-            <h3 className="font-medium text-yellow-800">Verify Your Email</h3>
-          </div>
-          <p className="text-sm text-yellow-700 mb-3">
-            We recommend verifying your email address. This ensures you can receive important notifications
-            and recover your account if needed.
-          </p>
-          {message && (
-            <div className={`text-sm mb-3 ${message.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>
-              {message}
-            </div>
-          )}
-          <button
-            onClick={handleResendVerification}
-            disabled={sending}
-            className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition text-sm flex items-center"
-          >
-            {sending ? (
-              <>
-                <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                Sending...
-              </>
-            ) : (
-              <>
-                <FaEnvelope className="mr-2" />
-                Send Verification Email
-              </>
-            )}
-          </button>
         </div>
       </div>
     </div>

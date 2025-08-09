@@ -30,42 +30,21 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setSuccessMessage('');
         setLoading(true);
-
-        if (!acceptedTerms) {
-            setError('You must accept the Terms of Service and Privacy Policy to create an account.');
-            setLoading(false);
-            return;
-        }
+        setError("");
+        setSuccessMessage("");
 
         if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
+            setError("Passwords do not match");
             setLoading(false);
             return;
-        }
-
-        const strongPassword = (password) => 
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
-
-        if (!strongPassword(formData.password)) {
-          setError('Password must be at least 8 characters, include uppercase, lowercase, and a number.');
-          setLoading(false);
-          return;
         }
 
         try {
-            await api.post("/auth/register", {
-                userName: formData.userName,
-                email: formData.email.toLowerCase(),
-                password: formData.password,
-            });
+            await api.post("/auth/register", formData);
             setSuccessMessage(
-                "Registration successful! Please check your email and verify your account before logging in. You cannot log in until your email is verified."
+                "Registration successful! Please check your email and click the verification link before logging in."
             );
-            // Optionally, show a button to go to login page.
-            // navigate("/login");
         } catch (err) {
             setError(err.response?.data?.error || "Error creating account");
         } finally {
