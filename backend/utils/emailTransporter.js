@@ -1,109 +1,46 @@
 const sendEmail = async ({ to, subject, html }) => {
   if (!to) {
     console.error('❌ Email sending failed: Recipient (to) is required');
-    throw new Error('Recipient email is required');
+    return { error: true, message: 'Recipient email is required' };
   }
 
   console.log('=============================================');
-  console.log(`📧 EMAIL SENDING ATTEMPT - ${new Date().toISOString()}`);
+  console.log(`📧 SENDING EMAIL VIA RESEND - ${new Date().toISOString()}`);
   console.log('To:', to);
-  console.log('Subject:', subject);
-  console.log('Email environment:', process.env.NODE_ENV);
   console.log('=============================================');
 
+  if (!process.env.RESEND_API_KEY) {
+    console.error('❌ Resend API key is missing. Cannot send email.');
+    return { error: true, message: 'Email service is not configured.' };
+  }
+
   try {
-    // Use Resend as the primary email service
-    if (process.env.RESEND_API_KEY) {
-      console.log('🔄 Trying to use Resend API...');
-      
-      let resend;
-      try {
-        const { Resend } = require('resend');
-        resend = new Resend(process.env.RESEND_API_KEY);
-      } catch (resendImportError) {
-        console.error('❌ Failed to import Resend package:', resendImportError.message);
-        console.log('⚠️ Falling back to alternative email method...');
-        // Continue to fallback method
-        throw new Error('Resend package not available');
-      }
-      
-      if (resend) {
-        // Always use slexplora@hotmail.com as the sender
-        const fromAddress = 'SLExplora <slexplora@hotmail.com>';
-        console.log('From address:', fromAddress);
-        
-        try {
-          const { data, error } = await resend.emails.send({
-            from: fromAddress,
-            to,
-            subject,
-            html,
-            // Add reply-to header for replies to go to your Hotmail
-            reply_to: 'slexplora@hotmail.com'
-          });
+    const { Resend } = require('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
-          if (error) {
-            console.error('❌ Failed to send email via Resend:', error);
-            throw new Error(error.message);
-          }
+    const fromAddress = 'SLExplora <slexplora@hotmail.com>';
 
-          console.log('✅ Email sent successfully via Resend:', data);
-          return data;
-        } catch (resendError) {
-          console.error('❌ Resend API error:', resendError);
-          throw resendError;
-        }
-      }
-    }
-    
-    // Fallback to SMTP if Resend isn't available or failed
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      console.log('🔄 Using SMTP (Hotmail)...');
-      
-      const nodemailer = require('nodemailer');
-      
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || 'smtp.office365.com',
-        port: process.env.EMAIL_PORT || 587,
-        secure: process.env.EMAIL_SECURE === 'true',
-        auth: {
-          user: process.env.EMAIL_USER || 'slexplora@hotmail.com',
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-      
-      try {
-        const result = await transporter.sendMail({
-          from: 'SLExplora <slexplora@hotmail.com>',
-          to,
-          subject,
-          html,
-        });
-        
-        console.log('✅ Email sent successfully via SMTP:', result.messageId);
-        return result;
-      } catch (smtpError) {
-        console.error('❌ SMTP error:', smtpError);
-        throw smtpError;
-      }
-    } else {
-      throw new Error('No email configuration available');
-    }
-  } catch (err) {
-    console.error('❌ Error sending email:', err);
-    
-    // Log detailed error for debugging
-    console.error('Detailed error:', {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-      responseCode: err.responseCode,
+    const { data, error } = await resend.emails.send({
+      from: fromAddress,
+      to,
+      subject,
+      html,
+      reply_to: 'slexplora@hotmail.com'
     });
-    
-    // Return error object instead of throwing
+
+    if (error) {
+      console.error('❌ Failed to send email via Resend:', error);
+      return { error: true, message: error.message, details: error };
+    }
+
+    console.log('✅ Email sent successfully via Resend:', data.id);
+    return { success: true, data };
+
+  } catch (err) {
+    console.error('❌ A critical error occurred during email sending:', err);
     return {
       error: true,
-      message: err.message || 'Email sending failed',
+      message: err.message || 'A critical error occurred.',
       details: err
     };
   }
