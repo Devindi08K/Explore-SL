@@ -87,7 +87,7 @@ const BlogList = () => {
                                             className="w-full h-full object-cover" 
                                             onError={(e) => {
                                                 e.target.onerror = null; 
-                                                e.target.src = 'https://placehold.co/600x400?text=Image+Not+Found';
+                                                e.target.src = '/placeholder.png';
                                             }}
                                         />
                                     </div>

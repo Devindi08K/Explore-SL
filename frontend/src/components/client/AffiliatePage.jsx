@@ -92,7 +92,7 @@ const AffiliatePage = () => {
                         className="w-full h-40 sm:h-48 object-cover"
                         onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = "https://placehold.co/600x400?text=Business+Image";
+                            e.target.src = "/placeholder.png";
                         }}
                     />
                     {business.isPremium && (

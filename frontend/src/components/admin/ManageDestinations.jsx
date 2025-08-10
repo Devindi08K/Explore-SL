@@ -218,7 +218,7 @@ const ManageDestinations = () => {
                             className="w-full h-48 object-cover"
                             onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = "https://placehold.co/600x400?text=No+Image";
+                                e.target.src = "/placeholder.png";
                             }}
                         />
                         <div className="p-4">

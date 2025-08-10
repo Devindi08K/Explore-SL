@@ -585,7 +585,7 @@ const AdminTour = () => {
                                         className="mt-2 w-40 h-24 object-cover rounded-md"
                                         onError={(e) => {
                                             e.target.onerror = null;
-                                            e.target.src = "https://placehold.co/600x400?text=Tour+Image";
+                                            e.target.src = "/placeholder.png";
                                         }}
                                     />
                                 </div>

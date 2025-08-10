@@ -1398,7 +1398,7 @@ const UserProfile = () => {
                                 className="w-full h-32 object-cover rounded-md"
                                 onError={(e) => {
                                   e.target.onerror = null;
-                                  e.target.src = "https://placehold.co/600x400?text=Tour+Image";
+                                  e.target.src = "/placeholder.png";
                                 }}
                               />
                             </div>
@@ -1463,7 +1463,7 @@ const UserProfile = () => {
                                 className="w-full h-32 object-cover rounded-lg"
                                 onError={(e) => {
                                   e.target.onerror = null;
-                                  e.target.src = 'https://placehold.co/600x400?text=Business+Image';
+                                  e.target.src = '/placeholder.png';
                                 }}
                               />
                             </div>

@@ -13,7 +13,7 @@ const DestinationCard = ({ _id, name, description, image, district, category }) 
           className="w-full h-52 object-cover"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = "https://via.placeholder.com/400x250?text=No+Image+Available";
+            e.target.src = "/placeholder.png";
           }}
         />
         
