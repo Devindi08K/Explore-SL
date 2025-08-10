@@ -1,5 +1,14 @@
+// This code should be at the top of the file, before other requires.
+if (process.env.NODE_ENV === 'production') {
+  // In production, override console.log with a function that does nothing.
+  // This effectively silences all non-error logs.
+  console.log = () => {};
+  console.info = () => {};
+  console.debug = () => {};
+  // We intentionally leave console.error active to log critical issues.
+}
+
 require("dotenv").config();
-require('./config/passport');
 
 // Use regular mongoose instead of mongoose-serverless (which is for Vercel)
 const mongoose = require("mongoose");
