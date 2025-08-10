@@ -117,6 +117,10 @@ const DestinationDetails = () => {
                     src={images[activeImage]}
                     alt={destination.name}
                     className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-t-lg"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder.png";
+                    }}
                   />
                   
                   {/* Enhanced Image navigation with previews */}

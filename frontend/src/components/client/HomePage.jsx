@@ -260,9 +260,14 @@ const HomePage = () => {
                   <img
                     src={place.image}
                     alt={place.name}
-                    className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder.png";
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-6">
                     <h3 className="text-xl font-semibold text-white mb-2">{place.name}</h3>
                     <p className="text-sm text-white/90">{place.description}</p>
                   </div>
