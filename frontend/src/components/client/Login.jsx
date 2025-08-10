@@ -110,7 +110,16 @@ const Login = ({ onLoginSuccess }) => {
                         className="w-full flex items-center justify-center gap-3 py-2.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-gold font-medium text-gray-700"
                     >
                         <span className="flex items-center justify-center w-6 h-6">
-                            <FaGoogle className="text-[#4285F4]" />
+                            {/* Official Google SVG to prevent external requests */}
+                            <svg width="24" height="24" viewBox="0 0 48 48">
+                                <g>
+                                    <path fill="#4285F4" d="M24 9.5c3.54 0 6.36 1.22 8.3 2.97l6.18-6.18C34.82 2.7 29.77 0 24 0 14.82 0 6.88 5.8 2.69 14.09l7.19 5.59C12.09 13.09 17.57 9.5 24 9.5z"/>
+                                    <path fill="#34A853" d="M46.1 24.55c0-1.64-.15-3.21-.43-4.73H24v9.01h12.41c-.54 2.9-2.18 5.36-4.66 7.02l7.19 5.59C43.98 37.47 46.1 31.53 46.1 24.55z"/>
+                                    <path fill="#FBBC05" d="M10.88 28.68c-1.04-3.09-1.04-6.41 0-9.5l-7.19-5.59C1.13 17.13 0 20.45 0 24c0 3.55 1.13 6.87 3.69 10.41l7.19-5.59z"/>
+                                    <path fill="#EA4335" d="M24 48c6.48 0 11.93-2.15 15.9-5.86l-7.19-5.59c-2.01 1.35-4.59 2.15-8.71 2.15-6.43 0-11.91-3.59-14.12-8.68l-7.19 5.59C6.88 42.2 14.82 48 24 48z"/>
+                                    <path fill="none" d="M0 0h48v48H0z"/>
+                                </g>
+                            </svg>
                         </span>
                         <span>
                             Continue with Google
