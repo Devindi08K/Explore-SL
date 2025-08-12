@@ -401,46 +401,12 @@ const UserProfile = () => {
     if (vehicle.isPremium) return null;
 
     return (
-      <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-semibold text-gray-700">Basic Plan</h4>
-          <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">FREE</span>
-        </div>
-        
-        <div className="text-xs text-gray-600 mb-3">
-          Upgrade to premium to unlock powerful features and boost your bookings.
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-          <div className="flex items-center text-gray-600">
-            <FaCheck className="mr-1 text-gray-400" />
-            <span>Basic listing</span>
-          </div>
-          <div className="flex items-center text-gray-600">
-            <FaCheck className="mr-1 text-gray-400" />
-            <span>1 photo max</span> {/* Changed from 3 to 1 */}
-          </div>
-          <div className="flex items-center text-gray-500">
-            <FaTimes className="mr-1 text-red-400" />
-            <span className="line-through">Up to 3 photos</span>
-          </div>
-          <div className="flex items-center text-gray-500">
-            <FaTimes className="mr-1 text-red-400" />
-            <span className="line-through">Priority placement</span>
-          </div>
-          <div className="flex items-center text-gray-500">
-            <FaTimes className="mr-1 text-red-400" />
-            <span className="line-through">Analytics</span>
-          </div>
-        </div>
-        
-        <Link 
-          to="/partnership/vehicle-premium"
-          className="w-full bg-gradient-to-r from-tan to-gold text-white text-xs px-3 py-2 rounded hover:from-gold hover:to-tan transition flex items-center justify-center"
-        >
-          <FaCrown className="mr-1" />
-          Upgrade to Premium
-        </Link>
+      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h4 className="text-sm font-semibold text-yellow-800 mb-2">Free Listing - Premium Processing Unavailable</h4>
+        <p className="text-xs text-yellow-700 mb-3">
+          Due to payment gateway maintenance, premium features are temporarily unavailable. 
+          All listings are currently operating as free plans.
+        </p>
       </div>
     );
   };
@@ -537,20 +503,12 @@ const UserProfile = () => {
   const BusinessListingUpgradePrompt = ({ listing }) => {
     if (listing.isPremium) return null;
     return (
-      <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">Basic Listing</h4>
-        <p className="text-xs text-gray-600 mb-3">Upgrade to premium to get priority placement, a verified badge, and access to analytics.</p>
-        <div className="flex flex-col space-y-2">
-          <Link to="/partnership/business-premium" className="w-full bg-gradient-to-r from-tan to-gold text-white text-xs px-3 py-2 rounded hover:from-gold hover:to-tan transition flex items-center justify-center">
-            <FaCrown className="mr-1" /> Upgrade to Premium
-          </Link>
-          <button
-            onClick={() => refreshBusinessListingPremium(listing._id)}
-            className="w-full bg-gray-200 text-gray-700 text-xs px-3 py-2 rounded hover:bg-gray-300 transition flex items-center justify-center"
-          >
-            <FaSyncAlt className="mr-2" /> Refresh Status
-          </button>
-        </div>
+      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h4 className="text-sm font-semibold text-yellow-800 mb-2">Free Listing - Premium Processing Unavailable</h4>
+        <p className="text-xs text-yellow-700 mb-3">
+          Due to payment gateway maintenance, premium features are temporarily unavailable.
+          All listings are currently operating as free plans.
+        </p>
       </div>
     );
   };
@@ -724,42 +682,12 @@ const UserProfile = () => {
     if (guide.isPremium) return null;
 
     return (
-      <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-semibold text-gray-700">Basic Guide Profile</h4>
-          <FaBolt className="text-gray-400" />
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-          <div className="flex items-center text-gray-600">
-            <FaCheck className="mr-1 text-gray-400" />
-            <span>Basic listing</span>
-          </div>
-          <div className="flex items-center text-gray-600">
-            <FaCheck className="mr-1 text-gray-400" />
-            <span>Standard search visibility</span>
-          </div>
-          <div className="flex items-center text-gray-500">
-            <FaTimes className="mr-1 text-red-400" />
-            <span className="line-through">Priority placement</span>
-          </div>
-          <div className="flex items-center text-gray-500">
-            <FaTimes className="mr-1 text-red-400" />
-            <span className="line-through">Premium badge</span>
-          </div>
-          <div className="flex items-center text-gray-500">
-            <FaTimes className="mr-1 text-red-400" />
-            <span className="line-through">Analytics</span>
-          </div>
-        </div>
-        
-        <Link 
-          to="/partnership/tour-guide-premium"
-          className="w-full bg-gradient-to-r from-tan to-gold text-white text-xs px-3 py-2 rounded hover:from-gold hover:to-tan transition flex items-center justify-center"
-        >
-          <FaCrown className="mr-1" />
-          Upgrade to Premium
-        </Link>
+      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h4 className="text-sm font-semibold text-yellow-800 mb-2">Free Listing - Premium Processing Unavailable</h4>
+        <p className="text-xs text-yellow-700 mb-3">
+          Due to payment gateway maintenance, premium features are temporarily unavailable.
+          All listings are currently operating as free plans.
+        </p>
       </div>
     );
   };

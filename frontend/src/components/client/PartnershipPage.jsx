@@ -32,23 +32,49 @@ const PartnershipPage = () => {
     }
   }, []);
 
+  // Add this component to show at the top of the page
+  const PaymentGatewayAlert = () => (
+    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-8 rounded-lg shadow-md">
+      <div className="flex">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <div className="ml-3">
+          <h3 className="text-lg font-medium text-yellow-800">
+            Payment Processing Temporarily Unavailable
+          </h3>
+          <div className="mt-2 text-yellow-700">
+            <p>
+              Due to maintenance with our payment gateway, premium subscriptions are temporarily unavailable. 
+              All premium features are accessible as free listings for now. We appreciate your understanding.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-cream px-4 py-16">
-      <div className="max-w-5xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center mb-12">
+    <div className="min-h-screen bg-cream py-16 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-charcoal">
-            Partnership <span className="text-tan">Opportunities</span>
+            Partner with <span className="text-tan">SLExplora</span>
           </h1>
           <p className="text-lg max-w-2xl mx-auto text-gray-600">
-            Join our growing network of tourism partners and showcase your services to travelers exploring Sri Lanka.
+            Expand your reach and grow your business by partnering with Sri Lanka's premier travel platform
           </p>
         </div>
-        
-        {/* Partnership Cards - Now directly after the header */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {/* Sponsored Blog Posts */}
-          <div id="blog-section" className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:transform hover:scale-[1.02]">
+
+        {/* Add the payment gateway alert at the top */}
+        <PaymentGatewayAlert />
+
+        {/* Partnership Cards - modify to disable payment options */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          {/* Blog Sponsorship */}
+          <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:transform hover:scale-[1.02]">
             <div className="bg-tan h-2"></div>
             <div className="p-6">
               <div className="mb-4 flex justify-center">
@@ -87,21 +113,12 @@ const PartnershipPage = () => {
               </div>
               
               <div className="flex space-x-3 mt-6">
-                <button 
-                  onClick={() => handlePaymentClick(
-                    'sponsored_blog_post', 
-                    700, 
-                    'Sponsored Blog Post'
-                  )}
-                  className="flex-1 flex justify-center items-center bg-tan text-cream py-3 px-4 rounded-md hover:bg-gold transition duration-200"
-                >
-                  Pay Now
-                </button>
+                {/* Replace this button with a free submission link */}
                 <Link 
                   to="/submit-sponsored-blog"
-                  className="flex-1 flex justify-center items-center bg-gray-100 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-200 transition duration-200"
+                  className="flex-1 flex justify-center items-center bg-tan text-cream py-3 px-4 rounded-md hover:bg-gold transition duration-200"
                 >
-                  Submit Post
+                  Submit Free Blog
                 </Link>
               </div>
             </div>
@@ -160,10 +177,10 @@ const PartnershipPage = () => {
               
               <div className="mt-auto">
                 <Link 
-                  to="/partnership/business-premium"
+                  to="/partnership/business-listing?tier=free"
                   className="flex justify-center items-center bg-tan text-cream py-3 px-6 rounded-md hover:bg-gold transition duration-200 w-full"
                 >
-                  Learn More
+                  Start Free Listing
                 </Link>
               </div>
             </div>
@@ -215,21 +232,12 @@ const PartnershipPage = () => {
               </div>
               
               <div className="flex space-x-3 mt-6">
-                <button 
-                  onClick={() => handlePaymentClick(
-                    'tour_partnership', 
-                    2000, 
-                    'Tour Partnership (Monthly)'
-                  )}
-                  className="flex-1 flex justify-center items-center bg-tan text-cream py-3 px-4 rounded-md hover:bg-gold transition duration-200"
-                >
-                  Pay Now
-                </button>
+                {/* Replace with free submission link */}
                 <Link 
                   to="/submit-tour-partnership"
-                  className="flex-1 flex justify-center items-center bg-gray-100 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-200 transition duration-200"
+                  className="flex-1 flex justify-center items-center bg-tan text-cream py-3 px-4 rounded-md hover:bg-gold transition duration-200"
                 >
-                  Submit Tour
+                  Submit Free Tour
                 </Link>
               </div>
             </div>

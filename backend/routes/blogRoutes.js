@@ -64,17 +64,21 @@ router.get('/my-submissions', protect, async (req, res) => {
 // Submit a sponsored blog post
 router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
   try {
-    const { paymentId, isExternal, title, content, author, blogUrl, imageUrl } = req.body;
-    const user = await User.findById(req.user._id);
-
+    // Comment out payment verification
+    /*
+    const { paymentId } = req.body;
     const payment = await Payment.findById(paymentId);
+    
     if (!payment || payment.userId.toString() !== req.user._id.toString() || payment.serviceType !== 'sponsored_blog_post' || !payment.subscriptionDetails.awaitingSubmission) {
       return res.status(403).json({ error: 'Invalid or used payment voucher.' });
     }
+    */
+    
+    const { isExternal, title, content, author, blogUrl, imageUrl } = req.body;
+    const user = await User.findById(req.user._id);
 
     const blogData = {
       isSponsored: true,
-      paymentId: payment._id,
       submittedBy: req.user._id,
       status: 'pending',
       isVerified: false,
@@ -99,10 +103,14 @@ router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
     const newBlog = new Blog(blogData);
     await newBlog.save();
 
+    // Skip the payment update
+    /*
     payment.subscriptionDetails.awaitingSubmission = false;
-    payment.itemId = newBlog._id;
+    payment.subscriptionDetails.itemId = savedBlog._id;
+    payment.description = `Sponsored Blog: ${savedBlog.title}`;
     await payment.save();
-
+    */
+    
     res.status(201).json(newBlog);
   } catch (error) {
     console.error('Error submitting sponsored blog:', error);
