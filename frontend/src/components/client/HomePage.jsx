@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { FaMapMarkedAlt, FaUserTie, FaHotel, FaArrowDown, FaRegCheckSquare, FaCompass, FaCrown, FaCar, FaUserCheck, FaGlobeAmericas, FaLock, FaGift } from 'react-icons/fa';
+import { FaMapMarkedAlt, FaUserTie, FaHotel, FaArrowDown, FaRegCheckSquare, FaCompass, FaCrown, FaCar, FaUserCheck, FaGlobeAmericas, FaLock, FaGift, FaArrowRight } from 'react-icons/fa';
 import { MdTour, MdBusinessCenter } from 'react-icons/md';
 import { BiSolidBadgeCheck } from 'react-icons/bi';
 import { RiQuillPenFill } from 'react-icons/ri';
