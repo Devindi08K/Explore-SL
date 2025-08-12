@@ -46,6 +46,7 @@ const VehiclesPage = () => {
     features: []
   });
   const [singleVehicle, setSingleVehicle] = useState(null);
+  const [loading, setLoading] = useState(true); // New loading state
 
   // Add this state to track the current image
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -95,11 +96,14 @@ const VehiclesPage = () => {
   }, [id]);
 
   const fetchVehicles = async () => {
+    setLoading(true); // Start loading
     try {
       const response = await api.get("/vehicles");
       setVehicles(response.data.filter(vehicle => vehicle.isVerified));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -602,6 +606,29 @@ const VehiclesPage = () => {
             >
               Reset Filters
             </button>
+          </div>
+        )}
+
+        {/* Suggestion to register vehicle - only when no vehicles are loaded */}
+        {!loading && vehicles.length === 0 && !singleVehicle && (
+          <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg p-6 mb-8 shadow-md">
+            <div className="flex flex-col md:flex-row items-center">
+              <div className="mb-4 md:mb-0 md:mr-6">
+                <div className="bg-white text-green-600 rounded-full w-16 h-16 flex items-center justify-center mb-2 mx-auto md:mx-0">
+                  <FaCar className="text-3xl" />
+                </div>
+              </div>
+              <div className="text-center md:text-left">
+                <h3 className="text-xl font-bold mb-2">Be the First Vehicle Owner on SLExplora! 🚗</h3>
+                <p className="mb-4">Get early access to bookings and establish your reputation before competition grows.</p>
+                <Link 
+                  to="/partnership/vehicle-premium" 
+                  className="inline-block bg-white text-green-600 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors shadow-md font-medium"
+                >
+                  Register Your Vehicle
+                </Link>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom'; // Add this import
 import api from '../../utils/api';
-import { FaRegClock, FaUsers, FaMapMarkerAlt, FaTag, FaCheck, FaTimes, FaPlusCircle, FaMap } from 'react-icons/fa'; // Add FaPlusCircle
+import { FaRegClock, FaUsers, FaMapMarkerAlt, FaTag, FaCheck, FaTimes, FaPlusCircle, FaMap, FaRoute } from 'react-icons/fa'; // Add FaPlusCircle and FaRoute
 
 const TourPage = () => {
   const [tours, setTours] = useState([]);
@@ -290,6 +290,29 @@ const TourPage = () => {
           <div className="text-center py-12 bg-white rounded-lg shadow-md">
             <h3 className="text-xl font-medium text-charcoal mb-2">No tours found</h3>
             <p className="text-gray-600">Try selecting a different tour type</p>
+          </div>
+        )}
+
+        {/* Special Section for Tour Operators - Added */}
+        {!loading && filteredTours.length === 0 && (
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg p-6 mb-8 shadow-md">
+            <div className="flex flex-col md:flex-row items-center">
+              <div className="mb-4 md:mb-0 md:mr-6">
+                <div className="bg-white text-amber-600 rounded-full w-16 h-16 flex items-center justify-center mb-2 mx-auto md:mx-0">
+                  <FaRoute className="text-3xl" />
+                </div>
+              </div>
+              <div className="text-center md:text-left">
+                <h3 className="text-xl font-bold mb-2">Be the First Tour Operator on SLExplora! 🌄</h3>
+                <p className="mb-4">List your tours early and gain prominence as we grow our user base!</p>
+                <Link 
+                  to="/partnership#tour-partnership" 
+                  className="inline-block bg-white text-amber-600 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors shadow-md font-medium"
+                >
+                  Register Your Tour
+                </Link>
+              </div>
+            </div>
           </div>
         )}
 

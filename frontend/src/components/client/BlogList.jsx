@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from '../../utils/api';
 import { FaLink, FaPlus, FaSpinner, FaArrowUp } from 'react-icons/fa'; // Add FaArrowUp
 import { AuthContext } from "../../context/AuthContext";
+import { RiQuillPenFill } from 'react-icons/ri'; // Import the icon for the suggestion box
 
 const BlogList = () => {
     const { currentUser } = useContext(AuthContext);
@@ -112,18 +113,11 @@ const BlogList = () => {
                 </div>
             )}
 
-            {/* Add Scroll to Top Button */}
-            {showScrollButton && (
-                <button
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="fixed bottom-8 right-8 bg-tan text-cream p-3 rounded-full shadow-lg hover:bg-gold transition-colors z-10"
-                    aria-label="Scroll to top"
-                >
-                    <FaArrowUp className="w-5 h-5" />
-                </button>
-            )}
-        </div>
-    );
-};
-
-export default BlogList;
+            {/* Suggestion box for no blogs scenario */}
+            {blogs.length === 0 && !loading && (
+                <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg p-6 mb-8 shadow-md">
+                    <div className="flex flex-col md:flex-row items-center">
+                        <div className="mb-4 md:mb-0 md:mr-6">
+                            <div className="bg-white text-pink-600 rounded-full w-16 h-16 flex items-center justify-center mb-2 mx-auto md:mx-0">
+                                <RiQuillPenFill className="text-3xl" />
+                           

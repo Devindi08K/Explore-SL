@@ -56,6 +56,22 @@ const PartnershipPage = () => {
     </div>
   );
 
+  // Add this announcement banner component
+  const LaunchAnnouncement = () => (
+    <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white p-6 mb-8 rounded-lg shadow-md">
+      <div className="flex flex-col md:flex-row items-center">
+        <div className="bg-white text-green-600 rounded-full w-20 h-20 flex items-center justify-center mb-4 md:mb-0 md:mr-6 mx-auto md:mx-0">
+          <FaRocket className="text-4xl" />
+        </div>
+        <div className="text-center md:text-left">
+          <h3 className="text-2xl font-bold mb-2">🎉 SLExplora is Now Officially Launched!</h3>
+          <p className="mb-2 text-white/90 text-lg">Early partners enjoy premium visibility and positioning.</p>
+          <p className="text-white/80">As we grow, early listings will build authority and establish presence before competition arrives.</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-cream py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -67,6 +83,9 @@ const PartnershipPage = () => {
             Expand your reach and grow your business by partnering with Sri Lanka's premier travel platform
           </p>
         </div>
+
+        {/* Add the launch announcement banner */}
+        <LaunchAnnouncement />
 
         {/* Add the payment gateway alert at the top */}
         <PaymentGatewayAlert />

@@ -201,6 +201,29 @@ const AffiliatePage = () => {
                     </div>
                 )}
                 
+                {/* Promotional Section for No Listings State */}
+                {!loading && filterBusinesses(selectedCategory).length === 0 && (
+                    <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg p-6 mb-8 shadow-md">
+                        <div className="flex flex-col md:flex-row items-center">
+                            <div className="mb-4 md:mb-0 md:mr-6">
+                                <div className="bg-white text-cyan-600 rounded-full w-16 h-16 flex items-center justify-center mb-2 mx-auto md:mx-0">
+                                    <FaBuilding className="text-3xl" />
+                                </div>
+                            </div>
+                            <div className="text-center md:text-left">
+                                <h3 className="text-xl font-bold mb-2">Be the First Business on SLExplora! 🏢</h3>
+                                <p className="mb-4">List your accommodation, restaurant, or tourism business and gain early visibility!</p>
+                                <Link 
+                                    to="/partnership/business-premium" 
+                                    className="inline-block bg-white text-cyan-600 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors shadow-md font-medium"
+                                >
+                                    List Your Business
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {showScrollButton && (
                     <button
                         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
