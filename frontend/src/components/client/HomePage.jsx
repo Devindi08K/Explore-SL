@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { FaMapMarkedAlt, FaUserTie, FaHotel, FaArrowDown, FaRegCheckSquare, FaCompass, FaCrown, FaCar } from 'react-icons/fa';
+import { FaMapMarkedAlt, FaUserTie, FaHotel, FaArrowDown, FaRegCheckSquare, FaCompass, FaCrown, FaCar, FaUserCheck, FaGlobeAmericas, FaLock, FaGift } from 'react-icons/fa';
 import { MdTour, MdBusinessCenter } from 'react-icons/md';
 import { BiSolidBadgeCheck } from 'react-icons/bi';
 import { RiQuillPenFill } from 'react-icons/ri';
@@ -175,13 +175,16 @@ const HomePage = () => {
           {/* Unique Selling Points */}
           <div className="flex flex-wrap justify-center gap-4 mb-6">
             <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 text-base font-medium shadow">
-              <span role="img" aria-label="Verified">✅</span> Verified Local Guides
+              <FaUserCheck className="text-white" /> {/* Replace emoji with icon */}
+              Verified Local Guides
             </div>
             <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 text-base font-medium shadow">
-              <span role="img" aria-label="Tours">🌏</span> Curated Tours
+              <FaGlobeAmericas className="text-white" /> {/* Replace emoji with icon */}
+              Curated Tours
             </div>
             <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 text-base font-medium shadow">
-              <span role="img" aria-label="Secure">🔒</span> Safe & Secure Payments
+              <FaLock className="text-white" /> {/* Replace emoji with icon */}
+              Safe & Secure Payments
             </div>
           </div>
           {/* Trust Signal Badge */}
@@ -232,6 +235,27 @@ const HomePage = () => {
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
+        </div>
+      </div>
+
+      {/* Free Listings Promotion Banner */}
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-4 px-6 mb-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="flex items-center mb-4 md:mb-0">
+              <FaGift className="text-yellow-300 text-2xl mr-3" />
+              <div>
+                <h3 className="font-bold text-lg">Limited Time Offer: Free Premium Listings!</h3>
+                <p className="text-white/80">For the next 2 months, register your business, tour, or vehicle completely free.</p>
+              </div>
+            </div>
+            <Link 
+              to="/partnership" 
+              className="bg-white text-indigo-600 px-6 py-2 rounded-lg hover:bg-cream transition-colors shadow-md flex items-center font-medium"
+            >
+              Get Started <FaArrowRight className="ml-2" />
+            </Link>
+          </div>
         </div>
       </div>
 
