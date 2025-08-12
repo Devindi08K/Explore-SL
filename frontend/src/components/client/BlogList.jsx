@@ -120,4 +120,36 @@ const BlogList = () => {
                         <div className="mb-4 md:mb-0 md:mr-6">
                             <div className="bg-white text-pink-600 rounded-full w-16 h-16 flex items-center justify-center mb-2 mx-auto md:mx-0">
                                 <RiQuillPenFill className="text-3xl" />
-                           
+                            </div>
+                        </div>
+                        <div className="text-center md:text-left">
+                            <h3 className="text-xl font-bold mb-2">Be the First Blogger on SLExplora! ✒️</h3>
+                            <p className="mb-4">Share your Sri Lanka experiences and attract readers as our platform launches!</p>
+                            <Link 
+                                to="/submit-sponsored-blog" 
+                                className="inline-block bg-white text-pink-600 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors shadow-md font-medium"
+                            >
+                                Submit a Blog Post
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Scroll to top button */}
+            {showScrollButton && (
+                <div className="fixed bottom-4 right-4">
+                    <button 
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+                        className="bg-tan hover:bg-gold text-cream rounded-full p-3 shadow-md transition-colors"
+                        title="Scroll to top"
+                    >
+                        <FaArrowUp className="text-xl" />
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default BlogList;
