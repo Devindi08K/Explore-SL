@@ -16,7 +16,9 @@ import { AuthContext } from '../../context/AuthContext';
 
 const VehicleRegistrationForm = () => {
   const navigate = useNavigate();
-  const { currentUser } = useContext(AuthContext); // Make sure this is properly imported
+  const { currentUser } = useContext(AuthContext);
+  
+  console.log("VehicleRegistrationForm - Current user on load:", currentUser);
   
   // Add loading state for currentUser
   const [isUserLoaded, setIsUserLoaded] = useState(false);
@@ -246,9 +248,18 @@ const VehicleRegistrationForm = () => {
     console.log('Form submission - Current user:', currentUser);
     console.log('Form submission - User ID:', currentUser?._id);
 
-    // Check if user is available
-    if (!currentUser || !currentUser._id) {
+    // Add this check at the top of the function
+    if (!currentUser) {
+      console.error("User not logged in during submission");
       setError('You must be logged in to register a vehicle. Please log in again.');
+      return;
+    }
+
+    // Add this explicit ID assignment
+    const userId = currentUser._id;
+    if (!userId) {
+      console.error("User ID is missing during submission");
+      setError('User ID is missing. Please log out and log in again.');
       return;
     }
 
@@ -280,7 +291,7 @@ const VehicleRegistrationForm = () => {
         vehicleYear: parseInt(formData.vehicleYear),
         driverExperience: parseInt(formData.driverExperience),
         vehicleImages: filteredImages,
-        submittedBy: currentUser._id,
+        submittedBy: userId, // Use the explicit userId variable
         status: 'pending',
         isVerified: false,
         submittedAt: new Date()
@@ -302,7 +313,12 @@ const VehicleRegistrationForm = () => {
       }
     } catch (error) {
       console.error('Error submitting vehicle:', error);
-      alert(error.response?.data?.error || 'Error registering vehicle');
+      // If there's an auth error, show a more specific message
+      if (error.response?.status === 401) {
+        setError('Your login session has expired. Please log in again.');
+      } else {
+        setError(error.response?.data?.error || 'Error registering vehicle');
+      }
     }
   };
 
