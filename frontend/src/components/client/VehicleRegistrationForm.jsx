@@ -246,8 +246,9 @@ const VehicleRegistrationForm = () => {
     setError(null);
 
     console.log('Form submission - Current user:', currentUser);
-    console.log('Form submission - User ID:', currentUser?._id);
+    console.log('Form submission - User ID:', currentUser?.id); // Check if ID is in 'id' property
 
+    // Replace lines 253-259 with this more robust approach
     // Add this check at the top of the function
     if (!currentUser) {
       console.error("User not logged in during submission");
@@ -255,11 +256,31 @@ const VehicleRegistrationForm = () => {
       return;
     }
 
-    // Add this explicit ID assignment
-    const userId = currentUser._id;
+    // More comprehensive check for the user ID
+    let userId;
+    if (typeof currentUser === 'object') {
+      // Try all possible ID formats
+      userId = currentUser._id || currentUser.id || currentUser.userId;
+      
+      // If still no ID but we have a string, it might be the ID itself
+      if (!userId && Object.keys(currentUser).length === 0 && typeof currentUser.toString === 'function') {
+        userId = currentUser.toString();
+      }
+      
+      // Special handling for JWT decoded objects
+      if (!userId && currentUser.sub) {
+        userId = currentUser.sub;  // JWT standard for subject (user ID)
+      }
+    } else if (typeof currentUser === 'string') {
+      // Sometimes the currentUser might just be the ID string
+      userId = currentUser;
+    }
+
+    console.log("Final user ID being used:", userId);
+
     if (!userId) {
       console.error("User ID is missing during submission");
-      setError('User ID is missing. Please log out and log in again.');
+      setError('User ID could not be determined. Please log out and log in again.');
       return;
     }
 
@@ -291,7 +312,7 @@ const VehicleRegistrationForm = () => {
         vehicleYear: parseInt(formData.vehicleYear),
         driverExperience: parseInt(formData.driverExperience),
         vehicleImages: filteredImages,
-        submittedBy: userId, // Use the explicit userId variable
+        submittedBy: userId, // This now uses either id or _id
         status: 'pending',
         isVerified: false,
         submittedAt: new Date()
