@@ -64,19 +64,10 @@ router.get('/my-submissions', protect, async (req, res) => {
 // Submit a sponsored blog post
 router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
   try {
-    // Comment out payment verification
-    /*
-    const { paymentId } = req.body;
-    const payment = await Payment.findById(paymentId);
-    
-    if (!payment || payment.userId.toString() !== req.user._id.toString() || payment.serviceType !== 'sponsored_blog_post' || !payment.subscriptionDetails.awaitingSubmission) {
-      return res.status(403).json({ error: 'Invalid or used payment voucher.' });
-    }
-    */
-    
-    const { isExternal, title, content, author, blogUrl, imageUrl } = req.body;
+    // Payment verification is bypassed
+    const { isExternal, title, content, author, authorName, blogUrl, imageUrl } = req.body;
     const user = await User.findById(req.user._id);
-
+    
     const blogData = {
       isSponsored: true,
       submittedBy: req.user._id,
@@ -87,13 +78,13 @@ router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
 
     if (blogData.isExternal) {
       blogData.title = title;
-      blogData.author = author;
+      blogData.author = author || authorName;
       blogData.blogUrl = blogUrl;
       blogData.image = imageUrl;
     } else {
       blogData.title = title;
       blogData.content = content;
-      blogData.author = user.userName;
+      blogData.author = authorName || user.userName;
       if (req.file) {
         const result = await cloudinary.uploader.upload(req.file.path, { folder: 'blogs' });
         blogData.image = result.secure_url;
@@ -102,14 +93,6 @@ router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
 
     const newBlog = new Blog(blogData);
     await newBlog.save();
-
-    // Skip the payment update
-    /*
-    payment.subscriptionDetails.awaitingSubmission = false;
-    payment.subscriptionDetails.itemId = savedBlog._id;
-    payment.description = `Sponsored Blog: ${savedBlog.title}`;
-    await payment.save();
-    */
     
     res.status(201).json(newBlog);
   } catch (error) {
@@ -117,7 +100,7 @@ router.post('/sponsored', protect, upload.single('image'), async (req, res) => {
     if (error.name === 'ValidationError') {
       return res.status(400).json({ error: `Validation Error: ${error.message}` });
     }
-    res.status(500).json({ error: 'Failed to submit sponsored blog post.' });
+    res.status(500).json({ error: 'Failed to submit blog post.' });
   }
 });
 

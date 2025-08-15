@@ -9,7 +9,7 @@ const SubmitTourPartnershipPage = () => {
     name: '',
     description: '',
     type: 'Cultural',
-    location: '', // Make sure this is here
+    location: '',
     priceRange: 'Rs ',
     duration: '',
     groupSize: '',
@@ -28,29 +28,14 @@ const SubmitTourPartnershipPage = () => {
   const [isExternalTour, setIsExternalTour] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState({
-    loading: true,
-    hasPaid: false,
+  const [preview, setPreview] = useState(null);
+  
+  // UPDATED: Remove payment check and just set as free tier
+  const [paymentStatus] = useState({
+    loading: false,
+    hasPaid: true, // Always consider as paid for free tier
     paymentId: null,
   });
-  const [preview, setPreview] = useState(null);
-
-  useEffect(() => {
-    const verifyPayment = async () => {
-      try {
-        const { data } = await api.get('/payments/check-voucher/tour_partnership');
-        if (data.hasVoucher) {
-          setPaymentStatus({ loading: false, hasPaid: true, paymentId: data.paymentId });
-        } else {
-          setPaymentStatus({ loading: false, hasPaid: false, paymentId: null });
-        }
-      } catch (err) {
-        console.error("Payment verification failed:", err);
-        setPaymentStatus({ loading: false, hasPaid: false, paymentId: null });
-      }
-    };
-    verifyPayment();
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,17 +45,13 @@ const SubmitTourPartnershipPage = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData({ ...formData, image: file, imageUrl: '' }); // Clear imageUrl if a file is uploaded
+      setFormData({ ...formData, image: file, imageUrl: '' });
       setPreview(URL.createObjectURL(file));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!paymentStatus.paymentId) {
-      setError("No valid payment voucher found.");
-      return;
-    }
     setIsSubmitting(true);
     setError(null);
 
@@ -79,7 +60,7 @@ const SubmitTourPartnershipPage = () => {
       data = {
         name: formData.name,
         description: formData.description,
-        location: formData.location, // Ensure this is included
+        location: formData.location,
         type: formData.type,
         isExternal: true,
         bookingUrl: formData.bookingUrl,
@@ -90,8 +71,6 @@ const SubmitTourPartnershipPage = () => {
       };
     } else {
       const submitData = new FormData();
-      
-      // Make sure to include location in non-external tour data
       Object.keys(formData).forEach(key => {
         if (key === 'image' && formData[key]) {
           submitData.append('image', formData[key]);
@@ -106,7 +85,9 @@ const SubmitTourPartnershipPage = () => {
 
     try {
       await api.post('/tours/partnership', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 
+          'Content-Type': isExternalTour ? 'application/json' : 'multipart/form-data' 
+        },
       });
       alert('Tour partnership submitted successfully! It will be reviewed by our team.');
       navigate('/profile?tab=submissions');
@@ -118,37 +99,13 @@ const SubmitTourPartnershipPage = () => {
     }
   };
 
-  if (paymentStatus.loading) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <FaSpinner className="animate-spin text-tan text-4xl mr-2" />
-        <p className="ml-2">Verifying payment...</p>
-      </div>
-    );
-  }
-
-  if (!paymentStatus.hasPaid) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center text-center">
-        <div className="bg-white p-8 rounded-lg shadow-lg">
-          <FaTimesCircle className="text-red-500 text-5xl mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-charcoal mb-4">No Active Payment Found</h2>
-          <p className="text-gray-600 mb-6">You must complete a payment before submitting a tour partnership.</p>
-          <Link to="/partnership" className="bg-tan text-white px-6 py-2 rounded-lg hover:bg-gold transition">
-            View Partnership Options
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-cream py-10 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-6">
           <FaCheckCircle className="text-green-500 text-4xl mx-auto mb-3" />
           <h2 className="text-3xl font-bold text-charcoal">Submit Your Tour Partnership</h2>
-          <p className="text-gray-500 mt-2">Your payment is confirmed. Please provide your tour details.</p>
+          <p className="text-gray-500 mt-2">Please provide your tour details below.</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">

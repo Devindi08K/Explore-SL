@@ -199,17 +199,8 @@ router.delete("/:id", async (req, res) => {
 // Modify the submit tour partnership endpoint
 router.post('/partnership', protect, upload.single('image'), async (req, res) => {
   try {
-    // Comment out payment verification
-    // const { paymentId, imageUrl, ...tourDataFromRequest } = req.body;
+    // Payment verification was commented out
     const { imageUrl, ...tourDataFromRequest } = req.body;
-
-    // Comment out payment verification
-    /*
-    const payment = await Payment.findById(paymentId);
-    if (!payment || payment.userId.toString() !== req.user._id.toString() || payment.serviceType !== 'tour_partnership' || !payment.subscriptionDetails.awaitingSubmission) {
-      return res.status(403).json({ error: 'Invalid or used payment voucher.' });
-    }
-    */
 
     // Create the tour without requiring payment
     const premiumExpiryDate = new Date();
@@ -242,12 +233,6 @@ router.post('/partnership', protect, upload.single('image'), async (req, res) =>
     });
 
     const savedTour = await newTour.save();
-
-    // Skip the payment update
-    // payment.subscriptionDetails.awaitingSubmission = false;
-    // payment.subscriptionDetails.itemId = savedTour._id;
-    // payment.description = `Tour Partnership: ${savedTour.name}`;
-    // await payment.save();
 
     res.status(201).json(savedTour);
   } catch (error) {

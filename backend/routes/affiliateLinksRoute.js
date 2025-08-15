@@ -120,7 +120,20 @@ router.get("/", async (req, res) => {
 // Create a new affiliate link
 router.post("/", protect, upload.single('image'), async (req, res) => {
   try {
-    const { businessName, businessType, description, isExternal, redirectUrl, imageUrl, ...otherFields } = req.body;
+    const { 
+      businessName, 
+      businessType, 
+      description, 
+      location,        // Add this
+      priceRange,      // Add this
+      specialties,     // Add this
+      openingHours,    // Add this if needed
+      isExternal, 
+      redirectUrl, 
+      imageUrl, 
+      ...otherFields 
+    } = req.body;
+    
     let finalImageUrl = imageUrl;
 
     if (req.file) {
