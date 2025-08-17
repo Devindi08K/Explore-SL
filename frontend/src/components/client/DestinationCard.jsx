@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaMapMarkerAlt } from "react-icons/fa";
 
-const DestinationCard = ({ _id, name, description, image, district, category }) => {
+const DestinationCard = ({ _id, name, image, district, category }) => {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       {/* Image container with fallback and overlay */}
@@ -35,12 +35,7 @@ const DestinationCard = ({ _id, name, description, image, district, category }) 
           <span>{district}</span>
         </p>
         
-        {/* Description with proper truncation */}
-        <p className="text-gray-600 text-sm mb-5 flex-grow line-clamp-3">
-          {description}
-        </p>
-        
-        {/* CTA button */}
+        {/* CTA button - Adjusted margin-top to auto to fill space */}
         <div className="mt-auto">
           <Link 
             to={`/destination/${_id}`}

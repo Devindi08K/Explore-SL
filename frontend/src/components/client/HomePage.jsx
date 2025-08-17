@@ -167,9 +167,6 @@ const HomePage = () => {
             Explore Sri Lanka with SLExplora
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl mb-4 sm:mb-6 max-w-3xl mx-auto drop-shadow-md font-light">
-            <span className="font-semibold text-gold block mb-2">
-              Discover Sri Lanka – Your Gateway to Authentic Local Experiences
-            </span>
             Guiding You Through Every Journey
           </p>
           {/* Unique Selling Points */}

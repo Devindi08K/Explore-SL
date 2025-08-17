@@ -5,7 +5,8 @@ import {
   FaBus,
   FaCarSide,
   FaRegCheckSquare,
-  FaSpinner 
+  FaSpinner,
+  FaMotorcycle // Better icon for three-wheeler
 } from 'react-icons/fa';
 import { 
   MdAirportShuttle,
@@ -118,7 +119,7 @@ const VehicleEdit = () => {
     largebus: { icon: FaBus, label: 'Large Bus' },
     suv: { icon: FaCarSide, label: 'SUV' },
     taxi: { icon: MdLocalTaxi, label: 'Taxi' },
-    threeWheeler: { icon: MdDirectionsBike, label: 'Three Wheeler' }
+    threeWheeler: { icon: FaMotorcycle, label: 'Three Wheeler' } // Updated icon
   };
 
   const features = [

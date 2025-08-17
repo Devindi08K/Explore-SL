@@ -10,7 +10,8 @@ import {
   FaCarAlt,
   FaMapMarkerAlt,
   FaFilter,
-  FaCrown
+  FaCrown,
+  FaMotorcycle // Import for three-wheeler icon
 } from 'react-icons/fa';
 import { 
   MdAirportShuttle, 
@@ -29,7 +30,7 @@ const vehicleTypes = {
   largebus: { icon: FaBus, label: 'Large Bus' },
   suv: { icon: FaCarSide, label: 'SUV' },
   taxi: { icon: MdLocalTaxi, label: 'Taxi' },
-  threeWheeler: { icon: MdDirectionsBike, label: 'Three Wheeler' } // Add three-wheeler type
+  threeWheeler: { icon: FaMotorcycle, label: 'Three Wheeler' } // Updated icon
 };
 
 const VehiclesPage = () => {
@@ -390,7 +391,9 @@ const VehiclesPage = () => {
           <div className="p-4 bg-tan/10 border-b flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center space-x-2">
               <h2 className="font-semibold text-charcoal">Vehicle Type:</h2>
-              <div className="flex flex-wrap gap-2">
+              
+              {/* Desktop view - buttons */}
+              <div className="hidden md:flex flex-wrap gap-2">
                 <button
                   className={`px-3 py-1.5 rounded-full text-sm ${
                     selectedType === 'all' 
@@ -416,6 +419,22 @@ const VehiclesPage = () => {
                     {label}
                   </button>
                 ))}
+              </div>
+              
+              {/* Mobile view - dropdown */}
+              <div className="md:hidden w-full">
+                <select 
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tan"
+                >
+                  <option value="all">All Types</option>
+                  {Object.entries(vehicleTypes).map(([type, { label }]) => (
+                    <option key={type} value={type}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             
