@@ -73,7 +73,7 @@ const Signup = () => {
             <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
                 <div className="text-center mb-8">
                     <img
-                        src="https://res.cloudinary.com/dxydsx0kf/image/upload/v1752847316/225844264_gsjo7w.png"
+                        src="https://res.cloudinary.com/dxydsx0kf/image/upload/v1755447916/slexplora_logo_X_u20szo.jpg"
                         alt="SLExplora Logo"
                         className="mx-auto h-16 w-16 rounded-full mb-4 object-cover"
                     />

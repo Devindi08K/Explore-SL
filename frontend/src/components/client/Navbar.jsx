@@ -113,7 +113,7 @@ const Navbar = ({ onLogout }) => {
             <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <Link className="flex items-center text-2xl font-bold text-cream" to="/">
                   <img
-                    src="https://res.cloudinary.com/dxydsx0kf/image/upload/v1752847316/225844264_gsjo7w.png"
+                    src="https://res.cloudinary.com/dxydsx0kf/image/upload/v1755447916/slexplora_logo_X_u20szo.jpg"
                     alt="SLExplora Logo"
                     className="h-16 w-16 rounded-full mr-2 object-cover" // big and round
                     style={{ maxHeight: '64px' }}
